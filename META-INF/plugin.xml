@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE idea-plugin PUBLIC "Plugin/DTD" "http://plugins.intellij.net/plugin.dtd">
+
+<idea-plugin>
+    <name>IntelliJad Plus</name>
+    <description>IntelliJad 9 integrates the Jad decompiler into IntelliJ IDEA 11+.</description>
+    <version>0.1</version>
+    <vendor logo="/scn-idea-16.png">Łukasz Zieliński</vendor>
+    <idea-version since-build="110.365"/>
+
+    <application-components>
+        <component>
+            <implementation-class>net.stevechaloner.intellijad.IntelliJad</implementation-class>
+        </component>
+        <component>
+            <implementation-class>net.stevechaloner.intellijad.config.ApplicationConfigComponent</implementation-class>
+        </component>
+        <component>
+            <implementation-class>net.stevechaloner.intellijad.vfs.MemoryVirtualFileSystem</implementation-class>
+            <interface-class>com.intellij.openapi.vfs.VirtualFileSystem</interface-class>
+        </component>
+    </application-components>
+
+    <project-components>
+        <component>
+            <implementation-class>net.stevechaloner.intellijad.config.ProjectConfigComponent</implementation-class>
+            <option name="workspace" value="true"/>
+        </component>
+    </project-components>
+
+    <actions>
+        <action id="net.stevechaloner.intellijad.Decompile"
+                class="net.stevechaloner.intellijad.actions.DecompileAction"
+                text="Decompile"
+                description="Decompile classfile">
+            <add-to-group group-id="EditorPopupMenu"
+                          anchor="after"
+                          relative-to-action="Compile"/>
+            <add-to-group group-id="ProjectViewPopupMenu"
+                          anchor="after"
+                          relative-to-action="Compile"/>
+        </action>
+        <action id="net.stevechaloner.intellijad.CloseAllDecompiledFiles"
+                class="net.stevechaloner.intellijad.actions.CloseAllDecompiledFilesAction"
+                text="Close All IntelliJad-decompiled Files"
+                description="Closes all files open due to decompilation by IntelliJad">
+            <add-to-group group-id="WindowMenu"
+                          anchor="before"
+                          relative-to-action="CloseAllUnpinnedEditors"/>
+            <add-to-group group-id="EditorTabPopupMenu"
+                          anchor="before"
+                          relative-to-action="CloseAllUnpinnedEditors"/>
+
+        </action>
+        <group id="net.stevechaloner.intellijad.group.toolmenu"
+               text="IntelliJad"
+               popup="true">
+            <add-to-group group-id="ToolsMenu"
+                          anchor="before"
+                          relative-to-action="ExternalToolsGroup"/>
+            <action id="net.stevechaloner.intellijad.ViewMemoryFS"
+                    class="net.stevechaloner.intellijad.actions.ViewMemoryFileSystemAction"
+                    text="Manage Memory File System"
+                    description="Open the Memory File System Manager"/>
+        </group>
+    </actions>
+
+    <helpset file="intellijad-help.jar" path="/helpset.hs"/>
+
+    <change-notes>
+        <![CDATA[
+        <ul>
+            <li>0.1
+                <ol>
+                    <li>Initial version of IntelliJad for IntelliJ IDEA 11.</li>
+                </ol>
+            </li>
+        </ul>
+        ]]>
+    </change-notes>
+
+</idea-plugin>
+

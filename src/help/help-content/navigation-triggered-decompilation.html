@@ -1,0 +1,30 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" href="style.css" TYPE="text/css">
+    <title>Navigation-triggered decompilation</title>
+</head>
+
+<body>
+<div class="mainheader">Navigation-triggered decompilation</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    When a class file is opened in IntelliJ, one of three things will happen:
+    <ul>
+        <li>The class will be decompiled and the source opened in an editor.</li>
+        <li>The class will not be decompiled because naviation-triggered decompilation is disabled, or the class's
+            package has been excluded from decompilation.
+        </li>
+        <li>A dialog will pop up and ask you to confirm the decompilation.</li>
+    </ul>
+    These possibilities are controlled by the decompile-on-navigation setting (see <a href="config-intellijad.html">IntelliJad options</a>)
+    and the exclusions setup (see <a href="config-exclusions.html">Exclusions</a>).
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    <center>
+        <img src="images/dialog-decompile.jpg" alt="Confirming navigation-triggered decompilation."/>
+    </center>
+</div>
+
+</body>
+</html>

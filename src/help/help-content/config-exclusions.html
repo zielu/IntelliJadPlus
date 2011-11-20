@@ -1,0 +1,66 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+    <title>Exclusions</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" href="style.css" TYPE="text/css">
+</head>
+
+<body>
+<div class="mainheader">Excluding packages from decompilation</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    It's possible to exclude all the classes in a package from decompilation in order to
+    skip over code you're not interested in.  The exclusion may apply to the named package,
+    or the package and all its subpackages.
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    The effect of exclusion is to cut IntelliJad out of the process for opening a file, i.e. the
+    class stub will appear in an editor.
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    <center>
+        <img src="images/config-exclusions.jpg" alt="Excluding packages from IntelliJad"/>
+    </center>
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    <div class="sectionheader">Excluding packages</div>
+    <div style="margin-bottom:5px; margin-top:5px;">
+        Packages can be excluded in two ways:
+        <ul>
+            <li>By entering the name of the package into the exclusion table, or using the package navigator via the
+                "..." button.  Note that at present, the package navigator is only available in the project-configuration
+                dialogue.
+            </li>
+            <li>
+                In the decompilation dialog's Advanced tab, you can choose to exclude the package
+                of the current class.  Recursive exclusion for the package may also be defined here.
+                If a package is excluded using this method, you can later edit the settings using
+                the exclusion table.
+                <div style="margin-bottom:5px; margin-top:5px;">
+                    <center>
+                        <img src="images/dialog-advanced.jpg" alt="Excluding packages from the decompilation dialog"/>
+                    </center>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    <div class="sectionheader">Recursive exclusion</div>
+    <div style="margin-bottom:5px; margin-top:5px;">
+        If the "Always exclude packages recursively" checkbox is enabled, recursive exclusion for the package will be
+        enabled.  Additionally, the "Exclude recursively" checkbox of the decompilation dialog will automatically be selected when this option is used.
+    </div>
+    <div style="margin-bottom:5px; margin-top:5px;">
+        Once a package has been excluded, you can then control its subpackage exclusion from the exclusion table.
+    </div>
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    <div class="sectionheader">Enabling/disabling exclusions</div>
+    <div style="margin-bottom:5px; margin-top:5px;">
+        Each exclusion has a flag controlling whether it is enabled.  This allows you enable or disable exclusions without having to add or
+        remove them from the table.
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Intellijad options</title>
+    <link rel="stylesheet" href="style.css" TYPE="text/css">
+</head>
+
+<body>
+<div class="mainheader">IntelliJad options</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    The basic IntelliJad options control the location of the Jad executable, the behaviour
+    for navigation-triggered decompilation, and the results of decompilation.
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    <center>
+        <img src="images/config-intellijad.jpg" alt="IntelliJad options"/>
+    </center>
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    <div class="sectionheader">Jad executable</div>
+    The path to the Jad executable must be absolute, and include the executable itself. The
+    easiest way to define this value is to use the "Browse..." button to navigate through your
+    computer's folders.
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    <div class="sectionheader">Decompile on navigation</div>
+    There are three basic behaviours that may occur when you open a class file in the editor.
+    <table cellpadding="1" border="1">
+        <tr>
+            <td>Name</td>
+            <td>Behaviour</td>
+        </tr>
+        <tr>
+            <td>Always</td>
+            <td>The class will be decompiled automatically and immediately, with no user input required.</td>
+        </tr>
+        <tr>
+            <td>Ask</td>
+            <td>A dialog will appear, asking for confirmation before proceeding with the decompilation.</td>
+        </tr>
+        <tr>
+            <td>Never</td>
+            <td>Decompilation will never take place due to navigation events.</td>
+        </tr>
+    </table>
+    Additionally, exclusions (see <a href="config-exclusions.html">Exclusions</a>) may have an effect
+    on the <b>Always</b> and <b>Ask</b> behaviours.
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    <div class="sectionheader">Decompile to memory</div>
+    When the <b>Decompile to memory</b> option is checked, the decompilation output will not
+    be written to disk but just held in memory. From an IntelliJ IDEA point of view, you will
+    see no difference to the behaviour of IntelliJad.
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    <div class="sectionheader">Decompile to disk</div>
+    When the <b>Decompile to memory</b> option is <b>not</b> checked, you will need to provide
+    a location to decompile classes to. By also checking the <b>Create if directory doesn't exist</b>
+    option, the decompilation location will be automatically created on the first decompilation
+    if it doesn't already exist. You may also mark decompiled files as read-only.
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    <div class="sectionheader">Project-specific settings</div>
+    In order to override the general IntelliJad Project settings defined in the IDE configuration, open the
+    IntelliJad configuration from the Project area of IntelliJ's settings view.
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    <center>
+        <img src="images/config-project-specific.jpg" alt="Project-level IntelliJad options"/>
+    </center>
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    By selecting the "Use project-specific IntelliJad settings" in this dialog, you will enable
+    project-specific settings for decompilation.  The meanings of all other settings stay the same
+    as described by this help.
+</div>
+</body>
+</html>

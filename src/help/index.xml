@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!DOCTYPE index PUBLIC "-//Sun Microsystems Inc.//DTD JavaHelp Index Version 2.0//EN"
+        "http://java.sun.com/products/javahelp/index_2_0.dtd">
+
+<index version="2.0">
+    <indexitem text="Configuring IntelliJad" target="configuring-intellijad"/>
+    <indexitem text="IntelliJad" target="intellijad"/>
+    <indexitem text="IntelliJad options" target="intellijad-options"/>
+    <indexitem text="Jad options" target="jad-options"/>
+    <indexitem text="Limits" target="limits"/>
+    <indexitem text="Prefixes" target="prefixes"/>
+    <indexitem text="Exclusions" target="exclusions"/>
+    <indexitem text="Navigation-triggered decompilation" target="navigation-triggered-decompilation"/>
+    <indexitem text="IntelliJad console" target="intellijad-console"/>
+    <indexitem text="Memory VFS manager" target="mvfs-manager"/>
+</index>

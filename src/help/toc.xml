@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!DOCTYPE toc PUBLIC "-//Sun Microsystems Inc.//DTD JavaHelp TOC Version 2.0//EN"
+        "http://java.sun.com/products/javahelp/toc_2_0.dtd">
+
+<toc version="2.0">
+    <tocitem text="IntelliJad" target="intellijad" image="scn-idea-12">
+        <tocitem text="Configuring IntelliJad" target="configuring-intellijad">
+            <tocitem text="IntelliJad options" target="intellijad-options"/>
+            <tocitem text="Jad options" target="jad-options"/>
+            <tocitem text="Limits" target="limits"/>
+            <tocitem text="Prefixes" target="prefixes"/>
+            <tocitem text="Exclusions" target="exclusions"/>
+        </tocitem>
+        <tocitem text="Navigation-triggered decompilation" target="navigation-triggered-decompilation"/>
+        <tocitem text="IntelliJad console" target="intellijad-console"/>
+        <tocitem text="Memory VFS manager" target="mvfs-manager"/>
+    </tocitem>
+</toc>
