@@ -3,7 +3,7 @@
 
 <idea-plugin>
     <name>IntelliJad Plus</name>
-    <description>IntelliJad 9 integrates the Jad decompiler into IntelliJ IDEA 11+.</description>
+    <description>IntelliJad Plus integrates the Jad decompiler into IntelliJ IDEA 11+.</description>
     <version>0.1</version>
     <vendor logo="/scn-idea-16.png">Łukasz Zieliński</vendor>
     <idea-version since-build="110.365"/>
