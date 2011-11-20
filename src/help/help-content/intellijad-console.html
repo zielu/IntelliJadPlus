@@ -1,0 +1,56 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+    <title>IntelliJad console</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" href="style.css" TYPE="text/css">
+</head>
+
+<body>
+<div class="mainheader">Excluding packages from decompilation</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    The IntelliJad console appears after a decompilation operation to report
+    on what happened, and show any errors that occurred.
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    <center>
+        <img src="images/console.jpg" alt="The IntelliJad console"/>
+    </center>
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    Each decompilation report is represented by a top-level tree node, with the
+    various steps that comprise it being organised in a way that associates them
+    with the closest <i>major</i> operation, i.e. identifying and extracting class
+    files from within a jar is reported under the "Jar extraction" group.
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    Each report is added to the bottom of the tree.
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    <div class="sectionheader">Using the console</div>
+    The console has the following controls, situated to the left of the tree.
+    <table cellpadding="1" border="1">
+        <tr>
+            <td>Clear and close on success</td>
+            <td>If the decompilation did not result in any errors, clear the whole tree and close the console view.</td>
+        </tr>
+        <tr>
+            <td>Clear</td>
+            <td>Clear the whole tree.</td>
+        </tr>
+        <tr>
+            <td>Expand all</td>
+            <td>Expand all nodes in the tree.</td>
+        </tr>
+        <tr>
+            <td>Collapse all</td>
+            <td>Collapse all nodes in the tree.</td>
+        </tr>
+        <tr>
+            <td>Help</td>
+            <td>Open the help viewer for IntelliJad.</td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>

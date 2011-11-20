@@ -1,0 +1,67 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+    <title>Memory VFS Manager</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" href="style.css" TYPE="text/css">
+</head>
+
+<body>
+<div class="mainheader">Memory VFS Manager</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    The memory VFS manager allows you to view and remove decompiled files from memory.  It's accessible through the
+    Tools/IntelliJad menu.
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    <center>
+        <img src="images/mvfs-manager.jpg" alt="The IntelliJad memory virtual file system manager"/>
+    </center>
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    Files can be viewed by expanding the tree, and selected by using the checkbox in each tree node.  The checkbox
+    selection is hierarchical, so all nodes below the selected node are also selected/deselected depending on the state
+    of the current checkbox.
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    The file size readout gives two values - the first shows the total size in bytes of the content of all files.  The
+    second gives the size in bytes of all selected files.  Note this only reflects the content of the files - it does
+    not calculate the overall object size required to support the memory VFS.
+</div>
+<div style="margin-bottom:5px; margin-top:5px;">
+    <div class="sectionheader">Using the manager</div>
+    The manager has the following controls, situated to the left of the tree.
+    <table cellpadding="1" border="1">
+        <tr>
+            <td>Expand</td>
+            <td>If a node is selected, expand it.  If nothing is selected, expand the entire tree.</td>
+        </tr>
+        <tr>
+            <td>Collapse</td>
+            <td>If a node is selected, collapse it.  If nothing is selected, collapse the entire tree.</td>
+        </tr>
+        <tr>
+            <td>Delete</td>
+            <td>Delete all selected files from the memory VFS.  This only affects decompiled sources, it will not
+                affect classes in any way.</td>
+        </tr>
+        <tr>
+            <td>Attach IntelliJad memory VFS as source root</td>
+            <td>
+                Manually attaches the memory VFS to the project SDK's source roots.  This operation occurs automatically
+                on decompilation, but this option allows you to attach it if you have removed it, either using the
+                "Remove IntelliJad memory VFS from source root" option or via the JDK manager.  If the memory VFS is
+                already attached to the project SDK, this option will be disabled.
+            </td>
+        </tr>
+        <tr>
+            <td>Remove IntelliJad memory VFS from source root</td>
+            <td>
+                Removes the memory VFS from the project SDK's source roots.  This is the same as manually removing the
+                source root using the JDK manager.  If the memory VFS is not attached to the project SDK, this option
+                will be disabled.
+            </td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>

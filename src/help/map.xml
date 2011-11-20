@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!DOCTYPE map PUBLIC "-//Sun Microsystems Inc.//DTD JavaHelp Map Version 2.0//EN"
+        "http://java.sun.com/products/javahelp/map_2_0.dtd">
+
+<map version="1.0" xml:lang="en">
+    <mapID target="scn-idea-12" url="scn-idea-12.gif"/>
+    <mapID target="intellijad-application" url="help-content/images/intellijad-application.png"/>
+    <mapID target="navdialog-options" url="help-content/images/navdialog-options.png"/>
+    <mapID target="intellijad-jad" url="help-content/images/intellijad-jad.png"/>
+    <mapID target="intellijad-prefixes" url="help-content/images/intellijad-prefixes.png"/>
+    <mapID target="navdialog-question" url="help-content/images/navdialog-question.png"/>
+    <mapID target="intellijad-project" url="help-content/images/intellijad-project.png"/>
+    <mapID target="intellijad-limits" url="help-content/images/intellijad-limits.png"/>
+    <mapID target="intellijad-excludes" url="help-content/images/intellijad-excludes.png"/>
+    <mapID target="configuring-intellijad" url="help-content/configuring-intellijad.html"/>
+    <mapID target="intellijad" url="help-content/intellijad.html"/>
+    <mapID target="intellijad-options" url="help-content/config-intellijad.html"/>
+    <mapID target="jad-options" url="help-content/config-jad.html"/>
+    <mapID target="limits" url="help-content/config-limits.html"/>
+    <mapID target="prefixes" url="help-content/config-prefixes.html"/>
+    <mapID target="exclusions" url="help-content/config-exclusions.html"/>
+    <mapID target="navigation-triggered-decompilation" url="help-content/navigation-triggered-decompilation.html"/>
+    <mapID target="intellijad-console" url="help-content/intellijad-console.html"/>
+    <mapID target="mvfs-manager" url="help-content/memory-vfs-manager.html"/>
+</map>

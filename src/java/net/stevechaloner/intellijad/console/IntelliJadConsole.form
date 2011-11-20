@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="net.stevechaloner.intellijad.console.IntelliJadConsole">
+  <grid id="27dc6" binding="root" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="0" vgap="0">
+    <margin top="3" left="3" bottom="3" right="3"/>
+    <constraints>
+      <xy x="20" y="20" width="500" height="400"/>
+    </constraints>
+    <properties/>
+    <border type="none"/>
+    <children>
+      <scrollpane id="d9f86" binding="scrollPane">
+        <constraints>
+          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <autoscrolls value="true"/>
+          <background color="-1"/>
+          <doubleBuffered value="true"/>
+        </properties>
+        <border type="none"/>
+        <children>
+          <component id="79163" class="javax.swing.JTree" binding="consoleTree">
+            <constraints/>
+            <properties>
+              <autoscrolls value="true"/>
+              <rootVisible value="false"/>
+              <showsRootHandles value="true"/>
+            </properties>
+            <clientProperties>
+              <JTree.lineStyle class="java.lang.String" value=""/>
+            </clientProperties>
+          </component>
+        </children>
+      </scrollpane>
+      <toolbar id="91413" binding="toolbar">
+        <constraints>
+          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="0" anchor="0" fill="3" indent="0" use-parent-layout="false">
+            <preferred-size width="-1" height="20"/>
+          </grid>
+        </constraints>
+        <properties>
+          <floatable value="false"/>
+          <orientation value="1"/>
+        </properties>
+        <border type="none"/>
+        <children>
+          <component id="dcf48" class="javax.swing.JToggleButton" binding="clearAndCloseOnSuccess">
+            <constraints/>
+            <properties>
+              <icon value="actions/collapsePanel.png"/>
+              <margin top="3" left="5" bottom="3" right="5"/>
+              <toolTipText resource-bundle="net/stevechaloner/intellijad/messages-i18n" key="config.clear-and-close-console-on-success"/>
+            </properties>
+          </component>
+          <component id="db5d8" class="javax.swing.JButton" binding="clearButton">
+            <constraints/>
+            <properties>
+              <icon value="actions/gc.png"/>
+              <margin top="3" left="5" bottom="3" right="5"/>
+              <text value=""/>
+              <toolTipText resource-bundle="net/stevechaloner/intellijad/messages-i18n" key="action.clear-tree"/>
+            </properties>
+          </component>
+          <component id="3cf93" class="javax.swing.JButton" binding="expandAll">
+            <constraints/>
+            <properties>
+              <icon value="actions/expandall.png"/>
+              <margin top="3" left="5" bottom="3" right="5"/>
+              <text value=""/>
+              <toolTipText resource-bundle="net/stevechaloner/intellijad/messages-i18n" key="action.expand-all"/>
+            </properties>
+          </component>
+          <component id="ca759" class="javax.swing.JButton" binding="collapseAll">
+            <constraints/>
+            <properties>
+              <icon value="actions/collapseall.png"/>
+              <margin top="3" left="5" bottom="3" right="5"/>
+              <text value=""/>
+              <toolTipText resource-bundle="net/stevechaloner/intellijad/messages-i18n" key="action.collapse-all"/>
+            </properties>
+          </component>
+          <component id="2658e" class="javax.swing.JButton" binding="helpButton">
+            <constraints/>
+            <properties>
+              <icon value="actions/help.png"/>
+              <margin top="3" left="5" bottom="3" right="5"/>
+              <text value=""/>
+              <toolTipText resource-bundle="net/stevechaloner/intellijad/messages-i18n" key="action.help"/>
+            </properties>
+          </component>
+        </children>
+      </toolbar>
+    </children>
+  </grid>
+</form>
