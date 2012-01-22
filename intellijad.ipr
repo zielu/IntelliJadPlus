@@ -505,6 +505,9 @@
     <option name="myVersion" value="124" />
     <option name="mySupportsUserInfoFilter" value="true" />
   </component>
+  <component name="TaskProjectConfiguration">
+    <server type="GitHub" url="https://github.com" />
+  </component>
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
   </component>
