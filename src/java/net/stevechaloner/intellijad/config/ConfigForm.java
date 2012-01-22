@@ -21,6 +21,11 @@ import com.intellij.openapi.ui.PackageChooser;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.peer.PeerFactory;
 import com.intellij.psi.PsiPackage;
+import net.stevechaloner.idea.util.fs.ApplicationFileSelectionAction;
+import net.stevechaloner.idea.util.fs.FileSelectionDescriptor;
+import net.stevechaloner.idea.util.fs.ProjectFileSelectionAction;
+import net.stevechaloner.intellijad.IntelliJadResourceBundle;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -46,13 +51,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.util.List;
-
-import net.stevechaloner.idea.util.fs.ApplicationFileSelectionAction;
-import net.stevechaloner.idea.util.fs.FileSelectionDescriptor;
-import net.stevechaloner.idea.util.fs.ProjectFileSelectionAction;
-import net.stevechaloner.intellijad.IntelliJadResourceBundle;
-
-import org.jetbrains.annotations.Nullable;
 
 /**
  * IntelliJad configuration form.  This class deals with both application- and
@@ -572,6 +570,14 @@ public class ConfigForm
         return false;
     }
 
+    public JComponent getOutputDirectoryInputComponent() {
+        return outputDirectoryTextField;
+    }
+
+    public boolean isReportOutputDirectoryNotSet() {
+        return !decompileToMemoryCheckBox.isSelected() && StringUtil.isEmptyOrSpaces(outputDirectoryTextField.getText());
+    }
+    
     public void setData(Config data)
     {
         setUnboundData(data);

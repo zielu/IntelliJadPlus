@@ -16,6 +16,7 @@
 package net.stevechaloner.intellijad.decompilers;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.roots.libraries.Library;
@@ -54,6 +55,8 @@ import java.util.Map;
  */
 public class FileSystemDecompiler extends MemoryDecompiler
 {
+    private final Logger LOG = Logger.getInstance(getClass());
+    
     private static final Key<Boolean> STORE_IN_MEMORY = new Key<Boolean>("FileSystemDecompiler.store-in-memory");
 
     private static final Key<VirtualFile> LOCAL_FS_FILE = new Key<VirtualFile>("FileSystemDecompiler.local-fs-file");
@@ -62,6 +65,8 @@ public class FileSystemDecompiler extends MemoryDecompiler
     protected OperationStatus setup(DecompilationDescriptor descriptor,
                                     DecompilationContext context) throws DecompilationException
     {
+        boolean debug = LOG.isDebugEnabled();
+
         OperationStatus status = super.setup(descriptor,
                                              context);
 
@@ -81,22 +86,28 @@ public class FileSystemDecompiler extends MemoryDecompiler
                     if (!outputDirectory.mkdirs())
                     {
                         storeInMemory = true;
-                        messages.put("error.could-not-create-output-directory",
-                                     new String[] { config.getOutputDirectory() });
+                        messages.put("error.could-not-create-output-directory", new String[] { config.getOutputDirectory() });
+                        if (debug) {
+                            LOG.debug("Output directory could not be created");
+                        }
                     }
                 }
                 else if (!outputDirExists)
                 {
                     storeInMemory = true;
-                    messages.put("error.non-existant-output-directory",
-                                 new String[] { config.getOutputDirectory() });
+                    messages.put("error.non-existant-output-directory", new String[] { config.getOutputDirectory() });
+                    if (debug) {
+                        LOG.debug("Output directory does not exist");
+                    }
                 }
             }
             else
             {
                 storeInMemory = true;
-                messages.put("error.output-directory-not-set",
-                             new String[] { config.getOutputDirectory() });
+                messages.put("error.output-directory-not-set", new String[] { config.getOutputDirectory() });
+                if (debug) {
+                    LOG.debug("Directory not set");
+                }
             }
         }
 
@@ -104,6 +115,10 @@ public class FileSystemDecompiler extends MemoryDecompiler
                             storeInMemory);
         if (storeInMemory)
         {
+            if (debug) {
+                LOG.debug("Result will be stored in memory");
+            }
+
             ConsoleContext consoleContext = context.getConsoleContext();
             for (String key : messages.keySet())
             {
@@ -126,60 +141,79 @@ public class FileSystemDecompiler extends MemoryDecompiler
                                                @NotNull MemoryVirtualFileSystem vfs,
                                                @NotNull MemoryVirtualFile file)
     {
+        final boolean debug = LOG.isDebugEnabled();
+        
         VirtualFile insertFile;
         if (context.getUserData(STORE_IN_MEMORY))
         {
-            insertFile = super.insertIntoFileSystem(descriptor,
-                                                    context,
-                                                    vfs,
-                                                    file);
+            insertFile = super.insertIntoFileSystem(descriptor, context, vfs, file);
         }
         else
         {
+            if (debug) {
+                LOG.debug("Inserting into local file system");
+            }
+            
             final LocalFileSystem lvfs = getLocalFileSystem();
             Config config = context.getConfig();
-            File localPath = new File(config.getOutputDirectory() + '/' +
-                                      descriptor.getPackageNameAsPath());
+            File localPath = new File(config.getOutputDirectory() + '/' + descriptor.getPackageNameAsPath());
+            
+            if (debug) {
+                LOG.debug("Insert into "+localPath.getAbsolutePath());
+            }
+            
             if (localPath.exists() & localPath.canWrite() || localPath.mkdirs())
             {
                 try
                 {
                     final File localFile = new File(localPath,
                                                     descriptor.getClassName() + IntelliJadConstants.DOT_JAVA_EXTENSION);
+                    if (debug) {
+                        LOG.debug("Insert into local file "+localFile.getAbsolutePath());
+                    }
                     FileWriter writer = new FileWriter(localFile);
+                    if (debug) {
+                        LOG.debug("Writing...");
+                    }
                     writer.write(file.getContent());
+                    if (debug) {
+                        LOG.debug("Written");
+                    }
                     writer.close();
+                    if (debug) {
+                        LOG.debug("Closed");
+                    }
                     final VirtualFile[] files = new VirtualFile[1];
                     ApplicationManager.getApplication().runWriteAction(new Runnable()
                     {
                         public void run()
                         {
+                            if (debug) {
+                                LOG.debug("Looking fof file");
+                            }
                             files[0] = lvfs.refreshAndFindFileByIoFile(localFile);
+                            if (debug) {
+                                LOG.debug("Found "+String.valueOf(files[0]));
+                            }
                         }
                     });
 
                     insertFile = files[0];
-                    context.addUserData(LOCAL_FS_FILE,
-                                        files[0]);
+                    context.addUserData(LOCAL_FS_FILE, files[0]);
                 }
                 catch (IOException e)
                 {
-                    insertFile = super.insertIntoFileSystem(descriptor,
-                                                            context,
-                                                            vfs,
-                                                            file);
-                    context.addUserData(STORE_IN_MEMORY,
-                                        true);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Could not save file", e);
+                    }
+                    insertFile = super.insertIntoFileSystem(descriptor, context, vfs, file);
+                    context.addUserData(STORE_IN_MEMORY, true);
                 }
             }
             else
             {
-                insertFile = super.insertIntoFileSystem(descriptor,
-                                                        context,
-                                                        vfs,
-                                                        file);
-                context.addUserData(STORE_IN_MEMORY,
-                                    true);
+                insertFile = super.insertIntoFileSystem(descriptor, context, vfs, file);
+                context.addUserData(STORE_IN_MEMORY, true);
             }
         }
 

@@ -20,7 +20,6 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.util.JDOMExternalizable;
 import com.intellij.openapi.util.WriteExternalException;
-
 import org.jdom.Element;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
@@ -48,7 +47,7 @@ public class ApplicationConfigComponent implements ApplicationComponent,
     /**
      * The generic configuration component.
      */
-    private final ConfigComponent configComponent = new ConfigComponent()
+    private final ConfigComponent configComponent = new UiConfigComponent()
     {
         /** {@inheritDoc} */
         @Nls
