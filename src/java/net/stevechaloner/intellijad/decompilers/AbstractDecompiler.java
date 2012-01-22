@@ -15,6 +15,7 @@
 
 package net.stevechaloner.intellijad.decompilers;
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.JarFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -47,6 +48,8 @@ public abstract class AbstractDecompiler implements Decompiler
      * Operational continue/cancel flags.
      */
     protected enum OperationStatus { CONTINUE, ABORT }
+
+    private final Logger LOG = Logger.getInstance(getClass());
 
     /**
      *
@@ -204,6 +207,8 @@ public abstract class AbstractDecompiler implements Decompiler
     public VirtualFile decompile(DecompilationDescriptor descriptor,
                                  DecompilationContext context) throws DecompilationException
     {
+        LOG.debug("About to decompile");
+
         VirtualFile decompiledFile = null;
         try
         {
@@ -228,6 +233,7 @@ public abstract class AbstractDecompiler implements Decompiler
                 consoleContext.addMessage(ConsoleEntryType.DECOMPILATION_OPERATION,
                                           "message.executing-jad",
                                           command.toString());
+
 
                 try
                 {
@@ -297,6 +303,11 @@ public abstract class AbstractDecompiler implements Decompiler
                                              ByteArrayOutputStream err) throws IOException,
                                                                                InterruptedException
     {
+        boolean debug = LOG.isDebugEnabled();
+        if (debug) {
+            LOG.debug("Running external decompiler: "+command);
+        }
+
         Process process = Runtime.getRuntime().exec(command);
         StreamPumper outputPumper = new StreamPumper(context,
                                                      process.getInputStream(),
@@ -308,7 +319,17 @@ public abstract class AbstractDecompiler implements Decompiler
                                                   err);
         Thread errThread = new Thread(errPumper);
         errThread.start();
+
+        if (debug) {
+            LOG.debug("Waiting for process finish");
+        }
+
         int exitCode = process.waitFor();
+
+        if (debug) {
+            LOG.debug("Process finished, exit code: "+exitCode);
+        }
+
         outputPumper.stopPumping();
         errPumper.stopPumping();
 
