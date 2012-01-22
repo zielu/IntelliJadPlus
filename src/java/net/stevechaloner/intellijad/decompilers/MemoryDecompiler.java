@@ -17,6 +17,7 @@ package net.stevechaloner.intellijad.decompilers;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.CommandProcessor;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.roots.libraries.LibrariesHelper;
@@ -50,6 +51,8 @@ import java.util.List;
  */
 public class MemoryDecompiler extends AbstractDecompiler
 {
+    private final Logger LOG = Logger.getInstance(getClass());
+    
     /**
      * Initialises a new instance of this class.
      */
@@ -261,6 +264,11 @@ public class MemoryDecompiler extends AbstractDecompiler
                 resultType = ResultType.FATAL_ERROR;
 
         }
+        
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Decompilation status: "+resultType);
+        }
+        
         return resultType;
     }
 

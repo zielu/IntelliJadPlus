@@ -51,7 +51,7 @@ public class ProjectConfigComponent implements ProjectComponent,
     /**
      * The generic configuration component.
      */
-    private final ConfigComponent configComponent = new ConfigComponent()
+    private final ConfigComponent configComponent = new UiConfigComponent()
     {
         /** {@inheritDoc} */
         @Nls
