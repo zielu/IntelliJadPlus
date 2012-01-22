@@ -15,6 +15,7 @@
 
 package net.stevechaloner.intellijad.config;
 
+import com.intellij.openapi.util.text.StringUtil;
 import net.stevechaloner.idea.util.properties.DOMable;
 import net.stevechaloner.idea.util.properties.DOMableCollectionContentType;
 import net.stevechaloner.idea.util.properties.DOMableGeneric;
@@ -936,5 +937,9 @@ public class Config implements DOMable
         setUseProjectSpecificSettings(config.isUseProjectSpecificSettings());
         setReformatStyle(config.getReformatStyle());
         setCleanupSourceRoots(config.isCleanupSourceRoots());
+    }
+
+    public boolean isReportOutputDirectoryNotSet() {
+        return !isDecompileToMemory() && StringUtil.isEmptyOrSpaces(getOutputDirectory());
     }
 }

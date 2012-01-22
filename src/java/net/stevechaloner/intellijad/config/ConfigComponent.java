@@ -26,6 +26,7 @@ import javax.swing.Icon;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.intellij.util.Alarm;
 import net.stevechaloner.idea.util.properties.DOMable;
 import net.stevechaloner.intellijad.IntelliJadConstants;
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
@@ -88,8 +89,12 @@ abstract class ConfigComponent implements Configurable,
     /** {@inheritDoc} */
     public boolean isModified()
     {
-        return form != null && form.isModified(config);
+        boolean modified = form != null && form.isModified(config);
+        afterIsModified(modified);
+        return modified;
     }
+
+    protected void afterIsModified(boolean modified) {}
 
     /** {@inheritDoc} */
     public void apply() throws ConfigurationException
@@ -106,9 +111,12 @@ abstract class ConfigComponent implements Configurable,
         if (form != null)
         {
             form.setData(config);
+            afterReset(config);
         }
     }
 
+    protected void afterReset(Config config) {}
+    
     /** {@inheritDoc} */
     public void disposeUIResources()
     {

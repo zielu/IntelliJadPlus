@@ -27,6 +27,7 @@ import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.roots.libraries.Library;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
@@ -46,10 +47,12 @@ import net.stevechaloner.intellijad.decompilers.MemoryDecompiler;
 import net.stevechaloner.intellijad.environment.EnvironmentContext;
 import net.stevechaloner.intellijad.environment.EnvironmentValidator;
 import net.stevechaloner.intellijad.environment.ValidationResult;
+import net.stevechaloner.intellijad.util.FileSystemUtil;
 import net.stevechaloner.intellijad.util.PluginUtil;
 import net.stevechaloner.intellijad.vfs.MemoryVirtualFileSystem;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -72,6 +75,8 @@ public class IntelliJad implements ApplicationComponent,
      */
     private final ConsoleManager consoleManager = new ConsoleManager();
 
+    private final Logger LOG = Logger.getInstance(getClass());
+    
     /**
      * The per-project map of closing tasks.
      */
@@ -219,6 +224,8 @@ public class IntelliJad implements ApplicationComponent,
     public void decompile(EnvironmentContext envContext,
                           DecompilationDescriptor descriptor)
     {
+        final boolean debug = LOG.isDebugEnabled();
+
         long startTime = System.currentTimeMillis();
 
         Project project = envContext.getProject();
@@ -246,8 +253,40 @@ public class IntelliJad implements ApplicationComponent,
             else
             {
                 LocalFileSystem lfs = (LocalFileSystem) VirtualFileManager.getInstance().getFileSystem(LocalFileSystem.PROTOCOL);
-                checkSDKRoot(project,
-                             lfs.findFileByPath(config.getOutputDirectory()));
+                String outputDir = config.getOutputDirectory();
+
+                if (debug) {
+                    LOG.debug("Will decompile to directory: "+String.valueOf(outputDir));
+                }
+
+                boolean emptyOutDir = StringUtil.isEmptyOrSpaces(outputDir);
+                if (emptyOutDir) {
+                    if (debug) {
+                        LOG.debug("Output directory not set");
+                    }
+                    checkSDKRoot(project);
+                } else {
+                    VirtualFile outDirFile = lfs.findFileByPath(outputDir);
+                    if (outDirFile == null && config.isCreateOutputDirectory()) {
+                        File targetDir = FileSystemUtil.createTargetDir(config);
+                        if (targetDir != null) {
+                            outDirFile = lfs.refreshAndFindFileByIoFile(targetDir);
+                            if (debug) {
+                                LOG.debug("Will decompile to created directory: "+outDirFile);
+                            }
+                            checkSDKRoot(project, outDirFile);
+                        } else {
+                            if (debug) {
+                                LOG.debug("Output directory creation failed");
+                            }
+                            checkSDKRoot(project);
+                        }
+                    } else if (outDirFile == null) {
+                        checkSDKRoot(project);
+                    } else {
+                        checkSDKRoot(project, outDirFile);
+                    }
+                }
             }
 
             StringBuilder sb = new StringBuilder();
@@ -257,6 +296,9 @@ public class IntelliJad implements ApplicationComponent,
                                                                     consoleContext,
                                                                     sb.toString());
             Decompiler decompiler = config.isDecompileToMemory() ? new MemoryDecompiler() : new FileSystemDecompiler();
+            if (debug) {
+                LOG.debug("Decompiler in use: "+decompiler.getClass().getSimpleName());
+            }
             try
             {
                 VirtualFile file = decompiler.getVirtualFile(descriptor,
@@ -266,8 +308,7 @@ public class IntelliJad implements ApplicationComponent,
                 {
                     console.closeConsole();
                     FileEditorManager.getInstance(project).closeFile(descriptor.getClassFile());
-                    editorManager.openFile(file,
-                                           true);
+                    editorManager.openFile(file, true);
                 }
                 else
                 {
@@ -276,8 +317,7 @@ public class IntelliJad implements ApplicationComponent,
                     if (file != null)
                     {
                         editorManager.closeFile(descriptor.getClassFile());
-                        editorManager.openFile(file,
-                                               true);
+                        editorManager.openFile(file, true);
                     }
                     consoleContext.addSectionMessage(ConsoleEntryType.INFO,
                                                      "message.operation-time",
