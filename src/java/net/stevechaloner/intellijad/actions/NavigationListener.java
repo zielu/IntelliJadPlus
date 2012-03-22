@@ -39,9 +39,9 @@ import net.stevechaloner.intellijad.decompilers.DecompilationDescriptor;
 import net.stevechaloner.intellijad.decompilers.DecompilationDescriptorFactory;
 import net.stevechaloner.intellijad.environment.EnvironmentContext;
 import net.stevechaloner.intellijad.util.PluginUtil;
-import net.stevechaloner.intellijad.vfs.MemoryVirtualFile;
-import net.stevechaloner.intellijad.vfs.MemoryVirtualFileSystem;
 
+import net.stevechaloner.intellijad.vfs.MemoryVF;
+import net.stevechaloner.intellijad.vfs.MemoryVFS;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -194,13 +194,12 @@ public class NavigationListener implements FileEditorManagerListener
     public void fileClosed(FileEditorManager fileEditorManager,
                            VirtualFile virtualFile)
     {
-        if (virtualFile instanceof MemoryVirtualFile)
+        if (virtualFile instanceof MemoryVF)
         {
-            MemoryVirtualFileSystem vfs = (MemoryVirtualFileSystem) VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
+            MemoryVFS vfs = (MemoryVFS) VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
             try
             {
-                vfs.deleteFile(this,
-                               virtualFile);
+                vfs.deleteFile(this, virtualFile);
             }
             catch (IOException e)
             {
