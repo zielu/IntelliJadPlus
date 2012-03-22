@@ -16,9 +16,8 @@
 package net.stevechaloner.intellijad.format;
 
 import com.intellij.openapi.diagnostic.Logger;
-
 import net.stevechaloner.intellijad.decompilers.DecompilationContext;
-import net.stevechaloner.intellijad.vfs.MemoryVirtualFile;
+import net.stevechaloner.intellijad.vfs.MemoryVF;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -53,8 +52,7 @@ public class SourceReorganiser
 
     private static final int LINE_NUMBER_MARKER_LENGTH = 8;
 
-    public static void reorganise(DecompilationContext context,
-                                  MemoryVirtualFile file)
+    public static void reorganise(DecompilationContext context, MemoryVF file)
     {
         LineNumberReader in = null;
         StringWriter out = new StringWriter();

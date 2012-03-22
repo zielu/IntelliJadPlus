@@ -16,9 +16,11 @@
 package net.stevechaloner.intellijad.vfs;
 
 import com.intellij.openapi.components.ApplicationComponent;
+import com.intellij.openapi.util.io.FileUtil.FileBooleanAttributes;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileEvent;
 import com.intellij.openapi.vfs.VirtualFileListener;
+import com.intellij.openapi.vfs.VirtualFileSystem;
 import com.intellij.openapi.vfs.newvfs.NewVirtualFileSystem;
 import com.intellij.openapi.vfs.newvfs.NewVirtualFile;
 import com.intellij.openapi.diagnostic.Logger;
@@ -40,7 +42,7 @@ import net.stevechaloner.intellijad.IntelliJadConstants;
  *
  * @author Steve Chaloner
  */
-public class NewMemoryVirtualFileSystem extends NewVirtualFileSystem implements ApplicationComponent
+public class NewMemoryVirtualFileSystem extends NewVirtualFileSystem implements ApplicationComponent, MemoryVFS
 {
     /**
      * The name of the component.
@@ -74,6 +76,16 @@ public class NewMemoryVirtualFileSystem extends NewVirtualFileSystem implements 
     }
 
     @Override
+    public VirtualFileSystem asVirtualFileSystem() {
+        return this;
+    }
+
+    @Override
+    public MemoryVF newMemoryFV(String name, String content) {
+        return new NewMemoryVirtualFile(name, content);
+    }
+
+    @Override
     public void refresh(boolean asynchronous) {
         //TODO: auto-generated method implementation
     }
@@ -104,9 +116,12 @@ public class NewMemoryVirtualFileSystem extends NewVirtualFileSystem implements 
         return null;
     }
 
-    public void deleteFile(Object o,
-                           VirtualFile virtualFile) throws IOException
-    {
+    public void deleteFile(Object o, VirtualFile virtualFile) throws IOException {
+        files.remove(virtualFile.getName());
+        NewMemoryVirtualFile parent = (NewMemoryVirtualFile) virtualFile.getParent();
+        if (parent != null) {
+            parent.deleteChild((NewMemoryVirtualFile)virtualFile);
+        }
     }
 
     public void moveFile(Object o,
@@ -119,6 +134,11 @@ public class NewMemoryVirtualFileSystem extends NewVirtualFileSystem implements 
                            VirtualFile virtualFile,
                            String s) throws IOException
     {
+    }
+
+    @Override
+    public int getBooleanAttributes(@NotNull VirtualFile file, @FileBooleanAttributes int flags) {
+        return 0;  //TODO: auto-generated method implementation
     }
 
     public String getProtocol()
@@ -243,12 +263,12 @@ public class NewMemoryVirtualFileSystem extends NewVirtualFileSystem implements 
     /**
      * Add a file to the file system.
      *
-     * @param file the file to add
+     * @param p_file the file to add
      */
-    public void addFile(@NotNull NewMemoryVirtualFile file)
+    public void addFile(@NotNull MemoryVF p_file)
     {
-        files.put(file.getName(),
-                  file);
+        NewMemoryVirtualFile file = (NewMemoryVirtualFile) p_file;
+        files.put(file.getName(), file);
         fireFileCreated(file);
     }
 
