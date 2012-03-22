@@ -42,7 +42,7 @@ import net.stevechaloner.intellijad.IntelliJadConstants;
 /**
  * @author Steve Chaloner
  */
-public class NewMemoryVirtualFile extends NewVirtualFile
+public class NewMemoryVirtualFile extends NewVirtualFile implements MemoryVF
 {
     /**
      * The name of the file.
@@ -90,7 +90,7 @@ public class NewMemoryVirtualFile extends NewVirtualFile
      * @param name the name of the file
      * @param content the content of the file
      */
-    public NewMemoryVirtualFile(@NotNull String name,
+    NewMemoryVirtualFile(@NotNull String name,
                                 String content)
     {
         this(name,
@@ -103,7 +103,7 @@ public class NewMemoryVirtualFile extends NewVirtualFile
      *
      * @param name the name of the file
      */
-    public NewMemoryVirtualFile(@NotNull String name)
+    NewMemoryVirtualFile(@NotNull String name)
     {
         this(name,
              null,
@@ -272,11 +272,13 @@ public class NewMemoryVirtualFile extends NewVirtualFile
     /**
      * Add the given file to the child list of this directory.
      *
-     * @param file the file to add to the list of children
+     * @param p_file the file to add to the list of children
      * @throws IllegalStateException if this file is not a directory
      */
-    public void addChild(NewMemoryVirtualFile file) throws IllegalStateException
+    @Override
+    public void addChild(MemoryVF p_file) throws IllegalStateException
     {
+        NewMemoryVirtualFile file = (NewMemoryVirtualFile) p_file;
         if (isDirectory)
         {
             file.setParent(this);
@@ -287,6 +289,11 @@ public class NewMemoryVirtualFile extends NewVirtualFile
         {
             throw new IllegalStateException("files can only be added to a directory");
         }
+    }
+
+    @Override
+    public VirtualFile asVirtualFile() {
+        return this;
     }
 
     /**
@@ -314,9 +321,15 @@ public class NewMemoryVirtualFile extends NewVirtualFile
      *
      * @return the content of the file
      */
+    @NotNull
     public String getContent()
     {
         return content;
+    }
+
+    @Override
+    public boolean isValid() {
+        return true;
     }
 
     @NotNull
@@ -337,6 +350,11 @@ public class NewMemoryVirtualFile extends NewVirtualFile
     }
 
     @Override
+    public NewVirtualFile getCanonicalFile() {
+        return this;
+    }
+
+    @Override
     public NewVirtualFile findChildById(int i)
     {
         NewVirtualFile child = null;
@@ -350,5 +368,9 @@ public class NewMemoryVirtualFile extends NewVirtualFile
             }
         }
         return child;
+    }
+
+    public void deleteChild(NewMemoryVirtualFile virtualFile) {
+        children.remove(virtualFile.getName());
     }
 }

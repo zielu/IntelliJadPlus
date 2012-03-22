@@ -31,8 +31,8 @@ import net.stevechaloner.intellijad.config.Config;
 import net.stevechaloner.intellijad.console.ConsoleContext;
 import net.stevechaloner.intellijad.console.ConsoleEntryType;
 import net.stevechaloner.intellijad.util.LibraryUtil;
-import net.stevechaloner.intellijad.vfs.MemoryVirtualFile;
-import net.stevechaloner.intellijad.vfs.MemoryVirtualFileSystem;
+import net.stevechaloner.intellijad.vfs.MemoryVF;
+import net.stevechaloner.intellijad.vfs.MemoryVFS;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -138,8 +138,8 @@ public class FileSystemDecompiler extends MemoryDecompiler
     /* {@inheritDoc} */
     protected VirtualFile insertIntoFileSystem(@NotNull DecompilationDescriptor descriptor,
                                                @NotNull final DecompilationContext context,
-                                               @NotNull MemoryVirtualFileSystem vfs,
-                                               @NotNull MemoryVirtualFile file)
+                                               @NotNull MemoryVFS vfs,
+                                               @NotNull MemoryVF file)
     {
         final boolean debug = LOG.isDebugEnabled();
         
@@ -223,7 +223,7 @@ public class FileSystemDecompiler extends MemoryDecompiler
     /* {@inheritDoc} */
     protected void attachSourceToLibraries(@NotNull DecompilationDescriptor descriptor,
                                            @NotNull DecompilationContext context,
-                                           @NotNull MemoryVirtualFileSystem vfs,
+                                           @NotNull MemoryVFS vfs,
                                            @NotNull List<Library> libraries)
     {
         if (context.getUserData(STORE_IN_MEMORY))
@@ -313,12 +313,11 @@ public class FileSystemDecompiler extends MemoryDecompiler
      * @param file
      */
     protected void lockFile(@NotNull DecompilationContext context,
-                            @NotNull MemoryVirtualFile file)
+                            @NotNull MemoryVF file)
     {
         if (context.getUserData(STORE_IN_MEMORY))
         {
-            super.lockFile(context,
-                           file);
+            super.lockFile(context, file);
         }
         else
         {

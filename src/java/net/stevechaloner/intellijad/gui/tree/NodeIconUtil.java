@@ -15,6 +15,7 @@
 
 package net.stevechaloner.intellijad.gui.tree;
 
+import com.intellij.openapi.vfs.VirtualFile;
 import net.stevechaloner.intellijad.gui.IntelliJadIcons;
 import net.stevechaloner.intellijad.vfs.MemoryVirtualFile;
 
@@ -51,7 +52,7 @@ class NodeIconUtil
         Object o = node.getUserObject();
         if (o instanceof CheckBoxTreeNode)
         {
-            MemoryVirtualFile file = (MemoryVirtualFile)((CheckBoxTreeNode)o).getUserObject();
+            VirtualFile file = (VirtualFile)((CheckBoxTreeNode)o).getUserObject();
             isDirectory = file.isDirectory();
         }
         return isDirectory;

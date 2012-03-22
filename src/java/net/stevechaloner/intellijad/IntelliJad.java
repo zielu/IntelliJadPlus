@@ -31,6 +31,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
+import com.intellij.openapi.vfs.VirtualFileSystem;
 import net.stevechaloner.intellijad.actions.NavigationListener;
 import net.stevechaloner.intellijad.config.Config;
 import net.stevechaloner.intellijad.console.ConsoleContext;
@@ -49,7 +50,6 @@ import net.stevechaloner.intellijad.environment.EnvironmentValidator;
 import net.stevechaloner.intellijad.environment.ValidationResult;
 import net.stevechaloner.intellijad.util.FileSystemUtil;
 import net.stevechaloner.intellijad.util.PluginUtil;
-import net.stevechaloner.intellijad.vfs.MemoryVirtualFileSystem;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -351,8 +351,8 @@ public class IntelliJad implements ApplicationComponent,
     {
         if (project.getUserData(IntelliJadConstants.SDK_SOURCE_ROOT_ATTACHED) != Boolean.TRUE)
         {
-            MemoryVirtualFileSystem vfs = (MemoryVirtualFileSystem) VirtualFileManager.getInstance().getFileSystem(
-                    IntelliJadConstants.INTELLIJAD_PROTOCOL);
+            VirtualFileSystem vfs = VirtualFileManager.getInstance().getFileSystem(
+                        IntelliJadConstants.INTELLIJAD_PROTOCOL);
             checkSDKRoot(project,
                          vfs.findFileByPath(IntelliJadConstants.INTELLIJAD_ROOT));
             project.putUserData(IntelliJadConstants.SDK_SOURCE_ROOT_ATTACHED,
