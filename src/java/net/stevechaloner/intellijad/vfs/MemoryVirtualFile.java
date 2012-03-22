@@ -19,6 +19,7 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.VirtualFileSystem;
+import com.intellij.openapi.vfs.VirtualFileWithId;
 import net.stevechaloner.intellijad.IntelliJadConstants;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -31,14 +32,18 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A memory-based file.
  *
  * @author Steve Chaloner
  */
-public class MemoryVirtualFile extends VirtualFile
+public class MemoryVirtualFile extends VirtualFile implements MemoryVF, VirtualFileWithId
 {
+    private static AtomicInteger ID_GEN = new AtomicInteger(1);
+
+
     /**
      * The name of the file.
      */
@@ -73,13 +78,15 @@ public class MemoryVirtualFile extends VirtualFile
      */
     private boolean writable = true;
 
+    private final int id;
+
     /**
      * Initialises a new instance of this class.
      *
      * @param name the name of the file
      * @param content the content of the file
      */
-    public MemoryVirtualFile(@NotNull String name,
+    MemoryVirtualFile(@NotNull String name,
                              String content)
     {
         this(name,
@@ -92,7 +99,7 @@ public class MemoryVirtualFile extends VirtualFile
      *
      * @param name the name of the file
      */
-    public MemoryVirtualFile(@NotNull String name)
+    MemoryVirtualFile(@NotNull String name)
     {
         this(name,
              null,
@@ -116,6 +123,7 @@ public class MemoryVirtualFile extends VirtualFile
         nameWithoutExtension = FileUtil.getNameWithoutExtension(name);
         this.content = content;
         this.isDirectory = isDirectory;
+        this.id = ID_GEN.incrementAndGet();
     }
 
     /** {@inheritDoc} */
@@ -145,7 +153,7 @@ public class MemoryVirtualFile extends VirtualFile
      *
      * @param writable true if the file is writable
      */
-    public void setWritable(boolean writable)
+    public void setWritable(boolean writable) throws IOException
     {
         this.writable = writable;
     }
@@ -188,11 +196,12 @@ public class MemoryVirtualFile extends VirtualFile
     /**
      * Add the given file to the child list of this directory.
      *
-     * @param file the file to add to the list of children
+     * @param p_file the file to add to the list of children
      * @throws IllegalStateException if this file is not a directory
      */
-    public void addChild(MemoryVirtualFile file) throws IllegalStateException
+    public void addChild(MemoryVF p_file) throws IllegalStateException
     {
+        MemoryVirtualFile file = (MemoryVirtualFile) p_file;
         if (isDirectory)
         {
             file.setParent(this);
@@ -271,6 +280,11 @@ public class MemoryVirtualFile extends VirtualFile
         return content;
     }
 
+    @Override
+    public VirtualFile asVirtualFile() {
+        return this;
+    }
+
     /**
      * Gets the file from this directory's children.
      *
@@ -309,5 +323,10 @@ public class MemoryVirtualFile extends VirtualFile
     public String toString()
     {
         return nameWithoutExtension;
+    }
+
+    @Override
+    public int getId() {
+        return id;
     }
 }

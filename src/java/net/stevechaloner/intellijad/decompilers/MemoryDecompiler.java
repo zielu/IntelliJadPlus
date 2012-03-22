@@ -25,6 +25,7 @@ import com.intellij.openapi.roots.libraries.Library;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 
+import com.intellij.openapi.vfs.VirtualFileSystem;
 import net.stevechaloner.intellijad.IntelliJadConstants;
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
 import net.stevechaloner.intellijad.config.CodeStyle;
@@ -32,8 +33,8 @@ import net.stevechaloner.intellijad.config.Config;
 import net.stevechaloner.intellijad.console.ConsoleContext;
 import net.stevechaloner.intellijad.console.ConsoleEntryType;
 import net.stevechaloner.intellijad.util.LibraryUtil;
-import net.stevechaloner.intellijad.vfs.MemoryVirtualFile;
-import net.stevechaloner.intellijad.vfs.MemoryVirtualFileSystem;
+import net.stevechaloner.intellijad.vfs.MemoryVF;
+import net.stevechaloner.intellijad.vfs.MemoryVFS;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -105,14 +106,13 @@ public class MemoryDecompiler extends AbstractDecompiler
                                         @NotNull final DecompilationContext context,
                                         @NotNull final String content) throws DecompilationException
     {
-        MemoryVirtualFileSystem vfs = (MemoryVirtualFileSystem) VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
-        MemoryVirtualFile file = new MemoryVirtualFile(descriptor.getClassName() + IntelliJadConstants.DOT_JAVA_EXTENSION,
+        MemoryVFS vfs = (MemoryVFS) VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
+        MemoryVF file = vfs.newMemoryFV(descriptor.getClassName() + IntelliJadConstants.DOT_JAVA_EXTENSION,
                                                              content);
-        file.putUserData(IntelliJadConstants.DECOMPILED_BY_INTELLIJAD,
-                         true);
+        file.asVirtualFile().putUserData(IntelliJadConstants.DECOMPILED_BY_INTELLIJAD,
+                true);
 
-        reformatToStyle(context,
-                        file);
+        reformatToStyle(context, file);
 
         VirtualFile actualFile = insertIntoFileSystem(descriptor,
                                                       context,
@@ -152,9 +152,13 @@ public class MemoryDecompiler extends AbstractDecompiler
      * @param file the file to lock
      */
     protected void lockFile(@NotNull DecompilationContext context,
-                            @NotNull MemoryVirtualFile file)
+                            @NotNull MemoryVF file)
     {
-        file.setWritable(false);
+        try {
+            file.setWritable(false);
+        } catch (IOException e) {
+            LOG.error("Error while locking file: "+file.asVirtualFile().getPath(), e);
+        }
     }
 
     /**
@@ -168,14 +172,14 @@ public class MemoryDecompiler extends AbstractDecompiler
      */
     protected VirtualFile insertIntoFileSystem(@NotNull DecompilationDescriptor descriptor,
                                                @NotNull final DecompilationContext context,
-                                               @NotNull MemoryVirtualFileSystem vfs,
-                                               @NotNull MemoryVirtualFile file)
+                                               @NotNull MemoryVFS vfs,
+                                               @NotNull MemoryVF file)
     {
         vfs.addFile(file);
-        MemoryVirtualFile parentFile = "".equals(descriptor.getPackageName()) ? (MemoryVirtualFile)vfs.findFileByPath(IntelliJadConstants.INTELLIJAD_ROOT) : vfs.getFileForPackage(descriptor.getPackageName());
+        MemoryVF parentFile = "".equals(descriptor.getPackageName()) ? (MemoryVF) vfs.asVirtualFileSystem().findFileByPath(IntelliJadConstants.INTELLIJAD_ROOT) : vfs.getFileForPackage(descriptor.getPackageName());
         parentFile.addChild(file);
 
-        return file;
+        return file.asVirtualFile();
     }
 
     /**
@@ -188,7 +192,7 @@ public class MemoryDecompiler extends AbstractDecompiler
      */
     protected void attachSourceToLibraries(@NotNull final DecompilationDescriptor descriptor,
                                            @NotNull final DecompilationContext context,
-                                           @NotNull final MemoryVirtualFileSystem vfs,
+                                           @NotNull final MemoryVFS vfs,
                                            @NotNull final List<Library> libraries)
     {
 //        CommandProcessor.getInstance().execute
@@ -208,7 +212,7 @@ public class MemoryDecompiler extends AbstractDecompiler
                     }
                     if (!found)
                     {
-                        model.addRoot(vfs.findFileByPath(IntelliJadConstants.INTELLIJAD_ROOT),
+                        model.addRoot(vfs.asVirtualFileSystem().findFileByPath(IntelliJadConstants.INTELLIJAD_ROOT),
                                       OrderRootType.SOURCES);
                         model.commit();
                     }
@@ -281,7 +285,7 @@ public class MemoryDecompiler extends AbstractDecompiler
         VirtualFile file = null;
         if (fqNameAsPath != null)
         {
-            MemoryVirtualFileSystem vfs = (MemoryVirtualFileSystem) VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
+            VirtualFileSystem vfs = VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
             file = vfs.findFileByPath(fqNameAsPath);
 
         }

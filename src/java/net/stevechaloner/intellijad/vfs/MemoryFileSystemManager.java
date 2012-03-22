@@ -24,6 +24,7 @@ import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
+import com.intellij.openapi.vfs.VirtualFileSystem;
 import net.stevechaloner.intellijad.IntelliJad;
 import net.stevechaloner.intellijad.IntelliJadConstants;
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
@@ -150,7 +151,7 @@ public class MemoryFileSystemManager implements CheckBoxTreeNodeListener
     private void initSourceRootControls(@NotNull final Project project)
     {
         boolean attached = false;
-        MemoryVirtualFileSystem vfs = (MemoryVirtualFileSystem) VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
+        VirtualFileSystem vfs = (VirtualFileSystem) VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
         final VirtualFile sourceRoot = vfs.findFileByPath(IntelliJadConstants.INTELLIJAD_ROOT);
         Sdk projectJdk = ProjectRootManager.getInstance(project).getProjectJdk();
         final SdkModificator sdkModificator = (projectJdk != null) ? projectJdk.getSdkModificator() : null;
@@ -224,7 +225,7 @@ public class MemoryFileSystemManager implements CheckBoxTreeNodeListener
      */
     private void delete(@Nullable Project project)
     {
-        List<MemoryVirtualFile> files = getSelectedFiles();
+        List<MemoryVF> files = getSelectedFiles();
         if (files.size() > 0)
         {
             int option = JOptionPane.showConfirmDialog(root,
@@ -235,23 +236,21 @@ public class MemoryFileSystemManager implements CheckBoxTreeNodeListener
             {
                 try
                 {
-                    MemoryVirtualFileSystem vfs = (MemoryVirtualFileSystem) VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
+                    MemoryVFS vfs = (MemoryVFS) VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
                     if (project != null)
                     {
                         FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
-                        for (MemoryVirtualFile file : files)
+                        for (MemoryVF file : files)
                         {
-                            fileEditorManager.closeFile(file);
-                            vfs.deleteFile(this,
-                                           file);
+                            fileEditorManager.closeFile(file.asVirtualFile());
+                            vfs.deleteFile(this, file.asVirtualFile());
                         }
                     }
                     else
                     {
-                        for (MemoryVirtualFile file : files)
+                        for (MemoryVF file : files)
                         {
-                            vfs.deleteFile(this,
-                                           file);
+                            vfs.deleteFile(this, file.asVirtualFile());
                         }
                     }
                     rebuildTreeModel();
@@ -272,9 +271,9 @@ public class MemoryFileSystemManager implements CheckBoxTreeNodeListener
      * @return a list of selected files
      */
     @NotNull
-    private List<MemoryVirtualFile> getSelectedFiles()
+    private List<MemoryVF> getSelectedFiles()
     {
-        List<MemoryVirtualFile> files = new ArrayList<MemoryVirtualFile>();
+        List<MemoryVF> files = new ArrayList<MemoryVF>();
 
         VisitableTreeNode root = (VisitableTreeNode)fsTree.getModel().getRoot();
         int count = root.getChildCount();
@@ -285,11 +284,11 @@ public class MemoryFileSystemManager implements CheckBoxTreeNodeListener
         }
 
         Collections.sort(files,
-                         new Comparator<MemoryVirtualFile>() {
-                             public int compare(MemoryVirtualFile o1,
-                                                MemoryVirtualFile o2)
+                         new Comparator<MemoryVF>() {
+                             public int compare(MemoryVF o1,
+                                                MemoryVF o2)
                              {
-                                 return o1.getPath().compareTo(o2.getPath());
+                                 return o1.asVirtualFile().getPath().compareTo(o2.asVirtualFile().getPath());
                              }
                          });
         Collections.reverse(files);
@@ -303,12 +302,12 @@ public class MemoryFileSystemManager implements CheckBoxTreeNodeListener
      * @param files the list of files
      */
     private void getSelectedFiles(VisitableTreeNode node,
-                                  List<MemoryVirtualFile> files)
+                                  List<MemoryVF> files)
     {
         CheckBoxTreeNode cbtn = (CheckBoxTreeNode)node.getUserObject();
         if (cbtn.isSelected())
         {
-            files.add((MemoryVirtualFile)cbtn.getUserObject());
+            files.add((MemoryVF)cbtn.getUserObject());
         }
         int count = node.getChildCount();
         for (int i = 0; i < count; i++)
@@ -362,7 +361,7 @@ public class MemoryFileSystemManager implements CheckBoxTreeNodeListener
     private void populateChildren(VisitableTreeNode node)
     {
         CheckBoxTreeNode cbtn = (CheckBoxTreeNode)node.getUserObject();
-        MemoryVirtualFile file = (MemoryVirtualFile)cbtn.getUserObject();
+        VirtualFile file = (VirtualFile)cbtn.getUserObject();
         for (VirtualFile childFile : file.getChildren())
         {
             CheckBoxTreeNode childPayload = new CheckBoxTreeNode(childFile);
@@ -412,8 +411,8 @@ public class MemoryFileSystemManager implements CheckBoxTreeNodeListener
      */
     private void rebuildTreeModel()
     {
-        MemoryVirtualFileSystem vfs = (MemoryVirtualFileSystem) VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
-        MemoryVirtualFile rootFile = (MemoryVirtualFile) vfs.findFileByPath(IntelliJadConstants.INTELLIJAD_ROOT);
+        VirtualFileSystem vfs = VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
+        VirtualFile rootFile = vfs.findFileByPath(IntelliJadConstants.INTELLIJAD_ROOT);
 
         CheckBoxTreeNode rootPayload = new CheckBoxTreeNode(rootFile);
         rootPayload.addListener(this);
@@ -467,7 +466,7 @@ public class MemoryFileSystemManager implements CheckBoxTreeNodeListener
 
         protected long getByteCountForNode(CheckBoxTreeNode node)
         {
-            MemoryVirtualFile file = (MemoryVirtualFile) node.getUserObject();
+            VirtualFile file = (VirtualFile) node.getUserObject();
             long bc = 0;
             if (file != null)
             {

@@ -23,6 +23,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileEvent;
 import com.intellij.openapi.vfs.VirtualFileListener;
 import com.intellij.openapi.vfs.VirtualFileManager;
+import com.intellij.openapi.vfs.VirtualFileSystem;
 import net.stevechaloner.intellijad.IntelliJadConstants;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -42,7 +43,7 @@ import java.util.StringTokenizer;
  *
  * @author Steve Chaloner
  */
-public class MemoryVirtualFileSystem extends DeprecatedVirtualFileSystem implements ApplicationComponent
+public class MemoryVirtualFileSystem extends DeprecatedVirtualFileSystem implements ApplicationComponent, MemoryVFS
 {
     /**
      * The name of the component.
@@ -79,12 +80,13 @@ public class MemoryVirtualFileSystem extends DeprecatedVirtualFileSystem impleme
     /**
      * Add a file to the file system.
      *
-     * @param file the file to add
+     * @param p_file the file to add
      */
-    public void addFile(@NotNull MemoryVirtualFile file)
+    @Override
+    public void addFile(@NotNull MemoryVF p_file)
     {
-        files.put(file.getName(),
-                  file);
+        MemoryVirtualFile file = (MemoryVirtualFile) p_file;
+        files.put(file.getName(), file);
         fireFileCreated(file);
     }
 
@@ -259,6 +261,16 @@ public class MemoryVirtualFileSystem extends DeprecatedVirtualFileSystem impleme
         }
         return getFileForPackage(names,
                                 files.get(IntelliJadConstants.INTELLIJAD_ROOT));
+    }
+
+    @Override
+    public VirtualFileSystem asVirtualFileSystem() {
+        return this;
+    }
+
+    @Override
+    public MemoryVF newMemoryFV(@NotNull String name, String content) {
+        return new MemoryVirtualFile(name, content);
     }
 
     /**
