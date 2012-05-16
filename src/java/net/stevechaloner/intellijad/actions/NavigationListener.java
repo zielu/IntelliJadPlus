@@ -38,6 +38,7 @@ import net.stevechaloner.intellijad.decompilers.DecompilationChoiceListener;
 import net.stevechaloner.intellijad.decompilers.DecompilationDescriptor;
 import net.stevechaloner.intellijad.decompilers.DecompilationDescriptorFactory;
 import net.stevechaloner.intellijad.environment.EnvironmentContext;
+import net.stevechaloner.intellijad.util.Exclusion;
 import net.stevechaloner.intellijad.util.PluginUtil;
 
 import net.stevechaloner.intellijad.vfs.MemoryVF;
@@ -63,8 +64,7 @@ public class NavigationListener implements FileEditorManagerListener
                     public void execute(@NotNull Config config,
                                         @NotNull DecompilationDescriptor descriptor)
                     {
-                        boolean excluded = isExcluded(config,
-                                                      descriptor);
+                        boolean excluded = new Exclusion(config).isExcluded(descriptor);
                         if (!excluded)
                         {
                             decompilationListener.decompile(new EnvironmentContext(project),
@@ -78,8 +78,7 @@ public class NavigationListener implements FileEditorManagerListener
                     public void execute(@NotNull Config config,
                                         @NotNull DecompilationDescriptor descriptor)
                     {
-                        boolean excluded = isExcluded(config,
-                                                      descriptor);
+                        boolean excluded = new Exclusion(config).isExcluded(descriptor);
                         if (!excluded)
                         {
                             DialogBuilder builder = new DialogBuilder(project);
@@ -154,38 +153,6 @@ public class NavigationListener implements FileEditorManagerListener
             navigationOption.execute(config,
                                      dd);
         }
-    }
-
-    /**
-     * Checks the exclusion settings to see if the class is eligable for decompilation.
-     *
-     * @param config                  the plugin configuration
-     * @param decompilationDescriptor the descriptor of the target class
-     * @return true if the class should not be decompiled
-     */
-    private boolean isExcluded(@NotNull Config config,
-                               @NotNull DecompilationDescriptor decompilationDescriptor)
-    {
-        ExclusionTableModel exclusionModel = config.getExclusionTableModel();
-        String packageName = decompilationDescriptor.getPackageName();
-        boolean exclude = false;
-        if (packageName != null)
-        {
-            if (ExclusionTableModel.ExclusionType.NOT_EXCLUDED == exclusionModel.getExclusionType(packageName))
-            {
-                for (int i = 0; !exclude && i < exclusionModel.getRowCount(); i++)
-                {
-                    String pn = (String) exclusionModel.getValueAt(i, 0);
-                    if (pn != null)
-                    {
-                        exclude = packageName.startsWith(pn) &&
-                                  (Boolean) exclusionModel.getValueAt(i, 1) &&
-                                  (Boolean) exclusionModel.getValueAt(i, 2);
-                    }
-                }
-            }
-        }
-        return exclude;
     }
 
     /**

@@ -83,6 +83,10 @@ public class PluginUtil {
         return config;
     }
 
+    public static Exclusion getExclusion(@NotNull Project project) {
+        return new Exclusion(getConfig(project));
+    }
+
     public static Balloon showBalloon(@NotNull JComponent component, @NotNull MessageType messageType, @NotNull String message) {
         BalloonBuilder balloonBuilder = JBPopupFactory.getInstance().createHtmlTextBalloonBuilder(message, messageType, null);
         Balloon balloon = balloonBuilder.setFadeoutTime(TimeUnit.SECONDS.toMillis(1)).createBalloon();
