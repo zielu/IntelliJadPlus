@@ -16,6 +16,7 @@
 package net.stevechaloner.intellijad.vfs;
 
 import com.intellij.openapi.components.ApplicationComponent;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.io.FileUtil.FileBooleanAttributes;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileEvent;
@@ -34,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import net.stevechaloner.intellijad.IntelliJadConstants;
 
@@ -44,6 +46,8 @@ import net.stevechaloner.intellijad.IntelliJadConstants;
  */
 public class NewMemoryVirtualFileSystem extends NewVirtualFileSystem implements ApplicationComponent, MemoryVFS
 {
+    private static final AtomicInteger ID_GEN = new AtomicInteger(1);
+
     /**
      * The name of the component.
      */
@@ -81,8 +85,8 @@ public class NewMemoryVirtualFileSystem extends NewVirtualFileSystem implements 
     }
 
     @Override
-    public MemoryVF newMemoryFV(String name, String content) {
-        return new NewMemoryVirtualFile(name, content);
+    public MemoryVF newMemoryFV(@NotNull String name, String content) {
+        return new NewMemoryVirtualFile(name, content, ID_GEN.incrementAndGet());
     }
 
     @Override
@@ -103,7 +107,7 @@ public class NewMemoryVirtualFileSystem extends NewVirtualFileSystem implements 
                                                      VirtualFile parent,
                                                      String name) throws IOException
     {
-        NewMemoryVirtualFile file = new NewMemoryVirtualFile(name);
+        NewMemoryVirtualFile file = new NewMemoryVirtualFile(name, ID_GEN.incrementAndGet());
         ((NewMemoryVirtualFile)parent).addChild(file);
         addFile(file);
         return file;
@@ -138,7 +142,10 @@ public class NewMemoryVirtualFileSystem extends NewVirtualFileSystem implements 
 
     @Override
     public int getBooleanAttributes(@NotNull VirtualFile file, @FileBooleanAttributes int flags) {
-        return 0;  //TODO: auto-generated method implementation
+        int isDir = (file instanceof NewMemoryVirtualFile && file.isDirectory()) ? FileUtil.BA_DIRECTORY : 0;
+        int exists = FileUtil.BA_EXISTS;
+        int regular = isDir == 0 ? FileUtil.BA_REGULAR : 0;
+        return isDir | exists | regular;
     }
 
     public String getProtocol()
@@ -217,7 +224,8 @@ public class NewMemoryVirtualFileSystem extends NewVirtualFileSystem implements 
 
     public void initComponent()
     {
-        NewMemoryVirtualFile root = new NewMemoryVirtualFile(IntelliJadConstants.INTELLIJAD_ROOT);
+        NewMemoryVirtualFile root = new NewMemoryVirtualFile(IntelliJadConstants.INTELLIJAD_ROOT,
+                ID_GEN.incrementAndGet());
         addFile(root);
     }
 

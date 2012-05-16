@@ -80,6 +80,8 @@ public class MemoryVirtualFile extends VirtualFile implements MemoryVF, VirtualF
 
     private final int id;
 
+    private boolean valid = true;
+
     /**
      * Initialises a new instance of this class.
      *
@@ -173,7 +175,11 @@ public class MemoryVirtualFile extends VirtualFile implements MemoryVF, VirtualF
     /** {@inheritDoc} */
     public boolean isValid()
     {
-        return true;
+        return valid;
+    }
+
+    public void invalidate() {
+        valid = false;
     }
 
     /**

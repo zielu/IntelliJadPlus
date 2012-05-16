@@ -4,7 +4,7 @@
 <idea-plugin>
     <name>IntelliJad Plus</name>
     <description>IntelliJad Plus integrates the Jad decompiler into IntelliJ IDEA 11+.</description>
-    <version>0.3.2</version>
+    <version>0.4.0</version>
     <vendor logo="/scn-idea-16.png">Łukasz Zieliński</vendor>
     <idea-version since-build="117.000" until-build="117.999"/>
 
@@ -65,11 +65,20 @@
         </group>
     </actions>
 
+    <extensions defaultExtensionNs="com.intellij">
+        <attachSourcesProvider implementation="net.stevechaloner.intellijad.editor.JadAttachSourcesProvider"/>
+    </extensions>
+
     <helpset file="intellijad-help.jar" path="/helpset.hs"/>
 
     <change-notes>
         <![CDATA[
         <ul>
+            <li>0.4.0
+                <ol>
+                    <li>Decompile dialog replaced by editor overlay integration <a href="https://github.com/zielu/IntelliJadPlus/issues/7">issue #6</a>.</li>
+                </ol>
+            </li>
             <li>0.3.2
                 <ol>
                     <li>Marked as compatible with latest Idea 11.1 RC</li>

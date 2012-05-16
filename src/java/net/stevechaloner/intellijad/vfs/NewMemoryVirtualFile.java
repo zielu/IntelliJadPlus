@@ -20,6 +20,7 @@ import com.intellij.openapi.vfs.newvfs.NewVirtualFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.newvfs.impl.VirtualFileSystemEntry;
 import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -83,19 +84,19 @@ public class NewMemoryVirtualFile extends NewVirtualFile implements MemoryVF
     private boolean dirty = false;
 
     private long timestamp = 0L;
+    private final int id;
 
     /**
      * Initialises a new instance of this class.
      *
-     * @param name the name of the file
+     * @param name    the name of the file
      * @param content the content of the file
      */
     NewMemoryVirtualFile(@NotNull String name,
-                                String content)
-    {
+                         String content, int id) {
         this(name,
-             content,
-             false);
+                content,
+                false, id);
     }
 
     /**
@@ -103,41 +104,39 @@ public class NewMemoryVirtualFile extends NewVirtualFile implements MemoryVF
      *
      * @param name the name of the file
      */
-    NewMemoryVirtualFile(@NotNull String name)
-    {
+    NewMemoryVirtualFile(@NotNull String name, int id) {
         this(name,
-             null,
-             true);
+                null,
+                true, id);
     }
 
     /**
      * Initialises a new instance of this class.
      *
-     * @param name the name of the file
-     * @param content the content of the file.  This is mutually exclusive with
-     * <code>isDirectory</code>.
+     * @param name        the name of the file
+     * @param content     the content of the file.  This is mutually exclusive with
+     *                    <code>isDirectory</code>.
      * @param isDirectory true iff this file is a directory.  This is mutually exclusive
-     * with <code>content<code>.
+     *                    with <code>content<code>.
      */
     private NewMemoryVirtualFile(@NotNull String name,
-                                 String content,
-                                 boolean isDirectory)
-    {
+                                 @Nullable String content,
+                                 boolean isDirectory, int id) {
         this.name = name;
         nameWithoutExtension = FileUtil.getNameWithoutExtension(name);
         this.content = content;
         this.isDirectory = isDirectory;
+        this.id = id;
     }
 
     @NotNull
-    public NewVirtualFileSystem getFileSystem()
-    {
-        return (NewVirtualFileSystem)VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
+    public NewVirtualFileSystem getFileSystem() {
+        return (NewVirtualFileSystem) VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
     }
 
     @Override
     public NewVirtualFile findChildByIdIfCached(int id) {
-        return null;  //TODO: auto-generated method implementation
+        return findChildById(id);
     }
 
     @Override
@@ -146,125 +145,104 @@ public class NewMemoryVirtualFile extends NewVirtualFile implements MemoryVF
     }
 
     // todo
-    public NewVirtualFile findChild(@NotNull String s)
-    {
+    public NewVirtualFile findChild(@NotNull String s) {
         return children.get(s);
     }
 
     // todo
-    public NewVirtualFile refreshAndFindChild(String s)
-    {
+    public NewVirtualFile refreshAndFindChild(String s) {
         return children.get(s);
     }
 
     // todo
-    public NewVirtualFile findChildIfCached(String s)
-    {
+    public NewVirtualFile findChildIfCached(String s) {
         return children.get(s);
     }
 
-    /** {@inheritDoc} */
-    public void setTimeStamp(long timestamp) throws IOException
-    {
+    /**
+     * {@inheritDoc}
+     */
+    public void setTimeStamp(long timestamp) throws IOException {
         this.timestamp = timestamp;
     }
 
-    public int getId()
-    {
-        return 0;
+    public int getId() {
+        return id;
     }
 
-    public void setWritable(boolean writable) throws IOException
-    {
+    public void setWritable(boolean writable) throws IOException {
         this.writable = writable;
     }
 
-    public void markDirty()
-    {
+    public void markDirty() {
         this.dirty = true;
     }
 
-    public void markDirtyRecursively()
-    {
+    public void markDirtyRecursively() {
         markDirty();
-        for (NewMemoryVirtualFile virtualFile : getChildren())
-        {
+        for (NewMemoryVirtualFile virtualFile : getChildren()) {
             virtualFile.markDirty();
         }
     }
 
-    public boolean isDirty()
-    {
+    public boolean isDirty() {
         return dirty;
     }
 
-    public void markClean()
-    {
+    public void markClean() {
         this.dirty = false;
     }
 
-    public Collection<VirtualFile> getCachedChildren()
-    {
+    public Collection<VirtualFile> getCachedChildren() {
         return new ArrayList<VirtualFile>(Arrays.asList(getChildren()));
     }
 
-    public NewVirtualFile getParent()
-    {
+    public NewVirtualFile getParent() {
         return parent;
     }
 
     @NotNull
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
     @NotNull
-    public String getUrl()
-    {
+    public String getUrl() {
         return IntelliJadConstants.INTELLIJAD_SCHEMA + getPath();
     }
 
-    public String getPath()
-    {
+    public String getPath() {
         VirtualFile parent = getParent();
         return parent == null ? name : parent.getPath() + '/' + name;
     }
 
-    public boolean isWritable()
-    {
+    public boolean isWritable() {
         return writable;
     }
 
-    public boolean isDirectory()
-    {
+    public boolean isDirectory() {
         return isDirectory;
     }
 
-    public NewMemoryVirtualFile[] getChildren()
-    {
+    public NewMemoryVirtualFile[] getChildren() {
         return children.values().toArray(new NewMemoryVirtualFile[children.size()]);
     }
 
     public OutputStream getOutputStream(Object o,
                                         long l,
-                                        long l1) throws IOException
-    {
+                                        long l1) throws IOException {
         return new ByteArrayOutputStream();
     }
 
-    public long getLength()
-    {
+    public long getLength() {
         return content == null ? 0 : content.getBytes().length;
     }
 
-    public long getTimeStamp()
-    {
+    public long getTimeStamp() {
         return timestamp;
     }
 
-    public InputStream getInputStream() throws IOException
-    {
+    public InputStream getInputStream() throws IOException {
         String s = content == null ? "" : content;
         return new ByteArrayInputStream(s.getBytes());
     }
@@ -276,17 +254,13 @@ public class NewMemoryVirtualFile extends NewVirtualFile implements MemoryVF
      * @throws IllegalStateException if this file is not a directory
      */
     @Override
-    public void addChild(MemoryVF p_file) throws IllegalStateException
-    {
+    public void addChild(MemoryVF p_file) throws IllegalStateException {
         NewMemoryVirtualFile file = (NewMemoryVirtualFile) p_file;
-        if (isDirectory)
-        {
+        if (isDirectory) {
             file.setParent(this);
             children.put(file.getName(),
-                         file);
-        }
-        else
-        {
+                    file);
+        } else {
             throw new IllegalStateException("files can only be added to a directory");
         }
     }
@@ -301,8 +275,7 @@ public class NewMemoryVirtualFile extends NewVirtualFile implements MemoryVF
      *
      * @param parent the parent
      */
-    public void setParent(@Nullable NewMemoryVirtualFile parent)
-    {
+    public void setParent(@Nullable NewMemoryVirtualFile parent) {
         this.parent = parent;
     }
 
@@ -311,8 +284,7 @@ public class NewMemoryVirtualFile extends NewVirtualFile implements MemoryVF
      *
      * @param content the content
      */
-    public void setContent(@NotNull String content)
-    {
+    public void setContent(@NotNull String content) {
         this.content = content;
     }
 
@@ -322,8 +294,7 @@ public class NewMemoryVirtualFile extends NewVirtualFile implements MemoryVF
      * @return the content of the file
      */
     @NotNull
-    public String getContent()
-    {
+    public String getContent() {
         return content;
     }
 
@@ -332,19 +303,11 @@ public class NewMemoryVirtualFile extends NewVirtualFile implements MemoryVF
         return true;
     }
 
-    @NotNull
-    public Collection<VirtualFile> getInDbChildren()
-    {
-        return Collections.emptyList();
-    }
-
-    public void setFlag(int i, boolean b)
-    {
+    public void setFlag(int i, boolean b) {
         flags.put(i, b);
     }
 
-    public boolean getFlag(int i)
-    {
+    public boolean getFlag(int i) {
         Boolean b = flags.get(i);
         return b == null ? false : b;
     }
@@ -355,15 +318,12 @@ public class NewMemoryVirtualFile extends NewVirtualFile implements MemoryVF
     }
 
     @Override
-    public NewVirtualFile findChildById(int i)
-    {
+    public NewVirtualFile findChildById(int i) {
         NewVirtualFile child = null;
         Collection<NewMemoryVirtualFile> files = children.values();
-        for (Iterator<NewMemoryVirtualFile> it = files.iterator(); child == null && it.hasNext();)
-        {
-            NewMemoryVirtualFile file =  it.next();
-            if (file != null && file.getId() == i)
-            {
+        for (Iterator<NewMemoryVirtualFile> it = files.iterator(); child == null && it.hasNext(); ) {
+            NewMemoryVirtualFile file = it.next();
+            if (file != null && file.getId() == i) {
                 child = file;
             }
         }
