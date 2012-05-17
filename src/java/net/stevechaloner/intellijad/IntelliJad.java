@@ -130,9 +130,7 @@ public class IntelliJad implements ApplicationComponent,
         project.putUserData(IntelliJadConstants.GENERATED_SOURCE_LIBRARIES,
                             new ArrayList<Library>());
 
-        NavigationListener navigationListener = new NavigationListener(project,
-                                                                       this);
-        //FileEditorManager.getInstance(project).addFileEditorManagerListener(navigationListener);
+        NavigationListener navigationListener = new NavigationListener(project, this);
         project.putUserData(IntelliJadConstants.DECOMPILE_LISTENER,
                             navigationListener);
 
@@ -188,8 +186,6 @@ public class IntelliJad implements ApplicationComponent,
      */
     public void projectClosed(Project project)
     {
-        /*NavigationListener listener = project.getUserData(IntelliJadConstants.DECOMPILE_LISTENER);
-        FileEditorManager.getInstance(project).removeFileEditorManagerListener(listener);*/
         consoleManager.disposeConsole(project);
         projectClosingTasks.remove(project);
     }
