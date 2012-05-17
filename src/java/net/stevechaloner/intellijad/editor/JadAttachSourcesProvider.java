@@ -5,12 +5,14 @@ package net.stevechaloner.intellijad.editor;
 
 import com.intellij.codeInsight.AttachSourcesProvider;
 import com.intellij.openapi.roots.LibraryOrderEntry;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import net.stevechaloner.intellijad.IntelliJad;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -30,8 +32,13 @@ public class JadAttachSourcesProvider implements AttachSourcesProvider {
     @NotNull
     @Override
     public Collection<AttachSourcesAction> getActions(List<LibraryOrderEntry> orderEntries, PsiFile psiFile) {
-        List<AttachSourcesAction> actions = new ArrayList<AttachSourcesAction>();
-        actions.add(new JadAttachSourcesAction(psiFile, intelliJad));
-        return actions;
+        VirtualFile vFile = psiFile.getVirtualFile();
+        if (vFile != null && "class".equals(vFile.getExtension())) {
+            List<AttachSourcesAction> actions = new ArrayList<AttachSourcesAction>();
+            actions.add(new JadAttachSourcesAction(psiFile, intelliJad));
+            return actions;
+        } else {
+            return Collections.emptyList();
+        }
     }
 }
