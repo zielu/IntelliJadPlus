@@ -16,6 +16,7 @@
 package net.stevechaloner.intellijad.vfs;
 
 import com.intellij.openapi.components.ApplicationComponent;
+import com.intellij.openapi.util.io.FileAttributes;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.io.FileUtil.FileBooleanAttributes;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -146,6 +147,17 @@ public class NewMemoryVirtualFileSystem extends NewVirtualFileSystem implements 
         int exists = FileUtil.BA_EXISTS;
         int regular = isDir == 0 ? FileUtil.BA_REGULAR : 0;
         return isDir | exists | regular;
+    }
+
+    @Override
+    public FileAttributes getAttributes(@NotNull VirtualFile virtualFile) {
+        if (virtualFile instanceof NewMemoryVirtualFile) {
+            NewMemoryVirtualFile file = (NewMemoryVirtualFile) virtualFile;
+            return new FileAttributes(file.isDirectory(), file.isSymLink(),
+                    file.isSpecialFile(), file.getLength(), file.getModificationStamp(), file.isWritable());
+        } else {
+            return null;
+        }
     }
 
     public String getProtocol()

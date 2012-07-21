@@ -47,7 +47,7 @@
           <component id="dcf48" class="javax.swing.JToggleButton" binding="clearAndCloseOnSuccess">
             <constraints/>
             <properties>
-              <icon value="actions/collapsePanel.png"/>
+              <icon value="actions/collapseall.png"/>
               <margin top="3" left="5" bottom="3" right="5"/>
               <toolTipText resource-bundle="net/stevechaloner/intellijad/messages-i18n" key="config.clear-and-close-console-on-success"/>
             </properties>

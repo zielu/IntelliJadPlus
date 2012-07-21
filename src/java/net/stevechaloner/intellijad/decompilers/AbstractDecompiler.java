@@ -17,6 +17,7 @@ package net.stevechaloner.intellijad.decompilers;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.JarFile;
 import com.intellij.openapi.vfs.JarFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import net.stevechaloner.intellijad.config.CodeStyle;
@@ -35,7 +36,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.zip.ZipFile;
 
 /**
  * The generic decompilation operations required to decompile and display a class.
@@ -362,15 +362,15 @@ public abstract class AbstractDecompiler implements Decompiler
     {
         try
         {
-            ZipFile lib = JarFileSystem.getInstance().getJarFile(jarFile);
+            JarFile lib = JarFileSystem.getInstance().getJarFile(jarFile);
             context.getConsoleContext().addMessage(ConsoleEntryType.JAR_OPERATION,
                                                    "message.examining",
                                                    jarFile.getPath());
-            ZipExtractor zipExtractor = new ZipExtractor();
-            zipExtractor.extract(context,
-                                 lib,
-                                 decompilationDescriptor.getPackageNameAsPath(),
-                                 decompilationDescriptor.getClassName());
+            JarExtractor jarExtractor = new JarExtractor();
+            jarExtractor.extract(context,
+                                lib,
+                                decompilationDescriptor.getPackageNameAsPath(),
+                                decompilationDescriptor.getClassName());
         }
         catch (IOException e)
         {

@@ -39,7 +39,7 @@ public class IntelliJadIcons
 
     public static final Icon JAVA = new ImageIcon(IntelliJadIcons.class.getClassLoader().getResource("fileTypes/java.png"));
 
-    public static final Icon LIBRARIES = new ImageIcon(IntelliJadIcons.class.getClassLoader().getResource("modules/libraries.png"));
+    public static final Icon LIBRARIES = new ImageIcon(IntelliJadIcons.class.getClassLoader().getResource("modules/library.png"));
 
     public static final Icon PACKAGE_CLOSED = new ImageIcon(IntelliJadIcons.class.getClassLoader().getResource("nodes/packageClosed.png"));
 
