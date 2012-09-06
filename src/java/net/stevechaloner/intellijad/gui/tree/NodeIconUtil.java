@@ -16,8 +16,7 @@
 package net.stevechaloner.intellijad.gui.tree;
 
 import com.intellij.openapi.vfs.VirtualFile;
-import net.stevechaloner.intellijad.gui.IntelliJadIcons;
-import net.stevechaloner.intellijad.vfs.MemoryVirtualFile;
+import net.stevechaloner.intellijad.gui.IntelliJadIcon;
 
 import javax.swing.Icon;
 import javax.swing.JTree;
@@ -31,16 +30,16 @@ class NodeIconUtil
                            Object value,
                            boolean expanded)
     {
-        Icon icon = IntelliJadIcons.JAVA;
+        Icon icon = IntelliJadIcon.JAVA.get();
         if (value.equals(jTree.getModel().getRoot()))
         {
-            icon = IntelliJadIcons.INTELLIJAD_LOGO_16X16;
+            icon = IntelliJadIcon.INTELLIJAD_LOGO_16X16.get();
         }
         else
         {
             if (isDirectory((VisitableTreeNode)value))
             {
-                icon = expanded ? IntelliJadIcons.PACKAGE_OPEN : IntelliJadIcons.PACKAGE_CLOSED;
+                icon = expanded ? IntelliJadIcon.PACKAGE_OPEN.get() : IntelliJadIcon.PACKAGE_CLOSED.get();
             }
         }
         return icon;

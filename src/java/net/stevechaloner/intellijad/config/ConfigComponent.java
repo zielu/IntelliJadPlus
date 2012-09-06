@@ -26,12 +26,11 @@ import javax.swing.Icon;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.intellij.util.Alarm;
 import net.stevechaloner.idea.util.properties.DOMable;
 import net.stevechaloner.intellijad.IntelliJadConstants;
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
 import net.stevechaloner.intellijad.config.rules.RuleContext;
-import net.stevechaloner.intellijad.gui.IntelliJadIcons;
+import net.stevechaloner.intellijad.gui.IntelliJadIcon;
 
 import org.jdom.Element;
 import org.jetbrains.annotations.NonNls;
@@ -75,7 +74,7 @@ abstract class ConfigComponent implements Configurable,
     /** {@inheritDoc} */
     public Icon getIcon()
     {
-        return IntelliJadIcons.INTELLIJAD_LOGO_32X32;
+        return IntelliJadIcon.INTELLIJAD_LOGO_32X32.get();
     }
 
     /** {@inheritDoc} */
