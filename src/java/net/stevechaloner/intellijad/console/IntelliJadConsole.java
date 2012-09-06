@@ -37,7 +37,7 @@ import java.util.List;
 
 import net.stevechaloner.intellijad.IntelliJadConstants;
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
-import net.stevechaloner.intellijad.gui.IntelliJadIcons;
+import net.stevechaloner.intellijad.gui.IntelliJadIcon;
 import net.stevechaloner.intellijad.util.PluginUtil;
 
 import org.jetbrains.annotations.NotNull;
@@ -170,7 +170,7 @@ public class IntelliJadConsole implements NodeHandler
                                                                        false);
                 window.getContentManager().addContent(content);
             }
-            window.setIcon(IntelliJadIcons.INTELLIJAD_LOGO_12X12);
+            window.setIcon(IntelliJadIcon.INTELLIJAD_LOGO_12X12.get());
             window.show(EMPTY_RUNNABLE);
         }
     }

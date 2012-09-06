@@ -24,7 +24,7 @@ import java.awt.Component;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.stevechaloner.intellijad.gui.IntelliJadIcons;
+import net.stevechaloner.intellijad.gui.IntelliJadIcon;
 
 /**
  * Console tree node renderer to provide a more attractive view on what happened.
@@ -38,22 +38,14 @@ class ConsoleTreeCellRenderer extends DefaultTreeCellRenderer
     private static final Map<ConsoleEntryType, Icon> ICONS = new HashMap<ConsoleEntryType, Icon>()
     {
         {
-            put(ConsoleEntryType.ROOT,
-                null);
-            put(ConsoleEntryType.INTELLIJAD,
-                IntelliJadIcons.INTELLIJAD_LOGO_12X12);
-            put(ConsoleEntryType.JAR_OPERATION,
-                IntelliJadIcons.ARCHIVE);
-            put(ConsoleEntryType.DECOMPILATION_OPERATION,
-                IntelliJadIcons.JAVA);
-            put(ConsoleEntryType.LIBRARY_OPERATION,
-                IntelliJadIcons.LIBRARIES);
-            put(ConsoleEntryType.MESSAGE,
-                IntelliJadIcons.INFO);
-            put(ConsoleEntryType.INFO,
-                IntelliJadIcons.INFO);
-            put(ConsoleEntryType.ERROR,
-                IntelliJadIcons.ERROR);
+            put(ConsoleEntryType.ROOT, null);
+            put(ConsoleEntryType.INTELLIJAD, IntelliJadIcon.INTELLIJAD_LOGO_12X12.get());
+            put(ConsoleEntryType.JAR_OPERATION, IntelliJadIcon.ARCHIVE.get());
+            put(ConsoleEntryType.DECOMPILATION_OPERATION, IntelliJadIcon.JAVA.get());
+            put(ConsoleEntryType.LIBRARY_OPERATION, IntelliJadIcon.LIBRARIES.get());
+            put(ConsoleEntryType.MESSAGE, IntelliJadIcon.INFO.get());
+            put(ConsoleEntryType.INFO, IntelliJadIcon.INFO.get());
+            put(ConsoleEntryType.ERROR, IntelliJadIcon.ERROR.get());
         }
     };
 

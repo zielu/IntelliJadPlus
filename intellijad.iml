@@ -11,6 +11,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/icons" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/test/java" isTestSource="true" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
@@ -25,6 +26,7 @@
         </SOURCES>
       </library>
     </orderEntry>
+    <orderEntry type="library" scope="TEST" name="junit" level="application" />
   </component>
 </module>
 
