@@ -3,7 +3,7 @@
         "http://java.sun.com/products/javahelp/helpset_2_0.dtd">
 
 <helpset version="2.0" xml:lang="en">
-    <title>IntelliJad</title>
+    <title>IntelliJad Plus</title>
     <maps>
         <homeID>intellijad</homeID>
         <mapref location="map.xml"/>

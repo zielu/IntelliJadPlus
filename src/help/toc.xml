@@ -3,7 +3,7 @@
         "http://java.sun.com/products/javahelp/toc_2_0.dtd">
 
 <toc version="2.0">
-    <tocitem text="IntelliJad" target="intellijad" image="scn-idea-12">
+    <tocitem text="IntelliJad Plus" target="intellijad" image="scn-idea-12">
         <tocitem text="Configuring IntelliJad" target="configuring-intellijad">
             <tocitem text="IntelliJad options" target="intellijad-options"/>
             <tocitem text="Jad options" target="jad-options"/>
