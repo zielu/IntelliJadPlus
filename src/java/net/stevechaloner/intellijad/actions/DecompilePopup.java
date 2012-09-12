@@ -81,7 +81,7 @@ public class DecompilePopup {
         excludeRecursivelyCheckBox.setSelected(config.isAlwaysExcludeRecursively());
 
         comboBox1.addItem(NavigationTriggeredDecompile.ALWAYS);
-        comboBox1.addItem(NavigationTriggeredDecompile.ASK);
+        comboBox1.addItem(NavigationTriggeredDecompile.ON_DEMAND);
         comboBox1.addItem(NavigationTriggeredDecompile.NEVER);
         comboBox1.setSelectedItem(NavigationTriggeredDecompile.getByName(config.getDecompileOnNavigation()));
     }

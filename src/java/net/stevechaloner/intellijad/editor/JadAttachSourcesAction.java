@@ -49,13 +49,8 @@ public class JadAttachSourcesAction implements AttachSourcesAction {
     public ActionCallback perform(List<LibraryOrderEntry> orderEntriesContainingFile) {
         VirtualFile file = psiFile.getVirtualFile();
         DecompilationDescriptor descriptor = DecompilationDescriptorFactory.getFactoryForFile(file).create(file);
-        boolean excluded = PluginUtil.getExclusion(psiFile.getProject()).isExcluded(descriptor);
-        if (excluded) {
-            return new ActionCallback.Rejected();
-        } else {
-            EnvironmentContext context = new EnvironmentContext(psiFile.getProject());
-            decompilationChoice.decompile(context, descriptor);
-            return new ActionCallback.Done();
-        }
+        EnvironmentContext context = new EnvironmentContext(psiFile.getProject());
+        decompilationChoice.decompile(context, descriptor);
+        return new ActionCallback.Done();
     }
 }

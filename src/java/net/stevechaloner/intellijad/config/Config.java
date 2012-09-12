@@ -46,6 +46,7 @@ public class Config implements DOMable
     private static final PropertyDescriptor<Boolean> ALWAYS_EXCLUDE_RECURSIVELY = new ImmutablePropertyDescriptor<Boolean>("always-exclude-recursively");
     private static final PropertyDescriptor<Boolean> CLEAR_AND_CLOSE_CONSOLE_ON_SUCCESS = new ImmutablePropertyDescriptor<Boolean>("clear-and-close-console-on-success");
     private static final PropertyDescriptor<Boolean> DECOMPILE_TO_MEMORY = new ImmutablePropertyDescriptor<Boolean>("decompile-to-memory", Boolean.TRUE);
+    private static final PropertyDescriptor<Boolean> KEEP_DECOMPILED_TO_MEMORY = new ImmutablePropertyDescriptor<Boolean>("keep-decompiled-to-memory", Boolean.FALSE);
     private static final PropertyDescriptor<ExclusionTableModel> EXCLUSION_TABLE_MODEL = new ImmutablePropertyDescriptor<ExclusionTableModel>("exclusion-table-model");
     private static final PropertyDescriptor<String> JAD_PATH = new ImmutablePropertyDescriptor<String>("jad-path");
     private static final PropertyDescriptor<Integer> LIMIT_INDENTATION = new ImmutablePropertyDescriptor<Integer>("indentation", 4);
@@ -86,6 +87,7 @@ public class Config implements DOMable
         registerBooleanProperty(ALWAYS_EXCLUDE_RECURSIVELY, dpc);
         registerBooleanProperty(JadOptions.DEAD, dpc);
         registerBooleanProperty(DECOMPILE_TO_MEMORY, dpc);
+        registerBooleanProperty(KEEP_DECOMPILED_TO_MEMORY, dpc);
         registerBooleanProperty(JadOptions.DEFAULT_INITIALIZERS, dpc);
         registerBooleanProperty(JadOptions.DISASSEMBLER_ONLY, dpc);
         registerStringProperty(JadOptions.FILE_EXTENSION, dpc);
@@ -262,7 +264,11 @@ public class Config implements DOMable
 
     public String getDecompileOnNavigation()
     {
-        return DECOMPILE_ON_NAVIGATION.getValue(propertyContainer.get(DECOMPILE_ON_NAVIGATION));
+        String value = DECOMPILE_ON_NAVIGATION.getValue(propertyContainer.get(DECOMPILE_ON_NAVIGATION));
+        if ("Ask".equals(value)) {
+            return NavigationTriggeredDecompile.ON_DEMAND.getName();
+        }
+        return value;
     }
 
     public void setDecompileOnNavigation(String confirmNavigationTriggeredDecompile)
@@ -749,6 +755,15 @@ public class Config implements DOMable
     {
         DOMableGeneric<Boolean> value = (DOMableGeneric<Boolean>) propertyContainer.get(DECOMPILE_TO_MEMORY);
         value.setValue(decompileToMemory);
+    }
+
+    public boolean isKeepDecompiledToMemory() {
+        return KEEP_DECOMPILED_TO_MEMORY.getValue(propertyContainer.get(KEEP_DECOMPILED_TO_MEMORY));
+    }
+
+    public void setKeepDecompiledToMemory(boolean keep) {
+        DOMableGeneric<Boolean> value = (DOMableGeneric<Boolean>) propertyContainer.get(KEEP_DECOMPILED_TO_MEMORY);
+        value.setValue(keep);
     }
 
     public boolean isCreateOutputDirectory()

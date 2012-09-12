@@ -32,7 +32,6 @@ import java.util.Map;
 import net.stevechaloner.intellijad.IntelliJadConstants;
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
 import net.stevechaloner.intellijad.config.Config;
-import net.stevechaloner.intellijad.config.ExclusionTableModel;
 import net.stevechaloner.intellijad.config.NavigationTriggeredDecompile;
 import net.stevechaloner.intellijad.decompilers.DecompilationChoiceListener;
 import net.stevechaloner.intellijad.decompilers.DecompilationDescriptor;
@@ -72,36 +71,13 @@ public class NavigationListener implements FileEditorManagerListener
                         }
                     }
                 });
-            put(NavigationTriggeredDecompile.ASK,
+            put(NavigationTriggeredDecompile.ON_DEMAND,
                 new NavigationOption()
                 {
                     public void execute(@NotNull Config config,
                                         @NotNull DecompilationDescriptor descriptor)
                     {
-                        boolean excluded = new Exclusion(config).isExcluded(descriptor);
-                        if (!excluded)
-                        {
-                            DialogBuilder builder = new DialogBuilder(project);
-                            builder.setTitle(IntelliJadResourceBundle.message("plugin.IntelliJad.name"));
-                            builder.addOkAction().setText(IntelliJadResourceBundle.message("option.decompile"));
-                            builder.addCancelAction().setText(IntelliJadResourceBundle.message("option.do-not-decompile"));
-                            DecompilePopup decompilePopup = new DecompilePopup(descriptor,
-                                                                               project);
-                            builder.setCenterPanel(decompilePopup.getContentPane());
-                            builder.setHelpId(IntelliJadConstants.CONFIGURATION_HELP_TOPIC);
-                            builder.setOkActionEnabled(true);
-                            switch (builder.show())
-                            {
-                                case DialogWrapper.CANCEL_EXIT_CODE:
-                                    decompilePopup.persistConfig();
-                                    break;
-                                case DialogWrapper.OK_EXIT_CODE:
-                                    decompilePopup.persistConfig();
-                                    decompilationListener.decompile(new EnvironmentContext(project),
-                                                                    descriptor);
-                                    break;
-                            }
-                        }
+                        // no-op
                     }
                 });
             put(NavigationTriggeredDecompile.NEVER,
@@ -141,6 +117,11 @@ public class NavigationListener implements FileEditorManagerListener
         this.decompilationListener = decompilationListener;
     }
 
+    private NavigationTriggeredDecompile getDecompileMode() {
+        Config config = PluginUtil.getConfig(project);
+        return NavigationTriggeredDecompile.getByName(config.getDecompileOnNavigation());
+    }
+
     /** {@inheritDoc} */
     public void fileOpened(FileEditorManager fileEditorManager,
                            VirtualFile file)
@@ -149,9 +130,8 @@ public class NavigationListener implements FileEditorManagerListener
         {
             Config config = PluginUtil.getConfig(project);
             DecompilationDescriptor dd = DecompilationDescriptorFactory.getFactoryForFile(file).create(file);
-            NavigationOption navigationOption = navigationOptions.get(NavigationTriggeredDecompile.getByName(config.getDecompileOnNavigation()));
-            navigationOption.execute(config,
-                                     dd);
+            NavigationOption navigationOption = navigationOptions.get(getDecompileMode());
+            navigationOption.execute(config, dd);
         }
     }
 
@@ -161,16 +141,16 @@ public class NavigationListener implements FileEditorManagerListener
     public void fileClosed(FileEditorManager fileEditorManager,
                            VirtualFile virtualFile)
     {
-        if (virtualFile instanceof MemoryVF)
-        {
-            MemoryVFS vfs = (MemoryVFS) VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
-            try
-            {
-                vfs.deleteFile(this, virtualFile);
-            }
-            catch (IOException e)
-            {
-                Logger.getInstance(getClass().getName()).error(e);
+        if (virtualFile instanceof MemoryVF) {
+            Config config = PluginUtil.getConfig(project);
+            if (!config.isKeepDecompiledToMemory()) {
+                MemoryVFS vfs = (MemoryVFS) VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
+                try {
+                    vfs.deleteFile(this, virtualFile);
+                }
+                catch (IOException e) {
+                    Logger.getInstance(getClass().getName()).error(e);
+                }
             }
         }
     }
