@@ -14,7 +14,7 @@
 </div>
 <div style="margin-bottom:5px; margin-top:5px;">
     <center>
-        <img src="images/config-intellijad.jpg" alt="IntelliJad options"/>
+        <img src="images/config-intellijad.png" alt="IntelliJad options"/>
     </center>
 </div>
 <div style="margin-bottom:5px; margin-top:5px;">
@@ -22,6 +22,7 @@
     The path to the Jad executable must be absolute, and include the executable itself. The
     easiest way to define this value is to use the "Browse..." button to navigate through your
     computer's folders.
+    Jad executable can be obtained from <a href="http://www.varaneckas.com/jad/">http://www.varaneckas.com/jad/</a>.
 </div>
 <div style="margin-bottom:5px; margin-top:5px;">
     <div class="sectionheader">Decompile on navigation</div>
@@ -36,8 +37,8 @@
             <td>The class will be decompiled automatically and immediately, with no user input required.</td>
         </tr>
         <tr>
-            <td>Ask</td>
-            <td>A dialog will appear, asking for confirmation before proceeding with the decompilation.</td>
+            <td>On demand</td>
+            <td>An editor overlay is displayed with action to perform with the decompilation.</td>
         </tr>
         <tr>
             <td>Never</td>
@@ -45,13 +46,15 @@
         </tr>
     </table>
     Additionally, exclusions (see <a href="config-exclusions.html">Exclusions</a>) may have an effect
-    on the <b>Always</b> and <b>Ask</b> behaviours.
+    on the <b>Always</b> and <b>On demand</b> behaviours.
 </div>
 <div style="margin-bottom:5px; margin-top:5px;">
     <div class="sectionheader">Decompile to memory</div>
     When the <b>Decompile to memory</b> option is checked, the decompilation output will not
     be written to disk but just held in memory. From an IntelliJ IDEA point of view, you will
     see no difference to the behaviour of IntelliJad.
+    When the <b>Remember decompiled to memory</b> option is checked, result on file decompilation
+    will persist when corresponding editor is closed.
 </div>
 <div style="margin-bottom:5px; margin-top:5px;">
     <div class="sectionheader">Decompile to disk</div>
