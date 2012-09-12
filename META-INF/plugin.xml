@@ -77,6 +77,9 @@
             <li>0.5.1
                 <ol>
                     <li>Compatible with Idea 12 EAP (122.x)</li>
+                    <li>Introduced "Decompile on navigation" - On demand (<a href="https://github.com/zielu/IntelliJadPlus/issues/12">issue #12</a>)</li>
+                    <li>Updated help (<a href="https://github.com/zielu/IntelliJadPlus/issues/10">issue #10</a>)</li>
+                    <li>Introduced "Remember decompiled to memory" (<a href="https://github.com/zielu/IntelliJadPlus/issues/16">issue #16</a>)
                 </ol>
             </li>
             <li>0.5.0
