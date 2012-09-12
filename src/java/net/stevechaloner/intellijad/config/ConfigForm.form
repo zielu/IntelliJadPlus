@@ -109,14 +109,6 @@
                       <text resource-bundle="net/stevechaloner/intellijad/messages-i18n" key="config.output-directory"/>
                     </properties>
                   </component>
-                  <component id="53917" class="javax.swing.JCheckBox" binding="decompileToMemoryCheckBox" default-binding="true">
-                    <constraints>
-                      <grid row="0" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                    </constraints>
-                    <properties>
-                      <text resource-bundle="net/stevechaloner/intellijad/messages-i18n" key="config.decompile-to-memory"/>
-                    </properties>
-                  </component>
                   <component id="66320" class="javax.swing.JCheckBox" binding="markDecompiledFilesAsCheckBox" default-binding="true">
                     <constraints>
                       <grid row="3" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="3" use-parent-layout="false"/>
@@ -125,6 +117,38 @@
                       <text resource-bundle="net/stevechaloner/intellijad/messages-i18n" key="config.readonly"/>
                     </properties>
                   </component>
+                  <grid id="a255b" layout-manager="GridLayoutManager" row-count="1" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                    <margin top="0" left="0" bottom="0" right="0"/>
+                    <constraints>
+                      <grid row="0" column="0" row-span="1" col-span="3" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                    </constraints>
+                    <properties/>
+                    <border type="none"/>
+                    <children>
+                      <component id="3218a" class="javax.swing.JCheckBox" binding="decompileToMemoryCheckBox" default-binding="true">
+                        <constraints>
+                          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text resource-bundle="net/stevechaloner/intellijad/messages-i18n" key="config.decompile-to-memory"/>
+                        </properties>
+                      </component>
+                      <component id="af31e" class="javax.swing.JCheckBox" binding="keepDecompiledToMemory">
+                        <constraints>
+                          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text resource-bundle="net/stevechaloner/intellijad/messages-i18n" key="config.keep-decompiled-to-memory"/>
+                          <toolTipText resource-bundle="net/stevechaloner/intellijad/messages-i18n" key="config.keep-decompiled-to-memory-tip"/>
+                        </properties>
+                      </component>
+                      <hspacer id="8e1a4">
+                        <constraints>
+                          <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                      </hspacer>
+                    </children>
+                  </grid>
                 </children>
               </grid>
               <component id="8912b" class="javax.swing.JCheckBox" binding="useProjectSpecificIntelliJadCheckBox" default-binding="true">

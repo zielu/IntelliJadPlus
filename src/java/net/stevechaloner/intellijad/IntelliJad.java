@@ -19,6 +19,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.project.ProjectManagerListener;
@@ -131,8 +132,8 @@ public class IntelliJad implements ApplicationComponent,
                             new ArrayList<Library>());
 
         NavigationListener navigationListener = new NavigationListener(project, this);
-        project.putUserData(IntelliJadConstants.DECOMPILE_LISTENER,
-                            navigationListener);
+        project.getMessageBus().connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, navigationListener);
+        project.putUserData(IntelliJadConstants.DECOMPILE_LISTENER, navigationListener);
 
         projectClosingTasks.get(project).add(new Runnable()
         {

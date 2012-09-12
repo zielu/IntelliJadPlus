@@ -38,10 +38,10 @@ public enum NavigationTriggeredDecompile {
     NEVER("Never",
           IntelliJadResourceBundle.message("option.never")),
     /**
-     * Unless excluded, ask if the class should be decompiled.
+     * Unless excluded, provide attach sources action.
      */
-    ASK("Ask",
-        IntelliJadResourceBundle.message("option.ask"));
+    ON_DEMAND("On demand",
+        IntelliJadResourceBundle.message("option.lazy"));
 
     /**
      * Mapping of the entry name to the entry.
@@ -52,19 +52,19 @@ public enum NavigationTriggeredDecompile {
                 ALWAYS);
             put(NEVER.getName(),
                 NEVER);
-            put(ASK.getName(),
-                ASK);
+            put(ON_DEMAND.getName(),
+                    ON_DEMAND);
         }
 
         /**
          * Gets the option by its name.
          *
          * @param key the name
-         * @return the option, or ASK if an invalid key is specified
+         * @return the option, or ON_DEMAND if an invalid key is specified
          */
         public NavigationTriggeredDecompile get(Object key) {
             NavigationTriggeredDecompile option = super.get(key);
-            return option == null ? ASK : option;
+            return option == null ? ON_DEMAND : option;
         }
     };
 
