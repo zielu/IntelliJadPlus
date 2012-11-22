@@ -4,9 +4,9 @@
 <idea-plugin>
     <name>IntelliJad Plus</name>
     <description>IntelliJad Plus integrates the Jad decompiler into IntelliJ IDEA 11+.</description>
-    <version>0.5.1</version>
+    <version>0.5.2</version>
     <vendor url="https://github.com/zielu/IntelliJadPlus" logo="/scn-idea-16.png">Łukasz Zieliński</vendor>
-    <idea-version since-build="122.000" until-build="122.999"/>
+    <idea-version since-build="122.000" until-build="123.9999"/>
 
     <application-components>
         <component>
@@ -74,6 +74,11 @@
     <change-notes>
         <![CDATA[
         <ul>
+            <li>0.5.2
+                <ol>
+                    <li>Compatible with Idea 12 EAP (123.x)</li>
+                </ol>
+            </li>
             <li>0.5.1
                 <ol>
                     <li>Compatible with Idea 12 EAP (122.x)</li>
