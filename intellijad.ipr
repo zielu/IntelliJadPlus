@@ -295,6 +295,9 @@
     <option name="OPEN_IN_BROWSER" value="false" />
     <option name="OUTPUT_DIRECTORY" />
   </component>
+  <component name="GradleSettings">
+    <option name="gradleHome" value="$PROJECT_DIR$/../../Libs/gradle/gradle-1.2" />
+  </component>
   <component name="IdProvider" IDEtalkID="0118582F6B25EE45AA391F6650ACBF68" />
   <component name="JavadocGenerationManager">
     <option name="OUTPUT_DIRECTORY" />
