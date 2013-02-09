@@ -374,7 +374,7 @@ public class IntelliJad implements ApplicationComponent,
         {
             public void run()
             {
-                final Sdk projectJdk = ProjectRootManager.getInstance(project).getProjectJdk();
+                final Sdk projectJdk = ProjectRootManager.getInstance(project).getProjectSdk();
                 if (projectJdk != null)
                 {
                     SdkModificator sdkModificator = projectJdk.getSdkModificator();

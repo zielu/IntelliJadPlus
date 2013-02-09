@@ -25,9 +25,9 @@ import java.net.URL;
 public enum IntelliJadIcon {
     ARCHIVE("fileTypes/archive.png"),
 
-    ERROR("compiler/error.png"),
+    ERROR("general/error.png"),
 
-    INFO("compiler/information.png"),
+    INFO("general/information.png"),
 
     INTELLIJAD_LOGO_12X12("scn-idea-12.png"),
 
