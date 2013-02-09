@@ -153,7 +153,7 @@ public class MemoryFileSystemManager implements CheckBoxTreeNodeListener
         boolean attached = false;
         VirtualFileSystem vfs = (VirtualFileSystem) VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
         final VirtualFile sourceRoot = vfs.findFileByPath(IntelliJadConstants.INTELLIJAD_ROOT);
-        Sdk projectJdk = ProjectRootManager.getInstance(project).getProjectJdk();
+        Sdk projectJdk = ProjectRootManager.getInstance(project).getProjectSdk();
         final SdkModificator sdkModificator = (projectJdk != null) ? projectJdk.getSdkModificator() : null;
         if (sdkModificator != null)
         {
