@@ -189,6 +189,7 @@ public class IntelliJad implements ApplicationComponent,
     {
         consoleManager.disposeConsole(project);
         projectClosingTasks.remove(project);
+        project.putUserData(IntelliJadConstants.DECOMPILE_LISTENER, null);
     }
 
     /**
