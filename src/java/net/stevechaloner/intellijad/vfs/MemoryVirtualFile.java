@@ -41,15 +41,15 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class MemoryVirtualFile extends VirtualFile implements MemoryVF, VirtualFileWithId
 {
-    private static AtomicInteger ID_GEN = new AtomicInteger(1);
+    private static final AtomicInteger ID_GEN = new AtomicInteger(1000000);
 
 
     /**
      * The name of the file.
      */
-    private final String name;
+    private String name;
 
-    private final String nameWithoutExtension;
+    private String nameWithoutExtension;
 
     /**
      * The content of the file.
@@ -80,6 +80,8 @@ public class MemoryVirtualFile extends VirtualFile implements MemoryVF, VirtualF
 
     private final int id;
 
+    private final long timestamp = System.currentTimeMillis();
+    
     private boolean valid = true;
 
     /**
@@ -121,13 +123,17 @@ public class MemoryVirtualFile extends VirtualFile implements MemoryVF, VirtualF
                               String content,
                               boolean isDirectory)
     {
-        this.name = name;
-        nameWithoutExtension = FileUtil.getNameWithoutExtension(name);
+        setName(name);
         this.content = content;
         this.isDirectory = isDirectory;
-        this.id = ID_GEN.incrementAndGet();
+        this.id = ID_GEN.getAndIncrement();
     }
 
+    public void setName(String name) {
+        this.name = name;
+        nameWithoutExtension = FileUtil.getNameWithoutExtension(name);
+    }
+    
     /** {@inheritDoc} */
     @NotNull
     @NonNls
@@ -243,7 +249,7 @@ public class MemoryVirtualFile extends VirtualFile implements MemoryVF, VirtualF
     /** {@inheritDoc} */
     public long getTimeStamp()
     {
-        return 0L;
+        return timestamp;
     }
 
     /** {@inheritDoc} */
@@ -306,7 +312,7 @@ public class MemoryVirtualFile extends VirtualFile implements MemoryVF, VirtualF
     /** {@inheritDoc} */
     public long getModificationStamp()
     {
-        return 0L;
+        return timestamp;
     }
 
     /** {@inheritDoc} */
@@ -328,7 +334,7 @@ public class MemoryVirtualFile extends VirtualFile implements MemoryVF, VirtualF
     @NonNls
     public String toString()
     {
-        return nameWithoutExtension;
+        return "MemoryVirtualFile[name="+name+", id="+id+",type="+(isDirectory ? "dir" : "file")+"]";
     }
 
     @Override

@@ -45,6 +45,8 @@ import java.util.StringTokenizer;
  * @author Steve Chaloner
  */
 public class MemoryVirtualFileSystem extends VirtualFileSystem implements ApplicationComponent, MemoryVFS {
+    private final Logger LOG = Logger.getInstance(getClass());
+    
     /**
      * The name of the component.
      */
@@ -61,18 +63,21 @@ public class MemoryVirtualFileSystem extends VirtualFileSystem implements Applic
     private final List<VirtualFileListener> listeners = new ArrayList<VirtualFileListener>();
 
     /** {@inheritDoc} */
-    public void addVirtualFileListener(VirtualFileListener virtualFileListener)
-    {
-        if (virtualFileListener != null)
-        {
+    public void addVirtualFileListener(VirtualFileListener virtualFileListener) {
+        if (virtualFileListener != null) {
             listeners.add(virtualFileListener);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Listener added: "+virtualFileListener);    
+            }
         }
     }
 
     /** {@inheritDoc} */
-    public void removeVirtualFileListener(VirtualFileListener virtualFileListener)
-    {
+    public void removeVirtualFileListener(VirtualFileListener virtualFileListener) {
         listeners.remove(virtualFileListener);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Listener removed: "+virtualFileListener);    
+        }
     }
 
     /**
@@ -83,7 +88,10 @@ public class MemoryVirtualFileSystem extends VirtualFileSystem implements Applic
     @Override
     public void addFile(@NotNull MemoryVF p_file) {
         MemoryVirtualFile file = (MemoryVirtualFile) p_file;
-        files.put(file.getName(), file);
+        MemoryVirtualFile old = files.put(file.getName(), file);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Add file: "+old+" -> "+file);    
+        }
         fireFileCreated(file);
     }
 
@@ -173,63 +181,80 @@ public class MemoryVirtualFileSystem extends VirtualFileSystem implements Applic
     /**
      * {@inheritDoc}
      */
-    public void deleteFile(Object object,
-                           VirtualFile virtualFile) throws IOException {
+    public void deleteFile(Object requestor, VirtualFile virtualFile) throws IOException {
         MemoryVirtualFile file = (MemoryVirtualFile) virtualFile;
-        files.remove(file.getName());
-
+        MemoryVirtualFile old = files.remove(file.getName());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Delete file: "+old+", requestor="+requestor);    
+        }
         MemoryVirtualFile parent = (MemoryVirtualFile) file.getParent();
         if (parent != null) {
             parent.deleteChild(file);
         }
         file.invalidate();
-        //fireFileDeleted(virtualFile);
+        fireFileDeleted(virtualFile);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void moveFile(Object object,
+    public void moveFile(Object requestor,
                          VirtualFile virtualFile,
-                         VirtualFile virtualFile1) throws IOException {
-        files.remove(virtualFile.getName());
-        files.put(virtualFile1.getName(),
-                (MemoryVirtualFile) virtualFile1);
+                         VirtualFile newParentVirtualFile) throws IOException {
+        /*MemoryVirtualFile file = (MemoryVirtualFile) virtualFile;
+        MemoryVirtualFile parent = (MemoryVirtualFile) file.getParent();
+        if (parent != null) {
+            parent.deleteChild(file);
+        }
+        MemoryVirtualFile newParent = (MemoryVirtualFile) newParentVirtualFile;
+        newParent.addChild(file);      
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Move file: "+file+" ->"+newParent+", requestor="+requestor);    
+        }*/
     }
 
     /**
      * {@inheritDoc}
      */
-    public void renameFile(Object object,
+    public void renameFile(Object requestor,
                            VirtualFile virtualFile,
-                           String string) throws IOException {
-        files.remove(virtualFile.getName());
-        files.put(string,
-                (MemoryVirtualFile) virtualFile);
+                           String newName) throws IOException {
+        /*files.remove(virtualFile.getName());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Rename file: "+virtualFile+" ->"+newName+", requestor="+requestor);    
+        }
+        MemoryVirtualFile file = (MemoryVirtualFile) virtualFile;
+        file.setName(newName);
+        files.put(newName, file);*/
     }
 
     /**
      * {@inheritDoc}
      */
-    public MemoryVirtualFile createChildFile(Object object,
+    public MemoryVirtualFile createChildFile(Object requestor,
                                              VirtualFile parent,
                                              String name) throws IOException {
-        MemoryVirtualFile file = new MemoryVirtualFile(name,
-                null);
+        MemoryVirtualFile file = new MemoryVirtualFile(name, null);
         file.setParent(parent);
         addFile(file);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Create child file: "+parent+" ->"+name+", requestor="+requestor);    
+        }
         return file;
     }
 
     /**
      * {@inheritDoc}
      */
-    public MemoryVirtualFile createChildDirectory(Object object,
+    public MemoryVirtualFile createChildDirectory(Object requestor,
                                                   VirtualFile parent,
                                                   String name) throws IOException {
         MemoryVirtualFile file = new MemoryVirtualFile(name);
         ((MemoryVirtualFile) parent).addChild(file);
         addFile(file);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Create child directory: "+parent+" ->"+name+", requestor="+requestor);    
+        }
         return file;
     }
 
@@ -321,31 +346,6 @@ public class MemoryVirtualFileSystem extends VirtualFileSystem implements Applic
     /**
      * {@inheritDoc}
      */
-    public void projectOpened() {
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void projectClosed() {
-        files.clear();
-    }
-
-    public boolean isCaseSensitive() {
-        return true;
-    }
-
-    protected String extractRootPath(@NotNull String s) {
-        return s;
-    }
-
-    public int getRank() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public VirtualFile copyFile(Object o,
                                 VirtualFile virtualFile,
                                 VirtualFile virtualFile1,
@@ -357,81 +357,6 @@ public class MemoryVirtualFileSystem extends VirtualFileSystem implements Applic
      * {@inheritDoc}
      */
     public boolean isReadOnly() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean exists(VirtualFile virtualFile) {
-        return files.containsValue(virtualFile);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String[] list(VirtualFile virtualFile) {
-        return new String[0];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isDirectory(VirtualFile virtualFile) {
-        return virtualFile.isDirectory();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public long getTimeStamp(VirtualFile virtualFile) {
-        return virtualFile.getTimeStamp();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setTimeStamp(VirtualFile virtualFile,
-                             long l) throws IOException {
-        // no-op
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isWritable(VirtualFile virtualFile) {
-        return virtualFile.isWritable();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setWritable(VirtualFile virtualFile,
-                            boolean b) throws IOException {
-        // no-op
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public InputStream getInputStream(VirtualFile virtualFile) throws IOException {
-        return virtualFile.getInputStream();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public OutputStream getOutputStream(VirtualFile virtualFile,
-                                        Object o,
-                                        long l,
-                                        long l1) throws IOException {
-        return virtualFile.getOutputStream(o, l, l1);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public long getLength(VirtualFile virtualFile) {
-        return virtualFile.getLength();
+        return true;
     }
 }
