@@ -113,11 +113,38 @@ public class IntelliJad implements ApplicationComponent,
         return COMPONENT_NAME;
     }
 
+    private String setupTempOutputDir(Project project) {
+        Config config = PluginUtil.getConfig(project);
+        String outputDir = FileSystemUtil.generateTempOutputDir(project);
+        config.setOutputDirectory(outputDir);
+        config.setCreateOutputDirectory(true);
+        LOG.info("Enabled decompilation to temporary directory: "+outputDir);
+        return outputDir;
+    }
+    
+    private void forceDecompilationToDirectory(final Project project) {
+        LOG.info("Forcing decompilation to directory");
+        Config config = PluginUtil.getConfig(project);
+        if (config.isDecompileToMemory()) {
+            config.setDecompileToMemory(false);
+            config.setKeepDecompiledToMemory(false);
+            LOG.info("Disabled decompilation to memory");
+            if (StringUtil.isEmptyOrSpaces(config.getOutputDirectory())) {
+                setupTempOutputDir(project);
+            }
+        } else {
+            LOG.info("Decompilation to directory is already enabled");    
+        }
+    }
+    
     /**
      * {@inheritDoc}
      */
-    public void projectOpened(final Project project)
-    {
+    public void projectOpened(final Project project) {
+        if (isDecompileToLocalFSOnly()) {
+            //this will reconfigure project to decompile to file system 
+            forceDecompilationToDirectory(project);
+        }
         primeProject(project);
     }
 
@@ -130,7 +157,7 @@ public class IntelliJad implements ApplicationComponent,
     {
         project.putUserData(IntelliJadConstants.GENERATED_SOURCE_LIBRARIES,
                             new ArrayList<Library>());
-
+        project.putUserData(IntelliJadConstants.DECOMPILATION_DISABLED, false);
         NavigationListener navigationListener = new NavigationListener(project, this);
         project.getMessageBus().connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, navigationListener);
         project.putUserData(IntelliJadConstants.DECOMPILE_LISTENER, navigationListener);
@@ -244,8 +271,7 @@ public class IntelliJad implements ApplicationComponent,
                                                                                      consoleContext);
         if (!validationResult.isCancelled() && validationResult.isValid())
         {
-            if (config.isDecompileToMemory())
-            {
+            if (config.isDecompileToMemory()) {
                 checkSDKRoot(project);
             }
             else
@@ -277,61 +303,97 @@ public class IntelliJad implements ApplicationComponent,
                             if (debug) {
                                 LOG.debug("Output directory creation failed");
                             }
-                            checkSDKRoot(project);
+                            if (isDecompileToLocalFSOnly()) {
+                                outputDir = setupTempOutputDir(project);
+                                outDirFile = lfs.findFileByPath(outputDir);
+                                if (outDirFile == null) {
+                                    targetDir = FileSystemUtil.createTargetDir(config);
+                                    if (targetDir != null) {
+                                        outDirFile = lfs.refreshAndFindFileByIoFile(targetDir);
+                                    } else {
+                                        LOG.error("Output directory creation failed: "+outputDir);
+                                        project.putUserData(IntelliJadConstants.DECOMPILATION_DISABLED, true);
+                                    }
+                                }
+                                if (!project.getUserData(IntelliJadConstants.DECOMPILATION_DISABLED)) {
+                                    checkSDKRoot(project, outDirFile);
+                                }
+                            } else {
+                                checkSDKRoot(project);    
+                            }                            
                         }
                     } else if (outDirFile == null) {
+                        if (isDecompileToLocalFSOnly()) {
+                            outputDir = setupTempOutputDir(project);
+                            outDirFile = lfs.findFileByPath(outputDir);
+                            if (outDirFile == null) {
+                                File targetDir = FileSystemUtil.createTargetDir(config);
+                                if (targetDir != null) {
+                                    outDirFile = lfs.refreshAndFindFileByIoFile(targetDir);
+                                } else {
+                                    LOG.error("Output directory creation failed: "+outputDir);
+                                    project.putUserData(IntelliJadConstants.DECOMPILATION_DISABLED, true);
+                                }
+                            }
+                            if (!project.getUserData(IntelliJadConstants.DECOMPILATION_DISABLED)) {
+                                checkSDKRoot(project, outDirFile);
+                            }        
+                        }
                         checkSDKRoot(project);
                     } else {
                         checkSDKRoot(project, outDirFile);
                     }
                 }
             }
-
-            StringBuilder sb = new StringBuilder();
-            sb.append(config.getJadPath()).append(' ');
-            sb.append(config.renderCommandLinePropertyDescriptors());
-            DecompilationContext context = new DecompilationContext(project,
-                                                                    consoleContext,
-                                                                    sb.toString());
-            Decompiler decompiler = config.isDecompileToMemory() ? new MemoryDecompiler() : new FileSystemDecompiler();
-            if (debug) {
-                LOG.debug("Decompiler in use: "+decompiler.getClass().getSimpleName());
-            }
-            try
-            {
-                VirtualFile file = decompiler.getVirtualFile(descriptor,
-                                                             context);
-                FileEditorManager editorManager = FileEditorManager.getInstance(project);
-                if (file != null && editorManager.isFileOpen(file))
-                {
-                    console.closeConsole();
-                    FileEditorManager.getInstance(project).closeFile(descriptor.getClassFile());
-                    editorManager.openFile(file, true);
+            if (project.getUserData(IntelliJadConstants.DECOMPILATION_DISABLED)) {
+                consoleContext.addSectionMessage(ConsoleEntryType.ERROR,
+                                                "error",
+                                                "Target directory "+config.getOutputDirectory()+" creation failed");    
+            } else {
+                StringBuilder sb = new StringBuilder();
+                sb.append(config.getJadPath()).append(' ');
+                sb.append(config.renderCommandLinePropertyDescriptors());
+                DecompilationContext context = new DecompilationContext(project,
+                                                                        consoleContext,
+                                                                        sb.toString());
+                Decompiler decompiler = config.isDecompileToMemory() ? new MemoryDecompiler() : new FileSystemDecompiler();
+                if (debug) {
+                    LOG.debug("Decompiler in use: "+decompiler.getClass().getSimpleName());
                 }
-                else
+                try
                 {
-                    file = decompiler.decompile(descriptor,
-                                                context);
-                    if (file != null)
+                    VirtualFile file = decompiler.getVirtualFile(descriptor,
+                                                                 context);
+                    FileEditorManager editorManager = FileEditorManager.getInstance(project);
+                    if (file != null && editorManager.isFileOpen(file))
                     {
-                        editorManager.closeFile(descriptor.getClassFile());
+                        console.closeConsole();
+                        FileEditorManager.getInstance(project).closeFile(descriptor.getClassFile());
                         editorManager.openFile(file, true);
                     }
-                    consoleContext.addSectionMessage(ConsoleEntryType.INFO,
-                                                     "message.operation-time",
-                                                     System.currentTimeMillis() - startTime);
+                    else
+                    {
+                        file = decompiler.decompile(descriptor,
+                                                    context);
+                        if (file != null)
+                        {
+                            editorManager.closeFile(descriptor.getClassFile());
+                            editorManager.openFile(file, true);
+                        }
+                        consoleContext.addSectionMessage(ConsoleEntryType.INFO,
+                                                         "message.operation-time",
+                                                         System.currentTimeMillis() - startTime);
+                    }
+                }
+                catch (DecompilationException e)
+                {
+                    consoleContext.addSectionMessage(ConsoleEntryType.ERROR,
+                                                     "error",
+                                                     e.getMessage());
                 }
             }
-            catch (DecompilationException e)
-            {
-                consoleContext.addSectionMessage(ConsoleEntryType.ERROR,
-                                                 "error",
-                                                 e.getMessage());
-            }
             consoleContext.close();
-            checkConsole(config,
-                         console,
-                         consoleContext);
+            checkConsole(config, console, consoleContext);
         }
     }
 
@@ -347,6 +409,9 @@ public class IntelliJad implements ApplicationComponent,
      */
     private void checkSDKRoot(final Project project)
     {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Checking SDK root: "+project.getName());
+        }
         if (project.getUserData(IntelliJadConstants.SDK_SOURCE_ROOT_ATTACHED) != Boolean.TRUE)
         {
             VirtualFileSystem vfs = VirtualFileManager.getInstance().getFileSystem(
@@ -371,6 +436,9 @@ public class IntelliJad implements ApplicationComponent,
     private void checkSDKRoot(final Project project,
                               final VirtualFile root)
     {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Checking SDK root: "+project.getName()+" -> "+root.getPresentableUrl());
+        }
         ApplicationManager.getApplication().runWriteAction(new Runnable()
         {
             public void run()
@@ -452,5 +520,13 @@ public class IntelliJad implements ApplicationComponent,
     public static Logger getLogger()
     {
         return Logger.getInstance(IntelliJadConstants.INTELLIJAD);
+    }
+
+    /**
+     * Enables workaround for Idea 12 indexing issues
+     * @return
+     */
+    public static boolean isDecompileToLocalFSOnly() {
+        return true;
     }
 }

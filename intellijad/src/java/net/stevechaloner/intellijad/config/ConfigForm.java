@@ -24,6 +24,7 @@ import com.intellij.psi.PsiPackage;
 import net.stevechaloner.idea.util.fs.ApplicationFileSelectionAction;
 import net.stevechaloner.idea.util.fs.FileSelectionDescriptor;
 import net.stevechaloner.idea.util.fs.ProjectFileSelectionAction;
+import net.stevechaloner.intellijad.IntelliJad;
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
 import org.jetbrains.annotations.Nullable;
 
@@ -248,6 +249,12 @@ public class ConfigForm
                 }
             });
         }
+        if (IntelliJad.isDecompileToLocalFSOnly()) {
+            decompileToMemoryCheckBox.setEnabled(false);
+            decompileToMemoryCheckBox.setToolTipText(IntelliJadResourceBundle.message("config.compatibility-mode-tip"));
+            keepDecompiledToMemory.setEnabled(false);
+            keepDecompiledToMemory.setToolTipText(IntelliJadResourceBundle.message("config.compatibility-mode-tip"));
+        }
     }
 
     /**
@@ -271,8 +278,10 @@ public class ConfigForm
     private void toggleToMemoryControls(@Nullable Project project) {
         if (project == null ||
                     useProjectSpecificIntelliJadCheckBox.isSelected()) {
-            boolean decompileToMemory = decompileToMemoryCheckBox.isSelected();
-            keepDecompiledToMemory.setEnabled(decompileToMemory);
+            if (!IntelliJad.isDecompileToLocalFSOnly()) {           
+                boolean decompileToMemory = decompileToMemoryCheckBox.isSelected();
+                keepDecompiledToMemory.setEnabled(decompileToMemory);
+            }
         }
     }
 

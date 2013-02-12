@@ -4,7 +4,6 @@
 package net.stevechaloner.intellijad.editor;
 
 import com.intellij.codeInsight.AttachSourcesProvider.AttachSourcesAction;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.roots.LibraryOrderEntry;
 import com.intellij.openapi.util.ActionCallback;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -14,8 +13,6 @@ import net.stevechaloner.intellijad.decompilers.DecompilationChoiceListener;
 import net.stevechaloner.intellijad.decompilers.DecompilationDescriptor;
 import net.stevechaloner.intellijad.decompilers.DecompilationDescriptorFactory;
 import net.stevechaloner.intellijad.environment.EnvironmentContext;
-import net.stevechaloner.intellijad.util.Exclusion;
-import net.stevechaloner.intellijad.util.PluginUtil;
 
 import java.util.List;
 

@@ -19,7 +19,7 @@ public interface MemoryVF {
     @NotNull
     String getContent();
     VirtualFile asVirtualFile();
-
+    String getName();
     void addChild(MemoryVF file);
 
     void setWritable(boolean writable) throws IOException;

@@ -26,6 +26,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 
 import com.intellij.openapi.vfs.VirtualFileSystem;
+import net.stevechaloner.intellijad.IntelliJad;
 import net.stevechaloner.intellijad.IntelliJadConstants;
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
 import net.stevechaloner.intellijad.config.CodeStyle;
@@ -33,9 +34,11 @@ import net.stevechaloner.intellijad.config.Config;
 import net.stevechaloner.intellijad.console.ConsoleContext;
 import net.stevechaloner.intellijad.console.ConsoleEntryType;
 import net.stevechaloner.intellijad.util.LibraryUtil;
+import net.stevechaloner.intellijad.vfs.LightMemoryVF;
 import net.stevechaloner.intellijad.vfs.MemoryVF;
 import net.stevechaloner.intellijad.vfs.MemoryVFS;
 
+import net.stevechaloner.intellijad.vfs.TempMemoryVFS;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -106,20 +109,27 @@ public class MemoryDecompiler extends AbstractDecompiler
                                         @NotNull final DecompilationContext context,
                                         @NotNull final String content) throws DecompilationException
     {
-        MemoryVFS vfs = (MemoryVFS) VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
+        MemoryVFS vfs;
+        if (IntelliJad.isDecompileToLocalFSOnly()) {
+            vfs = TempMemoryVFS.getInstance(context.getProject());    
+        } else {
+            vfs = (MemoryVFS) VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
+        }
         MemoryVF file = vfs.newMemoryFV(descriptor.getClassName() + IntelliJadConstants.DOT_JAVA_EXTENSION,
                                                              content);
         file.asVirtualFile().putUserData(IntelliJadConstants.DECOMPILED_BY_INTELLIJAD,
                 true);
 
-        reformatToStyle(context, file);
-
-        VirtualFile actualFile = insertIntoFileSystem(descriptor,
-                                                      context,
-                                                      vfs,
-                                                      file);
-        lockFile(context,
-                 file);
+        VirtualFile actualFile;
+        if (IntelliJad.isDecompileToLocalFSOnly()) {
+            actualFile = insertIntoFileSystem(descriptor, context, vfs, file); 
+            reformatToStyle(context, new LightMemoryVF(actualFile));                                    
+        } else {
+            reformatToStyle(context, file);            
+            actualFile = insertIntoFileSystem(descriptor, context, vfs, file);    
+        }
+        
+        lockFile(context, file);
 
         Project project = context.getProject();
         List<Library> libraries = LibraryUtil.findLibrariesByClass(descriptor.getFullyQualifiedName(),
@@ -139,8 +149,7 @@ public class MemoryDecompiler extends AbstractDecompiler
                                                    descriptor.getClassName());
         }
 
-        lockFile(context,
-                 file);
+        lockFile(context, file);
 
         return actualFile;
     }
