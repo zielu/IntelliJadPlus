@@ -4,7 +4,7 @@
     <!-- A build.properties file must exist containing: -->
     <!-- idea.home.dir, e.g. idea.home.dir=/usr/local/ide/idea-IU-93.94 -->
     <!-- property file="${user.home}/build.properties"/ -->
-    <property file="build.properties"/>
+    <property file="../build.properties"/>
 
     <property name="src.dir" value="src/"/>
     <property name="dist.dir" value="dist/"/>
