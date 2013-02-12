@@ -17,7 +17,7 @@ import java.io.IOException;
  * @author Lukasz Zielinski
  */
 public interface MemoryVFS {
-    void deleteFile(Object object, VirtualFile virtualFile) throws IOException;
+    void deleteFile(Object requestor, VirtualFile virtualFile) throws IOException;
 
     MemoryVF getFileForPackage(String packageName);
 

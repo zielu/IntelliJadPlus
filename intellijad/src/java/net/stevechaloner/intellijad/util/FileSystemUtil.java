@@ -3,6 +3,7 @@
  */
 package net.stevechaloner.intellijad.util;
 
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import net.stevechaloner.intellijad.config.Config;
 import net.stevechaloner.intellijad.decompilers.DecompilationContext;
@@ -17,6 +18,19 @@ import java.io.File;
  * @author Lukasz Zielinski
  */
 public class FileSystemUtil {
+    
+    public static String generateTempDirName(Project project) {
+        return "intellijad-"+project.getName();    
+    }
+    
+    public static String generateTempOutputDir(Project project) {
+        String tempDirPath = System.getProperty("java.io.tmpdir");
+        String fileSeparator = System.getProperty("file.separator");
+        if (!tempDirPath.endsWith(fileSeparator)) {
+            tempDirPath = tempDirPath + fileSeparator;
+        }
+        return tempDirPath + generateTempDirName(project);
+    } 
     
     public static File createTargetDir(Config config) {
         String outputDirPath = config.getOutputDirectory();
