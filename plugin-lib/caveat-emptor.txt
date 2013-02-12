@@ -1,0 +1,16 @@
+Caveat for IntelliJ plugin library
+----------------------------------
+
+This library started when I wrote the Firefox Search plugin in 2007
+and wanted to compartmentalise the persistence code as much as possible.
+
+When I started the IntelliJad plugin I reused the library, with a few tweaks,
+in order to get up and running quickly.
+
+This is by no means a robust, thoroughly-tested solution for persistence (and is
+now obsolete following the changes to the IntelliJ 7 openapi) but it works fine
+in both Firefox Search and IntelliJad.  I guess what I'm trying to say is that
+while you're welcome to use it, you probably want to have a dig around in the code
+first and keep your fingers crossed.
+
+- Steve

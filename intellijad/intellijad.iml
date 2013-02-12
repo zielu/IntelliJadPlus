@@ -15,17 +15,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library">
-      <library name="plugin-lib">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/plugin-lib.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="intellijad://intellijad" />
-        </SOURCES>
-      </library>
-    </orderEntry>
+    <orderEntry type="module" module-name="plugin-lib" />
     <orderEntry type="library" scope="TEST" name="junit" level="application" />
   </component>
 </module>
