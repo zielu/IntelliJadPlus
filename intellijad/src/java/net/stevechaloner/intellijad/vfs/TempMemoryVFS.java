@@ -34,11 +34,16 @@ public class TempMemoryVFS implements MemoryVFS {
     }
 
     private VirtualFile initRoot(Project project) {
+        VirtualFile fsRoot = fs.findFileByPath("/");
         String rootName = FileSystemUtil.generateTempDirName(project);
-        VirtualFile root = fs.findFileByPath("/" + rootName);
+        VirtualFile root = fs.findFileByPath("/intellijad/" + rootName);
         if (root == null) {
             try {
-                return fs.createChildDirectory(null, fs.findFileByPath("/"), rootName);
+                VirtualFile commonRoot = fs.findFileByPath("/intellijad");
+                if (commonRoot == null) {
+                    commonRoot = fs.createChildDirectory(null, fsRoot, "intellijad");
+                }
+                return fs.createChildDirectory(null, commonRoot, rootName);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -63,7 +68,7 @@ public class TempMemoryVFS implements MemoryVFS {
         while (st.hasMoreTokens()) {
             names.add(st.nextToken());
         }
-        return new TempMemoryVF(getFileForPackage(names, fs.findFileByPath("/")), fs);
+        return new TempMemoryVF(getFileForPackage(names, root), fs);
     }
 
     private VirtualFile getFileForPackage(@NotNull List<String> names,
@@ -100,7 +105,7 @@ public class TempMemoryVFS implements MemoryVFS {
     @Override
     public MemoryVF newMemoryFV(@NotNull String name, String content) {
         try {
-            VirtualFile file = fs.createChildFile(null, fs.findFileByPath("/"), name);
+            VirtualFile file = fs.createChildFile(null, root, name);
             TempMemoryVF memoryVF = new TempMemoryVF(file, fs);
             memoryVF.setContent(content);
             return memoryVF;

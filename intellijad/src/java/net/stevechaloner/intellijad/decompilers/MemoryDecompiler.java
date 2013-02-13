@@ -16,11 +16,9 @@
 package net.stevechaloner.intellijad.decompilers;
 
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.OrderRootType;
-import com.intellij.openapi.roots.libraries.LibrariesHelper;
 import com.intellij.openapi.roots.libraries.Library;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
@@ -110,7 +108,7 @@ public class MemoryDecompiler extends AbstractDecompiler
                                         @NotNull final String content) throws DecompilationException
     {
         MemoryVFS vfs;
-        if (IntelliJad.isDecompileToLocalFSOnly()) {
+        if (IntelliJad.isVirtualFsDisabled()) {
             vfs = TempMemoryVFS.getInstance(context.getProject());    
         } else {
             vfs = (MemoryVFS) VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
@@ -121,7 +119,7 @@ public class MemoryDecompiler extends AbstractDecompiler
                 true);
 
         VirtualFile actualFile;
-        if (IntelliJad.isDecompileToLocalFSOnly()) {
+        if (IntelliJad.isVirtualFsDisabled()) {
             actualFile = insertIntoFileSystem(descriptor, context, vfs, file); 
             reformatToStyle(context, new LightMemoryVF(actualFile));                                    
         } else {
@@ -249,7 +247,7 @@ public class MemoryDecompiler extends AbstractDecompiler
     }
 
     /**
-     * Calcuates the success of the process execution.
+     * Calculates the success of the process execution.
      *
      * @param exitCode the exit code of the process
      * @param err      the error stream of the process
