@@ -20,16 +20,21 @@ import java.io.File;
 public class FileSystemUtil {
     
     public static String generateTempDirName(Project project) {
-        return "intellijad-"+project.getName();    
+        return project.getName();    
     }
     
     public static String generateTempOutputDir(Project project) {
+        String fileSeparator = System.getProperty("file.separator");
+        return generateTempOutputDir() + fileSeparator + generateTempDirName(project);
+    } 
+    
+    public static String generateTempOutputDir() {
         String tempDirPath = System.getProperty("java.io.tmpdir");
         String fileSeparator = System.getProperty("file.separator");
         if (!tempDirPath.endsWith(fileSeparator)) {
             tempDirPath = tempDirPath + fileSeparator;
         }
-        return tempDirPath + generateTempDirName(project);
+        return tempDirPath + "intellijad";
     } 
     
     public static File createTargetDir(Config config) {

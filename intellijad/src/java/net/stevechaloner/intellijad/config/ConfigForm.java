@@ -26,6 +26,8 @@ import net.stevechaloner.idea.util.fs.FileSelectionDescriptor;
 import net.stevechaloner.idea.util.fs.ProjectFileSelectionAction;
 import net.stevechaloner.intellijad.IntelliJad;
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
+import net.stevechaloner.intellijad.util.FileSystemUtil;
+import net.stevechaloner.intellijad.util.PluginUtil;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.JButton;
@@ -109,7 +111,7 @@ public class ConfigForm
 
     @Nullable
     private final Project project;
-
+    
     /**
      * Initialises a new instance of this class with no project,
      * forcing it into generic (application-level) behaviour.
@@ -246,14 +248,31 @@ public class ConfigForm
                 {
                     setControlsEnabled(project,
                                        useProjectSpecificIntelliJadCheckBox.isSelected());
+                    if (IntelliJad.isVirtualFsDisabled()) {
+                        toggleToMemoryControls(project);
+                    }
+                    if (useProjectSpecificIntelliJadCheckBox.isSelected()) {
+                        if (StringUtil.isEmptyOrSpaces(jadTextField.getText())) {
+                            jadTextField.setText(PluginUtil.getApplicationConfig().getJadPath());        
+                        }
+                        if (IntelliJad.isVirtualFsDisabled() && StringUtil.isEmptyOrSpaces(outputDirectoryTextField.getText())) {
+                            outputDirectoryTextField.setText(FileSystemUtil.generateTempOutputDir(project));
+                            createIfDirectoryDoesnCheckBox.setSelected(true);
+                        }
+                    } else {
+                        String applicationJadPath = PluginUtil.getApplicationConfig().getJadPath();
+                        if (!StringUtil.isEmptyOrSpaces(applicationJadPath) &&
+                            StringUtil.equals(applicationJadPath, jadTextField.getText())) {
+                            jadTextField.setText("");
+                        }
+                        if (IntelliJad.isVirtualFsDisabled() && 
+                            !StringUtil.isEmptyOrSpaces(PluginUtil.getApplicationConfig().getOutputDirectory())) {
+                            outputDirectoryTextField.setText("");
+                            createIfDirectoryDoesnCheckBox.setSelected(false);
+                        }
+                    }
                 }
             });
-        }
-        if (IntelliJad.isDecompileToLocalFSOnly()) {
-            decompileToMemoryCheckBox.setEnabled(false);
-            decompileToMemoryCheckBox.setToolTipText(IntelliJadResourceBundle.message("config.compatibility-mode-tip"));
-            keepDecompiledToMemory.setEnabled(false);
-            keepDecompiledToMemory.setToolTipText(IntelliJadResourceBundle.message("config.compatibility-mode-tip"));
         }
     }
 
@@ -278,9 +297,16 @@ public class ConfigForm
     private void toggleToMemoryControls(@Nullable Project project) {
         if (project == null ||
                     useProjectSpecificIntelliJadCheckBox.isSelected()) {
-            if (!IntelliJad.isDecompileToLocalFSOnly()) {           
+            if (IntelliJad.isVirtualFsDisabled()) {           
+                decompileToMemoryCheckBox.setSelected(false);
+                decompileToMemoryCheckBox.setEnabled(false);
+                decompileToMemoryCheckBox.setToolTipText(IntelliJadResourceBundle.message("config.compatibility-mode-tip"));
+                keepDecompiledToMemory.setSelected(false);
+                keepDecompiledToMemory.setEnabled(false);
+                keepDecompiledToMemory.setToolTipText(IntelliJadResourceBundle.message("config.compatibility-mode-tip"));
+            } else {
                 boolean decompileToMemory = decompileToMemoryCheckBox.isSelected();
-                keepDecompiledToMemory.setEnabled(decompileToMemory);
+                keepDecompiledToMemory.setEnabled(decompileToMemory);    
             }
         }
     }
@@ -368,9 +394,14 @@ public class ConfigForm
         spacesForIndentationSpinner.setValue(data.getIndentation());
         displayLongsUsingRadixSpinner.setValue(data.getLongRadix());
         displayIntegersUsingRadixSpinner.setValue(data.getIntRadix());
-        navTriggeredDecomp.setSelectedItem(NavigationTriggeredDecompile.getByName(data.getDecompileOnNavigation()));
         reformatStyle.setSelectedItem(CodeStyle.getByName(data.getReformatStyle()));
         useProjectSpecificIntelliJadCheckBox.setSelected(data.isUseProjectSpecificSettings());
+        if (project == null) {
+            navTriggeredDecomp.setSelectedItem(NavigationTriggeredDecompile.getByName(data.getDecompileOnNavigation()));
+        } else {
+            navTriggeredDecomp.setSelectedItem(NavigationTriggeredDecompile.getByName(
+                    PluginUtil.getApplicationConfig().getDecompileOnNavigation()));    
+        }
     }
 
     /**
@@ -631,15 +662,17 @@ public class ConfigForm
         alwaysExcludePackagesRecursivelyCheckBox.setSelected(data.isAlwaysExcludeRecursively());
         cleanupSourceRootsCheckBox.setSelected(data.isCleanupSourceRoots());
         
-        if (project != null)
-        {
-            setControlsEnabled(project,
-                               data.isUseProjectSpecificSettings());
+        if (project != null) {
+            setControlsEnabled(project, data.isUseProjectSpecificSettings());
+            
+        }
+        if (IntelliJad.isVirtualFsDisabled()) {
+            decompileToMemoryCheckBox.setSelected(false);
+            toggleToMemoryControls(project);
         }
     }
 
-    public void getData(Config data)
-    {
+    public void getData(Config data) {
         getUnboundData(data);
         data.setJadPath(jadTextField.getText());
         data.setOutputDirectory(outputDirectoryTextField.getText());
@@ -673,8 +706,7 @@ public class ConfigForm
 
         if (project != null)
         {
-            setControlsEnabled(project,
-                               data.isUseProjectSpecificSettings());
+            setControlsEnabled(project, data.isUseProjectSpecificSettings());
         }
     }
 
