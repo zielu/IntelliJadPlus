@@ -663,8 +663,7 @@ public class ConfigForm
         cleanupSourceRootsCheckBox.setSelected(data.isCleanupSourceRoots());
         
         if (project != null) {
-            setControlsEnabled(project, data.isUseProjectSpecificSettings());
-            
+            setControlsEnabled(project, data.isUseProjectSpecificSettings());           
         }
         if (IntelliJad.isVirtualFsDisabled()) {
             decompileToMemoryCheckBox.setSelected(false);
