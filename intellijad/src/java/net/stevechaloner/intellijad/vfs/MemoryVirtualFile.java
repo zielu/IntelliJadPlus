@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class MemoryVirtualFile extends VirtualFile implements MemoryVF, VirtualFileWithId
 {
-    private static final AtomicInteger ID_GEN = new AtomicInteger(1000000);
+    private static final AtomicInteger ID_GEN = new AtomicInteger(1);
 
 
     /**

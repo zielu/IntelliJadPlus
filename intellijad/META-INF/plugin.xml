@@ -15,10 +15,10 @@
         <component>
             <implementation-class>net.stevechaloner.intellijad.config.ApplicationConfigComponent</implementation-class>
         </component>
-        <!--component>
+        <!--<component>
             <implementation-class>net.stevechaloner.intellijad.vfs.MemoryVirtualFileSystem</implementation-class>
             <interface-class>com.intellij.openapi.vfs.VirtualFileSystem</interface-class>
-        </component-->
+        </component>-->
     </application-components>
 
     <project-components>
@@ -77,6 +77,7 @@
             <li>0.5.3
                 <ol>
                     <li>Fixed Idea 12.0.3 compatibility - decompile to memory disabled</li>
+                    <li>Automatically changes settings to filesystem decompilation</li>
                 </ol>
             </li>
             <li>0.5.1

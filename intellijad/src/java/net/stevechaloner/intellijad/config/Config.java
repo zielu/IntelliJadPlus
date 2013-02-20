@@ -57,7 +57,7 @@ public class Config implements DOMable
                                                                                                              CodeStyle.PREFERRED_STYLE.getName());
     private static final PropertyDescriptor<Boolean> CLEANUP_SOURCE_ROOTS = new ImmutablePropertyDescriptor<Boolean>("cleanup-source-roots",
                                                                                                                      Boolean.TRUE);
-
+    private static final PropertyDescriptor<Boolean> FORCED_DECOMPILE_TO_MEMORY = new ImmutablePropertyDescriptor<Boolean>("forced-decompile-to-memory", Boolean.FALSE);
     /**
      * The persistence model.
      */
@@ -132,7 +132,8 @@ public class Config implements DOMable
         registerBooleanProperty(USE_PROJECT_SPECIFIC_SETTINGS, dpc);
         registerStringProperty(REFORMAT_STYLE, dpc);
         registerBooleanProperty(CLEANUP_SOURCE_ROOTS, dpc);
-
+        registerBooleanProperty(FORCED_DECOMPILE_TO_MEMORY, dpc);
+        
         dpc.put(EXCLUSION_TABLE_MODEL,
                 new DOMableTableModel(EXCLUSION_TABLE_MODEL,
                                       new ExclusionTableModel()));
@@ -832,6 +833,15 @@ public class Config implements DOMable
         value.setValue(cleanupSourceRoots);
     }
 
+    public boolean isForcedDecompileToMemory() {
+        return FORCED_DECOMPILE_TO_MEMORY.getValue(propertyContainer.get(FORCED_DECOMPILE_TO_MEMORY));
+    }
+    
+    public void setForcedDecompileToMemory(boolean forced) {
+        DOMableGeneric<Boolean> value = (DOMableGeneric<Boolean>) propertyContainer.get(FORCED_DECOMPILE_TO_MEMORY);
+        value.setValue(forced);    
+    }
+    
     @NotNull
     public PropertyDescriptor getPropertyDescriptor()
     {
@@ -952,6 +962,7 @@ public class Config implements DOMable
         setUseProjectSpecificSettings(config.isUseProjectSpecificSettings());
         setReformatStyle(config.getReformatStyle());
         setCleanupSourceRoots(config.isCleanupSourceRoots());
+        setForcedDecompileToMemory(config.isForcedDecompileToMemory());
     }
 
     public boolean isReportOutputDirectoryNotSet() {

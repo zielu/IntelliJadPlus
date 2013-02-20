@@ -15,6 +15,7 @@
 
 package net.stevechaloner.intellijad;
 
+import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.diagnostic.Logger;
@@ -51,6 +52,7 @@ import net.stevechaloner.intellijad.environment.EnvironmentValidator;
 import net.stevechaloner.intellijad.environment.ValidationResult;
 import net.stevechaloner.intellijad.util.FileSystemUtil;
 import net.stevechaloner.intellijad.util.PluginUtil;
+import net.stevechaloner.intellijad.vfs.MemoryVFS;
 import net.stevechaloner.intellijad.vfs.MemoryVirtualFileSystem;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -78,7 +80,7 @@ public class IntelliJad implements ApplicationComponent,
      */
     private final ConsoleManager consoleManager = new ConsoleManager();
 
-    private final Logger LOG = Logger.getInstance(getClass());
+    private static final Logger LOG = Logger.getInstance(IntelliJad.class);
     
     private static Boolean isVirtualFsDisabled;
     
@@ -108,6 +110,12 @@ public class IntelliJad implements ApplicationComponent,
         }
     };
 
+    private final Application application;
+
+    public IntelliJad(Application application) {
+        this.application = application;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -117,34 +125,57 @@ public class IntelliJad implements ApplicationComponent,
         return COMPONENT_NAME;
     }
     
-    private String setupTempOutputDir(Config config, Project project) {
-        if (config.isUseProjectSpecificSettings()) {
-            if (StringUtil.isEmptyOrSpaces(config.getOutputDirectory())) {
+    private String setupTempOutputDir(Config config, Project project, boolean enable) {
+        if (enable) {
+            if (config.isUseProjectSpecificSettings()) {
+                if (StringUtil.isEmptyOrSpaces(config.getOutputDirectory())) {
+                    String outputDir = FileSystemUtil.generateTempOutputDir(project);
+                    _setupTempOutputDir(config, outputDir, enable);
+                    return outputDir;
+                } else {
+                    return config.getOutputDirectory();
+                }
+            } else {
+                return setupTempOutputDir(PluginUtil.getApplicationConfig(), enable);
+            }
+        } else {
+            if (config.isUseProjectSpecificSettings()) {
                 String outputDir = FileSystemUtil.generateTempOutputDir(project);
-                _setupTempOutputDir(config, outputDir);
+                _setupTempOutputDir(config, outputDir, enable);
+            } else {
+                setupTempOutputDir(PluginUtil.getApplicationConfig(), enable);
+            }
+            return null;
+        }
+    }
+    
+    private String setupTempOutputDir(Config config, boolean enable) {
+        if (enable) {
+            if (StringUtil.isEmptyOrSpaces(config.getOutputDirectory())) {
+                String outputDir = FileSystemUtil.generateTempOutputDir();
+                _setupTempOutputDir(config, outputDir, enable);
                 return outputDir;
             } else {
                 return config.getOutputDirectory();
             }
         } else {
-            return setupTempOutputDir(PluginUtil.getApplicationConfig());
-        }
-    }
-    
-    private String setupTempOutputDir(Config config) {
-        if (StringUtil.isEmptyOrSpaces(config.getOutputDirectory())) {
             String outputDir = FileSystemUtil.generateTempOutputDir();
-            _setupTempOutputDir(config, outputDir);
-            return outputDir;
-        } else {
-            return config.getOutputDirectory();
+            if (outputDir.equals(config.getOutputDirectory())) {
+                _setupTempOutputDir(config, outputDir, enable);    
+            }
+            return null;
         }
     }
     
-    private void _setupTempOutputDir(Config config, String outputDir) {
-        config.setOutputDirectory(outputDir);
-        config.setCreateOutputDirectory(true);
-        LOG.info("Enabled decompilation to temporary directory: "+outputDir);    
+    private void _setupTempOutputDir(Config config, String outputDir, boolean enable) {
+        if (enable) {
+            config.setOutputDirectory(outputDir);
+            config.setCreateOutputDirectory(true);
+            LOG.info("Enabled decompilation to temporary directory: "+outputDir);
+        } else {
+            config.setOutputDirectory("");
+            config.setCreateOutputDirectory(false);
+        }
     }
     
     private void forceDecompilationToDirectory(Config config, Project project) {
@@ -153,9 +184,20 @@ public class IntelliJad implements ApplicationComponent,
             config.setDecompileToMemory(false);
             config.setKeepDecompiledToMemory(false);
             LOG.info("Disabled decompilation to memory for project");
-            setupTempOutputDir(config, project);
+            setupTempOutputDir(config, project, true);
+            config.setForcedDecompileToMemory(true);
+            application.saveSettings();
         } else {
             LOG.info("Decompilation to directory is already enabled for project");    
+        }
+    }
+    
+    private void reverseForcedDecompilationToDirectory(Config config, Project project) {
+        if (config.isForcedDecompileToMemory()) {
+            config.setDecompileToMemory(true);
+            setupTempOutputDir(config, project, false);
+            config.setForcedDecompileToMemory(false);
+            application.saveSettings();
         }
     }
     
@@ -165,7 +207,20 @@ public class IntelliJad implements ApplicationComponent,
             config.setDecompileToMemory(false);
             config.setKeepDecompiledToMemory(false);
             LOG.info("Disabled decompilation to memory");
-            setupTempOutputDir(config);
+            setupTempOutputDir(config, true);
+            config.setForcedDecompileToMemory(true);
+            application.saveSettings();
+        } else {
+            LOG.info("Decompilation to directory is already enabled for IDE");
+        }
+    }
+    
+    private void reverseForcedDecompilationToDirectory(Config config) {
+        if (config.isForcedDecompileToMemory()) {
+            config.setDecompileToMemory(true);
+            setupTempOutputDir(config, false);
+            config.setForcedDecompileToMemory(false);
+            application.saveSettings();
         }
     }
     
@@ -173,10 +228,12 @@ public class IntelliJad implements ApplicationComponent,
      * {@inheritDoc}
      */
     public void projectOpened(final Project project) {
+        Config config = PluginUtil.getConfig(project);
         if (isVirtualFsDisabled()) {
             //this will reconfigure project to decompile to file system
-            Config config = PluginUtil.getConfig(project);
             forceDecompilationToDirectory(config, project);
+        } else {
+            reverseForcedDecompilationToDirectory(config, project);   
         }
         primeProject(project);
     }
@@ -265,10 +322,13 @@ public class IntelliJad implements ApplicationComponent,
      */
     public void initComponent() {
         ProjectManager.getInstance().addProjectManagerListener(this);
+        Config config = PluginUtil.getApplicationConfig();
         if (isVirtualFsDisabled()) {
-            Config config = PluginUtil.getApplicationConfig();
             forceDecompilationToDirectory(config);
+        } else {
+            reverseForcedDecompilationToDirectory(config);    
         }
+        
     }
 
     /**
@@ -282,7 +342,7 @@ public class IntelliJad implements ApplicationComponent,
     private VirtualFile handleDisabledVirtualFs(LocalFileSystem lfs, Config config, Project project) {
         String outputDir = config.getOutputDirectory();
         if (StringUtil.isEmptyOrSpaces(outputDir)) {
-            outputDir = setupTempOutputDir(config, project);
+            outputDir = setupTempOutputDir(config, project, true);
         }
         VirtualFile outDirFile = lfs.findFileByPath(outputDir);
         if (outDirFile == null) {
@@ -556,7 +616,8 @@ public class IntelliJad implements ApplicationComponent,
      */
     public static boolean isVirtualFsDisabled() {
         if (isVirtualFsDisabled == null) {
-            isVirtualFsDisabled = PluginUtil.getComponent(MemoryVirtualFileSystem.class) == null;
+            VirtualFileSystem vfs = PluginUtil.getComponent(VirtualFileSystem.class);
+            isVirtualFsDisabled = vfs == null;
         }
         return isVirtualFsDisabled;
     }
