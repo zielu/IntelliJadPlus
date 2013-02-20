@@ -76,7 +76,7 @@
         <ul>
             <li>0.5.3
                 <ol>
-                    <li>Fixed Idea 12.0.3 compatibility - decompile to memory disabled</li>
+                    <li>Fixed Idea 12 compatibility - decompile to memory disabled</li>
                     <li>Automatically changes settings to filesystem decompilation</li>
                 </ol>
             </li>
