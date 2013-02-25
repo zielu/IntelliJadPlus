@@ -6,7 +6,11 @@ package net.stevechaloner.intellijad.vfs;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.StringReader;
+import java.nio.charset.Charset;
 
 /**
  * <p></p>
@@ -25,7 +29,11 @@ public class LightMemoryVF implements MemoryVF {
     @NotNull
     @Override
     public String getContent() {
-        throw new UnsupportedOperationException("Not implemented");
+        try {
+            return new String(virtualFile.contentsToByteArray(), Charset.forName("UTF-8"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -50,6 +58,19 @@ public class LightMemoryVF implements MemoryVF {
 
     @Override
     public void setContent(@NotNull String content) {
-        throw new UnsupportedOperationException("Not implemented");
+        try {
+            OutputStream out = virtualFile.getOutputStream(this);
+            BufferedReader reader = new BufferedReader(new StringReader(content));
+            String line;
+            byte[] newLine = "\n".getBytes("UTF-8");
+            while ((line = reader.readLine()) != null) {
+                out.write(line.getBytes("UTF-8"));
+                out.write(newLine);
+            }
+            reader.close();
+            out.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
