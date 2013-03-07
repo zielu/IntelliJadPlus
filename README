@@ -1,1 +1,4 @@
 IntelliJ IDEA plugin integrating JAD decompiler with Idea 11+
+
+## Installation
+In Idea go to Settings -> Plugins -> Browse Repositories... and search for "intellijad plus"
