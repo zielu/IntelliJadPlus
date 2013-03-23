@@ -228,13 +228,6 @@ public class IntelliJad implements ApplicationComponent,
      * {@inheritDoc}
      */
     public void projectOpened(final Project project) {
-        Config config = PluginUtil.getConfig(project);
-        if (isVirtualFsDisabled()) {
-            //this will reconfigure project to decompile to file system
-            forceDecompilationToDirectory(config, project);
-        } else {
-            reverseForcedDecompilationToDirectory(config, project);   
-        }
         primeProject(project);
     }
 
@@ -307,6 +300,11 @@ public class IntelliJad implements ApplicationComponent,
         consoleManager.disposeConsole(project);
         projectClosingTasks.remove(project);
         project.putUserData(IntelliJadConstants.DECOMPILE_LISTENER, null);
+        MemoryVFS vfs = project.getUserData(IntelliJadConstants.MEMORY_VFS);
+        if (vfs != null) {
+            vfs.dispose();
+            project.putUserData(IntelliJadConstants.MEMORY_VFS, null);
+        }
     }
 
     /**
@@ -317,18 +315,29 @@ public class IntelliJad implements ApplicationComponent,
         // no-op
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void initComponent() {
-        ProjectManager.getInstance().addProjectManagerListener(this);
+    public void onStartup() {
         Config config = PluginUtil.getApplicationConfig();
         if (isVirtualFsDisabled()) {
             forceDecompilationToDirectory(config);
         } else {
             reverseForcedDecompilationToDirectory(config);    
+        }    
+    }
+    
+    public void onStartup(Project project) {
+        Config config = PluginUtil.getConfig(project);
+        if (isVirtualFsDisabled()) {
+            //this will reconfigure project to decompile to file system
+            forceDecompilationToDirectory(config, project);
+        } else {
+            reverseForcedDecompilationToDirectory(config, project);   
         }
-        
+    }
+    /**
+     * {@inheritDoc}
+     */
+    public void initComponent() {
+        ProjectManager.getInstance().addProjectManagerListener(this);
     }
 
     /**

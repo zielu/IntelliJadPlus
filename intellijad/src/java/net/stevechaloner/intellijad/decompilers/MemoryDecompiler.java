@@ -121,7 +121,7 @@ public class MemoryDecompiler extends AbstractDecompiler
         VirtualFile actualFile;
         if (IntelliJad.isVirtualFsDisabled()) {
             actualFile = insertIntoFileSystem(descriptor, context, vfs, file); 
-            reformatToStyle(context, new LightMemoryVF(actualFile));                                    
+            reformatToStyle(context, new LightMemoryVF(actualFile));
         } else {
             reformatToStyle(context, file);            
             actualFile = insertIntoFileSystem(descriptor, context, vfs, file);    

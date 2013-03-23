@@ -359,4 +359,9 @@ public class MemoryVirtualFileSystem extends VirtualFileSystem implements Applic
     public boolean isReadOnly() {
         return true;
     }
+
+    @Override
+    public void dispose() {
+        //do nothing
+    }
 }
