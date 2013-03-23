@@ -26,4 +26,6 @@ public interface MemoryVFS {
     VirtualFileSystem asVirtualFileSystem();
 
     MemoryVF newMemoryFV(@NotNull String name, String content);
+    
+    void dispose();
 }

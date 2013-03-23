@@ -67,6 +67,7 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <attachSourcesProvider implementation="net.stevechaloner.intellijad.editor.JadAttachSourcesProvider"/>
+        <postStartupActivity implementation="net.stevechaloner.intellijad.IntelliJadStartup"/>
     </extensions>
 
     <helpset file="intellijad-help.jar" path="/helpset.hs"/>

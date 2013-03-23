@@ -18,6 +18,7 @@ package net.stevechaloner.intellijad;
 import com.intellij.openapi.roots.libraries.Library;
 import com.intellij.openapi.util.Key;
 import net.stevechaloner.intellijad.actions.NavigationListener;
+import net.stevechaloner.intellijad.vfs.MemoryVFS;
 
 import java.util.List;
 
@@ -99,4 +100,6 @@ public class IntelliJadConstants
     public static final Key<Boolean> SDK_SOURCE_ROOT_ATTACHED = new Key<Boolean>("sdk-source-root-attached");
     
     public static final Key<Boolean> DECOMPILATION_DISABLED = new Key<Boolean>("decompilation-by-intellijad-disabled");
+    
+    public static final Key<MemoryVFS> MEMORY_VFS = new Key<MemoryVFS>("memory-virtual-file-system");
 }
