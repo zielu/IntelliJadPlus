@@ -75,6 +75,11 @@
     <change-notes>
         <![CDATA[
         <ul>
+            <li>0.5.7
+                <ol>
+                    <li>Fixed save settings on startup (<a href="https://github.com/zielu/IntelliJadPlus/issues/27">issue #27</a>)</li>
+                </ol>
+            </li>
             <li>0.5.6
                 <ol>
                     <li>Marked as compatible with latest Idea 12.1</li>
