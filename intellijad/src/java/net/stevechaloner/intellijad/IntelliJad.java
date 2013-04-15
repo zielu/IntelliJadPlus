@@ -186,10 +186,20 @@ public class IntelliJad implements ApplicationComponent,
             LOG.info("Disabled decompilation to memory for project");
             setupTempOutputDir(config, project, true);
             config.setForcedDecompileToMemory(true);
-            application.saveSettings();
+            saveAppSettings(); 
         } else {
             LOG.info("Decompilation to directory is already enabled for project");    
         }
+    }
+    
+    private void saveAppSettings() {
+        application.runWriteAction(new Runnable() {
+            @Override
+            public void run() {
+                LOG.info("Saving settings");
+                application.saveSettings();
+            }
+        });   
     }
     
     private void reverseForcedDecompilationToDirectory(Config config, Project project) {
@@ -197,7 +207,7 @@ public class IntelliJad implements ApplicationComponent,
             config.setDecompileToMemory(true);
             setupTempOutputDir(config, project, false);
             config.setForcedDecompileToMemory(false);
-            application.saveSettings();
+            saveAppSettings();
         }
     }
     
@@ -209,7 +219,7 @@ public class IntelliJad implements ApplicationComponent,
             LOG.info("Disabled decompilation to memory");
             setupTempOutputDir(config, true);
             config.setForcedDecompileToMemory(true);
-            application.saveSettings();
+            saveAppSettings();        
         } else {
             LOG.info("Decompilation to directory is already enabled for IDE");
         }
@@ -220,7 +230,7 @@ public class IntelliJad implements ApplicationComponent,
             config.setDecompileToMemory(true);
             setupTempOutputDir(config, false);
             config.setForcedDecompileToMemory(false);
-            application.saveSettings();
+            saveAppSettings();
         }
     }
     
