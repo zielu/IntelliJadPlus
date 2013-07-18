@@ -189,7 +189,7 @@ public class FileSystemDecompiler extends MemoryDecompiler
                         public void run()
                         {
                             if (debug) {
-                                LOG.debug("Looking fof file");
+                                LOG.debug("Looking for file: "+localFile.getAbsolutePath());
                             }
                             files[0] = lvfs.refreshAndFindFileByIoFile(localFile);
                             if (debug) {
