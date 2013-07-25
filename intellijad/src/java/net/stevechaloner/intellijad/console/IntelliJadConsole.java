@@ -20,7 +20,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowAnchor;
 import com.intellij.openapi.wm.ToolWindowManager;
-import com.intellij.peer.PeerFactory;
 import com.intellij.ui.content.Content;
 
 import javax.swing.JButton;
@@ -35,6 +34,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
+import com.intellij.ui.content.ContentFactory;
+import com.intellij.ui.content.ContentFactory.SERVICE;
 import net.stevechaloner.intellijad.IntelliJadConstants;
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
 import net.stevechaloner.intellijad.gui.IntelliJadIcon;
@@ -163,11 +164,9 @@ public class IntelliJadConsole implements NodeHandler
                 window = toolWindowManager.registerToolWindow(TOOL_WINDOW_ID,
                                                               true,
                                                               ToolWindowAnchor.BOTTOM);
-                PeerFactory pf = com.intellij.peer.PeerFactory.getInstance();
+                ContentFactory contentFactory = SERVICE.getInstance();
 
-                Content content = pf.getContentFactory().createContent(getRoot(),
-                                                                       TOOL_WINDOW_ID,
-                                                                       false);
+                Content content = contentFactory.createContent(getRoot(), TOOL_WINDOW_ID, false);
                 window.getContentManager().addContent(content);
             }
             window.setIcon(IntelliJadIcon.INTELLIJAD_LOGO_12X12.get());

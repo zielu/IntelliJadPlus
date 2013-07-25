@@ -15,11 +15,11 @@
 
 package net.stevechaloner.intellijad.config;
 
+import com.intellij.ide.util.PackageChooserDialog;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.PackageChooser;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.peer.PeerFactory;
 import com.intellij.psi.PsiPackage;
 import net.stevechaloner.idea.util.fs.ApplicationFileSelectionAction;
 import net.stevechaloner.idea.util.fs.FileSelectionDescriptor;
@@ -149,8 +149,7 @@ public class ConfigForm
             {
                 public void actionPerformed(ActionEvent e)
                 {
-                    PackageChooser packageChooser = PeerFactory.getInstance().getUIHelper().createPackageChooser(IntelliJadResourceBundle.message("message.exclude-package"),
-                                                                                                                 project);
+                    PackageChooser packageChooser = new PackageChooserDialog(IntelliJadResourceBundle.message("message.exclude-package"), project);
                     packageChooser.show();
                     switch (packageChooser.getExitCode())
                     {
