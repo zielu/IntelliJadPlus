@@ -79,6 +79,7 @@
                 <ol>
                     <li>Marked as compatible with latest Idea 13 EAP</li>
                     <li>Functionality same as 0.5.7</li>
+                    <li>Fixed option label (<a href="https://github.com/zielu/IntelliJadPlus/issues/17">issue #17</a>)</li>
                 </ol>
             </li>
             <li>0.5.7
