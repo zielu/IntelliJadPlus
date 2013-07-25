@@ -77,8 +77,7 @@
         <ul>
             <li>0.6.0
                 <ol>
-                    <li>Marked as compatible with latest Idea 13 EAP</li>
-                    <li>Functionality same as 0.5.7</li>
+                    <li>Compatible with latest Idea 13 EAP, functionality same as 0.5.7</li>
                     <li>Fixed option label (<a href="https://github.com/zielu/IntelliJadPlus/issues/17">issue #17</a>)</li>
                 </ol>
             </li>
