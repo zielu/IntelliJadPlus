@@ -4,7 +4,7 @@
 <idea-plugin url="https://github.com/zielu/IntelliJadPlus">
     <name>IntelliJad Plus</name>
     <description>IntelliJad Plus integrates the Jad decompiler into IntelliJ IDEA 11+.</description>
-    <version>0.5.6</version>
+    <version>0.5.7</version>
     <vendor url="https://github.com/zielu/IntelliJadPlus" logo="/scn-idea-16.png">Łukasz Zieliński</vendor>
     <idea-version since-build="123.72" until-build="129.9999"/>
 
