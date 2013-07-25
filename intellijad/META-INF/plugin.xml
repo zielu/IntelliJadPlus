@@ -78,11 +78,12 @@
         <li>Aligned major version number with Idea version</li>
         <li>Compatible with latest Idea 13 (133.*), functionality the same as 0.5.x</li>
         <li>Fixed AssertionError <a href="https://github.com/zielu/IntelliJadPlus/issues/30">issue #30</a></li>
-      <ul>
+      </ul>
       <h3>Changes in 0.5.8</h3>
       <ul>
         <li>Backported AssertionError fix <a href="https://github.com/zielu/IntelliJadPlus/issues/30">issue #30</a></li>
-      <ul>
+        <li>Backported option label fix (<a href="https://github.com/zielu/IntelliJadPlus/issues/17">issue #17</a>)</li>
+      </ul>
       ]]>
     </change-notes>
 
