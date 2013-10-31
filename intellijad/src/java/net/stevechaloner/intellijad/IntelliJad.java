@@ -15,6 +15,12 @@
 
 package net.stevechaloner.intellijad;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
@@ -53,15 +59,8 @@ import net.stevechaloner.intellijad.environment.ValidationResult;
 import net.stevechaloner.intellijad.util.FileSystemUtil;
 import net.stevechaloner.intellijad.util.PluginUtil;
 import net.stevechaloner.intellijad.vfs.MemoryVFS;
-import net.stevechaloner.intellijad.vfs.MemoryVirtualFileSystem;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * The central component of the plugin.
@@ -314,6 +313,11 @@ public class IntelliJad implements ApplicationComponent,
         if (vfs != null) {
             vfs.dispose();
             project.putUserData(IntelliJadConstants.MEMORY_VFS, null);
+        }
+        List<Library> libraries = project.getUserData(IntelliJadConstants.GENERATED_SOURCE_LIBRARIES);
+        if (libraries != null) {
+            libraries.clear();
+            project.putUserData(IntelliJadConstants.GENERATED_SOURCE_LIBRARIES, null);
         }
     }
 
