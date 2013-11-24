@@ -3,13 +3,13 @@
  */
 package net.stevechaloner.intellijad.vfs;
 
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.ex.temp.TempFileSystem;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.ex.temp.TempFileSystem;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * <p></p>
@@ -49,18 +49,19 @@ public class TempMemoryVF implements MemoryVF {
 
     private void store(VirtualFile file, String content) throws IOException {
         long time = System.currentTimeMillis();
-        OutputStream outputStream = fs.getOutputStream(virtualFile, null, time, time);
+        OutputStream outputStream = fs.getOutputStream(file, null, time, time);
         byte[] bytes = content.getBytes("UTF-8");
         outputStream.write(bytes);
         outputStream.close();    
     }
     
     @Override
-    public void addChild(MemoryVF file) {
+    public MemoryVF addChild(MemoryVF file) {
         try {
             VirtualFile newFile = fs.createChildFile(null, virtualFile, file.getName());
             newFile.setCharset(Charset.forName("UTF-8"));
-            store(virtualFile, file.getContent());
+            store(newFile, file.getContent());
+            return new TempMemoryVF(newFile, fs);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

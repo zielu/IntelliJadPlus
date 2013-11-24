@@ -3,14 +3,14 @@
  */
 package net.stevechaloner.intellijad.vfs;
 
-import com.intellij.openapi.vfs.VirtualFile;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.nio.charset.Charset;
+
+import com.intellij.openapi.vfs.VirtualFile;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * <p></p>
@@ -47,7 +47,7 @@ public class LightMemoryVF implements MemoryVF {
     }
 
     @Override
-    public void addChild(MemoryVF file) {
+    public MemoryVF addChild(MemoryVF file) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
