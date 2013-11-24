@@ -15,6 +15,15 @@
 
 package net.stevechaloner.intellijad.vfs;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
@@ -24,15 +33,6 @@ import net.stevechaloner.intellijad.IntelliJadConstants;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A memory-based file.
@@ -211,14 +211,14 @@ public class MemoryVirtualFile extends VirtualFile implements MemoryVF, VirtualF
      * @param p_file the file to add to the list of children
      * @throws IllegalStateException if this file is not a directory
      */
-    public void addChild(MemoryVF p_file) throws IllegalStateException
+    public MemoryVF addChild(MemoryVF p_file) throws IllegalStateException
     {
         MemoryVirtualFile file = (MemoryVirtualFile) p_file;
         if (isDirectory)
         {
             file.setParent(this);
-            children.put(file.getName(),
-                         file);
+            children.put(file.getName(), file);
+            return file;
         }
         else
         {
