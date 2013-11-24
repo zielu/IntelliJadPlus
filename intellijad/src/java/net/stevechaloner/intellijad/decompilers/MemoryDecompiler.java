@@ -15,6 +15,11 @@
 
 package net.stevechaloner.intellijad.decompilers;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
@@ -22,7 +27,6 @@ import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.roots.libraries.Library;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
-
 import com.intellij.openapi.vfs.VirtualFileSystem;
 import net.stevechaloner.intellijad.IntelliJad;
 import net.stevechaloner.intellijad.IntelliJadConstants;
@@ -35,15 +39,9 @@ import net.stevechaloner.intellijad.util.LibraryUtil;
 import net.stevechaloner.intellijad.vfs.LightMemoryVF;
 import net.stevechaloner.intellijad.vfs.MemoryVF;
 import net.stevechaloner.intellijad.vfs.MemoryVFS;
-
 import net.stevechaloner.intellijad.vfs.TempMemoryVFS;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
 
 /**
  * An in-memory decompiler that catches the piped output of Jad and
@@ -184,9 +182,8 @@ public class MemoryDecompiler extends AbstractDecompiler
     {
         vfs.addFile(file);
         MemoryVF parentFile = "".equals(descriptor.getPackageName()) ? (MemoryVF) vfs.asVirtualFileSystem().findFileByPath(IntelliJadConstants.INTELLIJAD_ROOT) : vfs.getFileForPackage(descriptor.getPackageName());
-        parentFile.addChild(file);
-
-        return file.asVirtualFile();
+        MemoryVF child = parentFile.addChild(file);
+        return child.asVirtualFile();
     }
 
     /**

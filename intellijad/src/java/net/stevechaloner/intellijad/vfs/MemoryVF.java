@@ -3,10 +3,10 @@
  */
 package net.stevechaloner.intellijad.vfs;
 
+import java.io.IOException;
+
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
-
-import java.io.IOException;
 
 /**
  * <p></p>
@@ -20,7 +20,7 @@ public interface MemoryVF {
     String getContent();
     VirtualFile asVirtualFile();
     String getName();
-    void addChild(MemoryVF file);
+    MemoryVF addChild(MemoryVF file);
 
     void setWritable(boolean writable) throws IOException;
     void setContent(@NotNull String content);
