@@ -15,13 +15,13 @@
 
 package net.stevechaloner.idea.util.fs;
 
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.fileChooser.FileChooser;
-import com.intellij.openapi.project.Project;
-
-import javax.swing.JTextField;
 import java.awt.event.ActionEvent;
 
+import javax.swing.JTextField;
+
+import com.intellij.openapi.fileChooser.FileChooser;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,8 +53,8 @@ public class ProjectFileSelectionAction extends AbstractFileSelectionAction
     protected VirtualFile[] getFiles(@NotNull ActionEvent actionEvent,
                                      @Nullable VirtualFile existingSelection)
     {
-        return FileChooser.chooseFiles(project,
-                                       getSelectionDescriptor().getFileChooserDescriptor(),
+        return FileChooser.chooseFiles(getSelectionDescriptor().getFileChooserDescriptor(),
+                                       project,
                                        existingSelection);
     }
 }

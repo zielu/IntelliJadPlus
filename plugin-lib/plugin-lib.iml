@@ -10,6 +10,13 @@
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="org.twodividedbyzero.idea.findbugs">
+    <option name="_basePreferences">
+      <map>
+        <entry key="property.analysisEffortLevel" value="default" />
+        <entry key="property.minPriorityToReport" value="High" />
+        <entry key="property.toolWindowToFront" value="true" />
+      </map>
+    </option>
     <option name="_detectors">
       <map>
         <entry key="AppendingToAnObjectOutputStream" value="true" />
