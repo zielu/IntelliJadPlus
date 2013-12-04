@@ -4,7 +4,7 @@
 <idea-plugin url="https://github.com/zielu/IntelliJadPlus">
     <name>IntelliJad Plus</name>
     <description>IntelliJad Plus integrates the Jad decompiler into IntelliJ IDEA 11+.</description>
-    <version>13.0.0</version>
+    <version>13.0.1</version>
     <vendor url="https://github.com/zielu/IntelliJadPlus" logo="/scn-idea-16.png">Łukasz Zieliński</vendor>
     <idea-version since-build="130.1179" until-build="133.9999"/>
 
@@ -73,11 +73,10 @@
     <helpset file="intellijad-help.jar" path="/helpset.hs"/>
 
     <change-notes><![CDATA[
-      <h3>Changes in 13.0.0</h3>
+      <h3>Changes in 13.0.1</h3>
       <ul>
-        <li>Aligned major version number with Idea version</li>
         <li>Compatible with latest Idea 13 (133.*), functionality the same as 0.5.x</li>
-        <li>Fixed AssertionError <a href="https://github.com/zielu/IntelliJadPlus/issues/30">issue #30</a></li>
+        <li>Fixed NoSuchMethod <a href="https://github.com/zielu/IntelliJadPlus/issues/33">issue #33</a></li>
       </ul>
       ]]>
     </change-notes>

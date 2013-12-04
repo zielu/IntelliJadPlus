@@ -15,14 +15,15 @@
 
 package net.stevechaloner.idea.util.fs;
 
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+
+import javax.swing.JTextField;
+
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import javax.swing.JTextField;
-import java.awt.Component;
-import java.awt.event.ActionEvent;
 
 /**
  * @author Steve Chaloner
@@ -46,8 +47,9 @@ public class ApplicationFileSelectionAction extends AbstractFileSelectionAction
     protected VirtualFile[] getFiles(@NotNull ActionEvent actionEvent,
                                      @Nullable VirtualFile existingSelection)
     {
-        return FileChooser.chooseFiles((Component)actionEvent.getSource(),
-                                       getSelectionDescriptor().getFileChooserDescriptor(),
+        return FileChooser.chooseFiles(getSelectionDescriptor().getFileChooserDescriptor(),
+                                       (Component)actionEvent.getSource(),
+                                       null,
                                        existingSelection);
     }
 }
