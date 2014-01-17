@@ -23,6 +23,7 @@ import java.util.Map;
 
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileEditorManager;
@@ -191,14 +192,23 @@ public class IntelliJad implements ApplicationComponent,
         }
     }
     
-    private void saveAppSettings() {
-        application.runWriteAction(new Runnable() {
+    private Runnable newSaveAction() {
+        return new Runnable() {
             @Override
             public void run() {
                 LOG.info("Saving settings");
                 application.saveSettings();
             }
-        });   
+        };    
+    }
+    
+    private void saveAppSettings() {
+        application.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                application.runWriteAction(newSaveAction());
+            }
+        }, ModalityState.NON_MODAL);           
     }
     
     private void reverseForcedDecompilationToDirectory(Config config, Project project) {
