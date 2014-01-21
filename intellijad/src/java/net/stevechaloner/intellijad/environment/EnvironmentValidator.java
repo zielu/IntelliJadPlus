@@ -15,16 +15,18 @@
 
 package net.stevechaloner.intellijad.environment;
 
+import java.io.File;
+
+import javax.swing.JLabel;
+
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogBuilder;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.MultiLineLabelUI;
 import com.intellij.openapi.util.text.StringUtil;
-
-import javax.swing.JLabel;
-import java.io.File;
-
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
 import net.stevechaloner.intellijad.config.ApplicationConfigComponent;
 import net.stevechaloner.intellijad.config.Config;
@@ -32,7 +34,6 @@ import net.stevechaloner.intellijad.config.ConfigAccessor;
 import net.stevechaloner.intellijad.config.ProjectConfigComponent;
 import net.stevechaloner.intellijad.console.ConsoleContext;
 import net.stevechaloner.intellijad.console.ConsoleEntryType;
-
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -41,8 +42,9 @@ import org.jetbrains.annotations.NotNull;
  *
  * @author Steve Chaloner
  */
-public class EnvironmentValidator
-{
+public class EnvironmentValidator {
+    private static final Logger LOG = Logger.getInstance(EnvironmentValidator.class);
+    
     /**
      * Validates the environment prior to decompilation.
      *
@@ -58,12 +60,9 @@ public class EnvironmentValidator
         String message = null;
         Object[] params = {};
         String jadPath = config.getJadPath();
-        if (StringUtil.isEmptyOrSpaces(jadPath))
-        {
+        if (StringUtil.isEmptyOrSpaces(jadPath)) {
             message = "error.unspecified-jad-path";
-        }
-        else
-        {
+        } else {
             File f = new File(jadPath);
             if (!f.exists())
             {
@@ -78,22 +77,21 @@ public class EnvironmentValidator
         }
 
         ValidationResult result;
-        if (message != null)
-        {
-            result = showErrorDialog(config,
-                                     envContext,
-                                     consoleContext,
-                                     IntelliJadResourceBundle.message(message,
-                                                                     params));
-            consoleContext.addSectionMessage(ConsoleEntryType.ERROR,
-                                             message,
-                                             params);
-
-        }
-        else
-        {
-            result = new ValidationResult(true,
-                                          false);
+        if (message != null) {
+            String preparedMessage = IntelliJadResourceBundle.message(message, params);
+            if (ApplicationManager.getApplication().isUnitTestMode()) {
+                result = new ValidationResult(false, true);
+                LOG.error("Validation failed: "+preparedMessage);
+            } else {
+                result = showErrorDialog(config,
+                                         envContext,
+                                         consoleContext, preparedMessage);
+                consoleContext.addSectionMessage(ConsoleEntryType.ERROR,
+                                                 message,
+                                                 params);
+            }
+        } else {
+            result = new ValidationResult(true, false);
         }
         return result;
     }

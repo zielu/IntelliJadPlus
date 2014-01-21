@@ -30,7 +30,9 @@ public interface DecompilationChoiceListener
      * 
      * @param environmentContext the environment context
      * @param decompilationDescriptor a description of the class to decompile
+     *                                
+     * @return result description
      */
-    void decompile(EnvironmentContext environmentContext,
+    DecompilationResult decompile(EnvironmentContext environmentContext,
                    DecompilationDescriptor decompilationDescriptor);
 }

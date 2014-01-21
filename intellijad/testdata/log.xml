@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+  <appender name="CONSOLE-ALL" class="org.apache.log4j.ConsoleAppender">
+    <layout class="org.apache.log4j.PatternLayout">
+      <param name="ConversionPattern" value="[%7r] %6p - %30.30c - %m \n"/>
+    </layout>
+  </appender>
+
+  <category name="#net.stevechaloner.intellijad">
+    <level value="DEBUG"/>
+  </category>
+  
+  <root>
+    <priority value="INFO"/>
+    <appender-ref ref="CONSOLE-ALL"/>
+  </root>
+</log4j:configuration>

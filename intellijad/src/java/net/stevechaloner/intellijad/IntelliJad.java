@@ -51,6 +51,7 @@ import net.stevechaloner.intellijad.decompilers.DecompilationChoiceListener;
 import net.stevechaloner.intellijad.decompilers.DecompilationContext;
 import net.stevechaloner.intellijad.decompilers.DecompilationDescriptor;
 import net.stevechaloner.intellijad.decompilers.DecompilationException;
+import net.stevechaloner.intellijad.decompilers.DecompilationResult;
 import net.stevechaloner.intellijad.decompilers.Decompiler;
 import net.stevechaloner.intellijad.decompilers.FileSystemDecompiler;
 import net.stevechaloner.intellijad.decompilers.MemoryDecompiler;
@@ -203,12 +204,14 @@ public class IntelliJad implements ApplicationComponent,
     }
     
     private void saveAppSettings() {
-        application.invokeAndWait(new Runnable() {
+        if (!application.isUnitTestMode()) {
+            application.invokeAndWait(new Runnable() {
             @Override
             public void run() {
                 application.runWriteAction(newSaveAction());
             }
-        }, ModalityState.NON_MODAL);           
+        }, ModalityState.NON_MODAL);
+        }
     }
     
     private void reverseForcedDecompilationToDirectory(Config config, Project project) {
@@ -220,7 +223,7 @@ public class IntelliJad implements ApplicationComponent,
         }
     }
     
-    private void forceDecompilationToDirectory(Config config) {
+    public void forceDecompilationToDirectory(Config config) {
         if (config.isDecompileToMemory()) {
             LOG.info("Forcing decompilation to filesystem");
             config.setDecompileToMemory(false);
@@ -401,13 +404,12 @@ public class IntelliJad implements ApplicationComponent,
     /**
      * {@inheritDoc}
      */
-    public void decompile(EnvironmentContext envContext,
-                          DecompilationDescriptor descriptor)
-    {
+    public DecompilationResult decompile(EnvironmentContext envContext,
+                          DecompilationDescriptor descriptor) {
         final boolean debug = LOG.isDebugEnabled();
 
         long startTime = System.currentTimeMillis();
-
+        DecompilationResult result = new DecompilationResult();
         Project project = envContext.getProject();
 
         // this allows recovery from a canProjectClose method vetoed by another manager
@@ -491,16 +493,17 @@ public class IntelliJad implements ApplicationComponent,
                     LOG.debug("Decompiler in use: "+decompiler.getClass().getSimpleName());
                 }
                 try {
-                    VirtualFile file = decompiler.getVirtualFile(descriptor,
-                                                                 context);
+                    VirtualFile file = decompiler.getVirtualFile(descriptor, context);
                     FileEditorManager editorManager = FileEditorManager.getInstance(project);
                     if (file != null && editorManager.isFileOpen(file)) {
+                        result = new DecompilationResult(file);
                         console.closeConsole();
                         FileEditorManager.getInstance(project).closeFile(descriptor.getClassFile());
                         editorManager.openFile(file, true);
                     } else {
                         file = decompiler.decompile(descriptor, context);
                         if (file != null) {
+                            result = new DecompilationResult(file);
                             editorManager.closeFile(descriptor.getClassFile());
                             editorManager.openFile(file, true);
                         }
@@ -517,6 +520,10 @@ public class IntelliJad implements ApplicationComponent,
             consoleContext.close();
             checkConsole(config, console, consoleContext);
         }
+        if (debug) {
+            LOG.debug("Decompilation finished: "+descriptor.getClassFile().getPath());
+        }
+        return result;
     }
 
 
