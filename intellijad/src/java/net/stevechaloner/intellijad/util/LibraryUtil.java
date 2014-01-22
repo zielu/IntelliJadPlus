@@ -15,19 +15,21 @@
 
 package net.stevechaloner.intellijad.util;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.roots.OrderEnumerator;
 import com.intellij.openapi.roots.libraries.Library;
-import com.intellij.openapi.roots.libraries.LibraryTable;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.util.Processor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Extension to the openapi LibraryUtil to allow easy searching in module libraries.
@@ -70,11 +72,8 @@ public class LibraryUtil
                 for (Module module : modules)
                 {
                     ModuleRootManager mrm = ModuleRootManager.getInstance(module);
-                    LibraryTable table = mrm.getModifiableModel().getModuleLibraryTable();
-                    Library library = findInTable(table,
-                                                  fqn);
-                    if (library != null)
-                    {
+                    Library library = findInLibraries(mrm.orderEntries(), fqn);
+                    if (library != null) {
                         libraries.add(library);
                     }
                 }
@@ -82,29 +81,19 @@ public class LibraryUtil
         }
         return libraries;
     }
-
-    /**
-     * This method has been borrowed from {@link com.intellij.openapi.roots.libraries.LibraryUtil} -
-     * it would be nice if the method in that class was public :)
-     *
-     * @param table the library table to search
-     * @param fqn the fully-qualified name of the class
-     * @return the matching library, if any
-     */
+    
     @Nullable
-    private static Library findInTable(LibraryTable table,
-                                       String fqn)
-    {
-        Library[] libraries = table.getLibraries();
-        Library library = null;
-        for (int i = 0; library == null && i < libraries.length; i++)
-        {
-            if (com.intellij.openapi.roots.libraries.LibraryUtil.isClassAvailableInLibrary(libraries[i],
-                                                                                           fqn))
-            {
-                library = libraries[i];
+    private static Library findInLibraries(OrderEnumerator enumerator, final String fqn) {
+        final AtomicReference<Library> libraryRef = new AtomicReference<Library>();
+        enumerator.forEachLibrary(new Processor<Library>() {
+            @Override
+            public boolean process(Library library) {
+                if (com.intellij.openapi.roots.libraries.LibraryUtil.isClassAvailableInLibrary(library, fqn)) {
+                    libraryRef.set(library);
+                }
+                return true;
             }
-        }
-        return library;
+        });        
+        return libraryRef.get();
     }
 }

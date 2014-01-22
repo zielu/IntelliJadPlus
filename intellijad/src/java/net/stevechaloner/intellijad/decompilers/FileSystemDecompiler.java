@@ -15,6 +15,13 @@
 
 package net.stevechaloner.intellijad.decompilers;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
@@ -35,13 +42,6 @@ import net.stevechaloner.intellijad.vfs.MemoryVF;
 import net.stevechaloner.intellijad.vfs.MemoryVFS;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * A decompiler that takes the file created by the memory decompiler and copies it to the file system.  This allows
@@ -266,19 +266,15 @@ public class FileSystemDecompiler extends MemoryDecompiler
                         public void run()
                         {
                             ConsoleContext consoleContext = context.getConsoleContext();
-                            for (Library library : libraries)
-                            {
-                                Library.ModifiableModel model = library.getModifiableModel();
-                                String[] urls = model.getUrls(OrderRootType.SOURCES);
+                            for (Library library : libraries) {                             
+                                String[] urls = library.getUrls(OrderRootType.SOURCES);
                                 boolean found = false;
-                                for (int i = 0; !found && i < urls.length; i++)
-                                {
+                                for (int i = 0; !found && i < urls.length; i++) {
                                     found = targetDirectory.getUrl().equals(urls[i]);
                                 }
-                                if (!found)
-                                {
-                                    model.addRoot(targetDirectory,
-                                                  OrderRootType.SOURCES);
+                                if (!found) {
+                                    Library.ModifiableModel model = library.getModifiableModel();
+                                    model.addRoot(targetDirectory, OrderRootType.SOURCES);
                                     model.commit();
                                 }
 
