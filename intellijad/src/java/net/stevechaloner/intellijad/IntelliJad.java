@@ -413,7 +413,7 @@ public class IntelliJad implements ApplicationComponent,
         Project project = envContext.getProject();
 
         // this allows recovery from a canProjectClose method vetoed by another manager
-        if (isPrimed(project)) {
+        if (!isPrimed(project)) {
             primeProject(project);
         }
 
