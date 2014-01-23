@@ -3,6 +3,13 @@
  */
 package net.stevechaloner.intellijad.vfs;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -11,13 +18,6 @@ import com.intellij.openapi.vfs.ex.temp.TempFileSystem;
 import net.stevechaloner.intellijad.IntelliJadConstants;
 import net.stevechaloner.intellijad.util.FileSystemUtil;
 import org.jetbrains.annotations.NotNull;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
 
 /**
  * <p></p>
@@ -36,26 +36,30 @@ public class TempMemoryVFS implements MemoryVFS {
     
     private TempMemoryVFS(TempFileSystem fs, Project project) {
         this.fs = fs;
-        root = initRoot(project);
+        root = initRoot(this.fs, project);
     }
 
-    private VirtualFile initRoot(Project project) {
-        VirtualFile fsRoot = fs.findFileByPath("/");
+    private VirtualFile initRoot(TempFileSystem fs, Project project) {
+        VirtualFile fsRoot = fs.getRoot();
         String rootName = FileSystemUtil.generateTempDirName(project);
-        VirtualFile root = fs.findFileByPath("/intellijad/" + rootName);
-        if (root == null) {
-            try {
-                VirtualFile commonRoot = fs.findFileByPath("/intellijad");
-                if (commonRoot == null) {
-                    commonRoot = fs.createChildDirectory(null, fsRoot, "intellijad");
+        VirtualFile commonRoot = fsRoot.findChild("intellijad");
+        
+        try {
+            if (commonRoot != null) {
+                VirtualFile root = commonRoot.findChild(rootName);
+                if (root != null) {
+                    return root;
+                } else {
+                    return fs.createChildDirectory(null, commonRoot, rootName);    
                 }
+            } else {
+                commonRoot = fs.createChildDirectory(null, fsRoot, "intellijad");
                 return fs.createChildDirectory(null, commonRoot, rootName);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
-        } else {
-            return root;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+            
     }
     
     public static MemoryVFS getInstance(Project project) {
