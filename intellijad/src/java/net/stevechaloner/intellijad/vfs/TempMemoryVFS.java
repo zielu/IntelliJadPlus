@@ -140,6 +140,7 @@ public class TempMemoryVFS implements MemoryVFS {
 
     @Override
     public void dispose() {
+        files.clear();
         try {
             fs.deleteFile(null, root);
             LOG.info("Disposed "+root.getPath());
