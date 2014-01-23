@@ -4,11 +4,15 @@
 package net.stevechaloner.intellijad;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.Semaphore;
 
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.project.DumbService;
+import com.intellij.openapi.project.DumbService.DumbModeListener;
 import com.intellij.openapi.roots.ContentEntry;
 import com.intellij.openapi.roots.LanguageLevelModuleExtension;
 import com.intellij.openapi.roots.ModifiableRootModel;
@@ -17,10 +21,12 @@ import com.intellij.openapi.roots.libraries.Library.ModifiableModel;
 import com.intellij.openapi.vfs.JarFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
+import com.intellij.openapi.vfs.newvfs.persistent.FSRecords;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.testFramework.fixtures.LightCodeInsightFixtureTestCase;
+import com.intellij.util.messages.MessageBusConnection;
 import net.stevechaloner.intellijad.config.Config;
 import net.stevechaloner.intellijad.decompilers.DecompilationChoiceListener;
 import net.stevechaloner.intellijad.decompilers.DecompilationDescriptor;
@@ -42,6 +48,9 @@ public class DecompilationTest extends LightCodeInsightFixtureTestCase {
     
     private String jarLibPath;
     private VirtualFile libJar;
+    private MessageBusConnection connection;
+    
+    private Semaphore semaphore = new Semaphore(1);
     
     @Override
     protected String getTestDataPath() {
@@ -65,7 +74,35 @@ public class DecompilationTest extends LightCodeInsightFixtureTestCase {
         };
     }
 
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        connection = getProject().getMessageBus().connect();
+        connection.subscribe(DumbService.DUMB_MODE, new DumbModeListener() {
+            @Override
+            public void enteredDumbMode() {
+            }
+
+            @Override
+            public void exitDumbMode() {
+                LOG.info("Dumb mode exited");
+                semaphore.release();
+            }
+        });
+        
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        connection.disconnect();
+        LOG.info("Invalidating caches");
+        FSRecords.invalidateCaches();
+        super.tearDown();
+    }
+
     public void testDecompilation() throws Exception {
+        LOG.info("Awaiting indexing end");
+        semaphore.acquire();
         VirtualFileManager virtualFileManager = VirtualFileManager.getInstance();
         assertNotNull(virtualFileManager);
         String fileUrl = libJar.getUrl() + "org/junit/Assert.class";
@@ -88,9 +125,22 @@ public class DecompilationTest extends LightCodeInsightFixtureTestCase {
         
         DecompilationDescriptor dd = DecompilationDescriptorFactory.getFactoryForFile(testFile).create(testFile);
         assertNotNull(dd);
-        DecompilationResult result = listener.decompile(new EnvironmentContext(getProject()), dd);
+        final DecompilationResult result = listener.decompile(new EnvironmentContext(getProject()), dd);
         LOG.info("Decompilation finished");
         assertTrue(result.isSuccessful());
         assertTrue(result.getResultFile().exists());
+        
+        application.runWriteAction(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    result.getResultFile().delete(this);
+                    LOG.info("Deleted file "+result.getResultFile().getPath());
+                } catch (IOException e) {
+                    LOG.info("Failed to delete "+result.getResultFile().getPath(), e);
+                }
+            }
+        });
+        
     }
 }
