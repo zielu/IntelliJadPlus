@@ -15,9 +15,10 @@
 
 package net.stevechaloner.intellijad.gui;
 
+import java.net.URL;
+
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import java.net.URL;
 
 /**
  * Icons used by the IntelliJad GUI.
@@ -29,7 +30,7 @@ public enum IntelliJadIcon {
 
     INFO("general/information.png"),
 
-    INTELLIJAD_LOGO_12X12("scn-idea-12.png"),
+    INTELLIJAD_LOGO_13X13("scn-idea-13.png"),
 
     INTELLIJAD_LOGO_16X16("scn-idea-16-inset.png"),
 

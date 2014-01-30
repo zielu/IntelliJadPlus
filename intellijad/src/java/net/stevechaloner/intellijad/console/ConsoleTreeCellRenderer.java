@@ -15,15 +15,15 @@
 
 package net.stevechaloner.intellijad.console;
 
-import com.intellij.openapi.ui.MultiLineLabelUI;
-
-import javax.swing.Icon;
-import javax.swing.JTree;
-import javax.swing.tree.DefaultTreeCellRenderer;
 import java.awt.Component;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.Icon;
+import javax.swing.JTree;
+import javax.swing.tree.DefaultTreeCellRenderer;
+
+import com.intellij.openapi.ui.MultiLineLabelUI;
 import net.stevechaloner.intellijad.gui.IntelliJadIcon;
 
 /**
@@ -39,7 +39,7 @@ class ConsoleTreeCellRenderer extends DefaultTreeCellRenderer
     {
         {
             put(ConsoleEntryType.ROOT, null);
-            put(ConsoleEntryType.INTELLIJAD, IntelliJadIcon.INTELLIJAD_LOGO_12X12.get());
+            put(ConsoleEntryType.INTELLIJAD, IntelliJadIcon.INTELLIJAD_LOGO_13X13.get());
             put(ConsoleEntryType.JAR_OPERATION, IntelliJadIcon.ARCHIVE.get());
             put(ConsoleEntryType.DECOMPILATION_OPERATION, IntelliJadIcon.JAVA.get());
             put(ConsoleEntryType.LIBRARY_OPERATION, IntelliJadIcon.LIBRARIES.get());

@@ -15,12 +15,9 @@
 
 package net.stevechaloner.intellijad.console;
 
-import com.intellij.openapi.help.HelpManager;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.openapi.wm.ToolWindowAnchor;
-import com.intellij.openapi.wm.ToolWindowManager;
-import com.intellij.ui.content.Content;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -30,17 +27,19 @@ import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.tree.TreePath;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.List;
 
+import com.intellij.openapi.help.HelpManager;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.openapi.wm.ToolWindowAnchor;
+import com.intellij.openapi.wm.ToolWindowManager;
+import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.ui.content.ContentFactory.SERVICE;
 import net.stevechaloner.intellijad.IntelliJadConstants;
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
 import net.stevechaloner.intellijad.gui.IntelliJadIcon;
 import net.stevechaloner.intellijad.util.PluginUtil;
-
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -169,7 +168,7 @@ public class IntelliJadConsole implements NodeHandler
                 Content content = contentFactory.createContent(getRoot(), TOOL_WINDOW_ID, false);
                 window.getContentManager().addContent(content);
             }
-            window.setIcon(IntelliJadIcon.INTELLIJAD_LOGO_12X12.get());
+            window.setIcon(IntelliJadIcon.INTELLIJAD_LOGO_13X13.get());
             window.show(EMPTY_RUNNABLE);
         }
     }
