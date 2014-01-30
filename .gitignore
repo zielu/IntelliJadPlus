@@ -3,3 +3,4 @@ intellijad.iws
 intellijad/lib/
 plugin-lib/dist/
 classes/
+out/
