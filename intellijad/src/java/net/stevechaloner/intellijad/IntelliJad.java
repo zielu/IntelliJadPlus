@@ -498,9 +498,12 @@ public class IntelliJad implements ApplicationComponent,
                     if (file != null && editorManager.isFileOpen(file)) {
                         result = new DecompilationResult(file);
                         console.closeConsole();
-                        FileEditorManager.getInstance(project).closeFile(descriptor.getClassFile());
+                        editorManager.closeFile(descriptor.getClassFile());
                         editorManager.openFile(file, true);
+                    } else if (IntelliJadConstants.CURRENTLY_DECOMPILING.isIn(project)) {
+                        LOG.debug("Decompilation of "+IntelliJadConstants.CURRENTLY_DECOMPILING.get(project)+" in progress");    
                     } else {
+                        IntelliJadConstants.CURRENTLY_DECOMPILING.set(project, descriptor.getClassName());
                         file = decompiler.decompile(descriptor, context);
                         if (file != null) {
                             result = new DecompilationResult(file);
@@ -515,6 +518,8 @@ public class IntelliJad implements ApplicationComponent,
                     consoleContext.addSectionMessage(ConsoleEntryType.ERROR,
                                                      "error",
                                                      e.getMessage());
+                } finally {
+                    IntelliJadConstants.CURRENTLY_DECOMPILING.set(project, null);
                 }
             }
             consoleContext.close();

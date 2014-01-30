@@ -15,12 +15,12 @@
 
 package net.stevechaloner.intellijad;
 
+import java.util.List;
+
 import com.intellij.openapi.roots.libraries.Library;
 import com.intellij.openapi.util.Key;
 import net.stevechaloner.intellijad.actions.NavigationListener;
 import net.stevechaloner.intellijad.vfs.MemoryVFS;
-
-import java.util.List;
 
 /**
  * Constants used by IntelliJad.
@@ -102,4 +102,6 @@ public class IntelliJadConstants
     public static final Key<Boolean> DECOMPILATION_DISABLED = new Key<Boolean>("decompilation-by-intellijad-disabled");
     
     public static final Key<MemoryVFS> MEMORY_VFS = new Key<MemoryVFS>("memory-virtual-file-system");
+    
+    public static final Key<String> CURRENTLY_DECOMPILING = new Key<String>("currently-decompiling");
 }
