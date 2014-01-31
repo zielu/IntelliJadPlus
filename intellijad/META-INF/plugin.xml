@@ -5,11 +5,11 @@
     <name>IntelliJad Plus</name>
     <description><![CDATA[
     <p>IntelliJad Plus integrates the Jad decompiler into IntelliJ IDEA 11+.</p>
-    <p>All credit goes to Steve Chaloner for creating the <a href="http://plugins.jetbrains.com/plugin/1570">original code</a></p>     
+    <p>All credit goes to Steve Chaloner for creating the <a href="http://plugins.jetbrains.com/plugin/1570">original plugin</a></p>     
     <p>If you find this plugin useful please leave your rating !</p>
     ]]></description>
     <version>13.0.1-dev</version>
-    <vendor url="https://github.com/zielu/IntelliJadPlus" logo="/scn-idea-16.png">Łukasz Zieliński</vendor>
+    <vendor url="https://github.com/zielu" logo="/scn-idea-16.png">Łukasz Zieliński</vendor>
     <idea-version since-build="130.1179" until-build="133.9999"/>
 
     <application-components>
