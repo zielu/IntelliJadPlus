@@ -661,7 +661,7 @@ public class IntelliJad implements ApplicationComponent,
      */
     public static boolean isVirtualFsDisabled() {
         if (isVirtualFsDisabled == null) {
-            VirtualFileSystem vfs = PluginUtil.getComponent(VirtualFileSystem.class);
+            VirtualFileSystem vfs = VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
             isVirtualFsDisabled = vfs == null;
         }
         return isVirtualFsDisabled;
