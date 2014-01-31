@@ -15,15 +15,16 @@
 
 package net.stevechaloner.intellijad.console;
 
+import com.intellij.openapi.diagnostic.Logger;
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
-
 import org.jetbrains.annotations.NotNull;
 
 /**
  * @author Steve Chaloner
  */
-public class ConsoleContextImpl implements ConsoleContext
-{
+public class ConsoleContextImpl implements ConsoleContext {
+    private final Logger LOG = Logger.getInstance(getClass());
+
     private final ConsoleTreeNode contextNode;
 
     private final ConsoleTreeModel consoleTreeModel;
@@ -36,62 +37,72 @@ public class ConsoleContextImpl implements ConsoleContext
      * Initialises a new instance of this class.
      *
      * @param consoleTreeModel the tree model containing the log
-     * @param contextNode the node this log is rooted in
-     * @param nodeHandler the handler for node operations
+     * @param contextNode      the node this log is rooted in
+     * @param nodeHandler      the handler for node operations
      */
     ConsoleContextImpl(@NotNull ConsoleTreeModel consoleTreeModel,
                        @NotNull ConsoleTreeNode contextNode,
-                       @NotNull NodeHandler nodeHandler)
-    {
+                       @NotNull NodeHandler nodeHandler) {
         this.consoleTreeModel = consoleTreeModel;
         this.contextNode = contextNode;
         this.nodeHandler = nodeHandler;
     }
 
-    /** {@inheritDoc} */
-    public boolean isWorthDisplaying()
-    {
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isWorthDisplaying() {
         return worthDisplaying;
     }
 
-    /** {@inheritDoc} */
-    public void setWorthDisplaying(boolean worthDisplaying)
-    {
+    /**
+     * {@inheritDoc}
+     */
+    public void setWorthDisplaying(boolean worthDisplaying) {
         // if something has already flagged this context of interest,
         // ensure that it remains so
         this.worthDisplaying = this.worthDisplaying || worthDisplaying;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public void addMessage(ConsoleEntryType entryType,
                            String message,
-                           Object... parameters)
-    {
-        consoleTreeModel.addMessage(entryType,
-                                    this,
-                                    IntelliJadResourceBundle.message(message,
-                                                                     parameters));
+                           Object... parameters) {
+        String formattedMessage = IntelliJadResourceBundle.message(message, parameters);
+        if (entryType == ConsoleEntryType.ERROR) {
+            LOG.error(formattedMessage);            
+        } else if (LOG.isDebugEnabled()) {
+            LOG.debug(formattedMessage);                        
+        }
+        consoleTreeModel.addMessage(entryType, this, formattedMessage);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public void addSectionMessage(ConsoleEntryType entryType,
                                   String message,
-                                  Object... parameters)
-    {
-        consoleTreeModel.addSectionMessage(this,
-                                           IntelliJadResourceBundle.message(message,
-                                                                            parameters));
+                                  Object... parameters) {
+        String formattedMessage = IntelliJadResourceBundle.message(message, parameters);
+        if (entryType == ConsoleEntryType.ERROR) {
+            LOG.error(formattedMessage);
+        } else if (LOG.isDebugEnabled()) {
+            LOG.debug(formattedMessage);
+        }
+        consoleTreeModel.addSectionMessage(this, formattedMessage);
     }
 
-    public void close()
-    {
+    public void close() {
         nodeHandler.select(this.contextNode);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @NotNull
-    public ConsoleTreeNode getContextNode()
-    {
+    public ConsoleTreeNode getContextNode() {
         return contextNode;
     }
 }
