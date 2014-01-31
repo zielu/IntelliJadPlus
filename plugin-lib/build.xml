@@ -2,7 +2,7 @@
 <project name="plugin-lib" default="build" basedir=".">
 
     <!-- A build.properties file must exist -->
-    <property file="../build.properties"/>
+    <property file="${build.properties.file}"/>
 
     <property name="src.dir" value="src/"/>
     <property name="dist.dir" value="dist/"/>
