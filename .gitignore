@@ -1,6 +1,7 @@
 .idea/
 intellijad.iws
 intellijad/lib/
+intellijad/dist/
 plugin-lib/dist/
 classes/
 out/
