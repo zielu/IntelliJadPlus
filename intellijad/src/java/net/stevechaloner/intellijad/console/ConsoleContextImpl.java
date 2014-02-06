@@ -62,6 +62,9 @@ public class ConsoleContextImpl implements ConsoleContext {
         // if something has already flagged this context of interest,
         // ensure that it remains so
         this.worthDisplaying = this.worthDisplaying || worthDisplaying;
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Console is worth displaying", new Throwable("Console worth displaying call site"));
+        }
     }
 
     /**
@@ -83,7 +86,7 @@ public class ConsoleContextImpl implements ConsoleContext {
     /**
      * {@inheritDoc}
      */
-    public void addSectionMessage(ConsoleEntryType entryType,
+    public String addSectionMessage(ConsoleEntryType entryType,
                                   String message,
                                   Object... parameters) {
         String formattedMessage = IntelliJadResourceBundle.message(message, parameters);
@@ -93,6 +96,7 @@ public class ConsoleContextImpl implements ConsoleContext {
             LOG.debug(formattedMessage);
         }
         consoleTreeModel.addSectionMessage(this, formattedMessage);
+        return formattedMessage;
     }
 
     public void close() {
