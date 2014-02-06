@@ -404,8 +404,7 @@ public class IntelliJad implements ApplicationComponent,
     /**
      * {@inheritDoc}
      */
-    public DecompilationResult decompile(EnvironmentContext envContext,
-                          DecompilationDescriptor descriptor) {
+    public DecompilationResult decompile(EnvironmentContext envContext, DecompilationDescriptor descriptor) {
         final boolean debug = LOG.isDebugEnabled();
 
         long startTime = System.currentTimeMillis();
@@ -482,12 +481,10 @@ public class IntelliJad implements ApplicationComponent,
                                                 "error",
                                                 "Target directory "+config.getOutputDirectory()+" creation failed");    
             } else {
-                StringBuilder sb = new StringBuilder();
-                sb.append(config.getJadPath()).append(' ');
-                sb.append(config.renderCommandLinePropertyDescriptors());
+                String info = config.getJadPath() + " " + config.renderCommandLinePropertyDescriptors();                
                 DecompilationContext context = new DecompilationContext(project,
                                                                         consoleContext,
-                                                                        sb.toString());
+                                                                        info);
                 Decompiler decompiler = config.isDecompileToMemory() ? new MemoryDecompiler() : new FileSystemDecompiler();
                 if (debug) {
                     LOG.debug("Decompiler in use: "+decompiler.getClass().getSimpleName());
@@ -500,10 +497,8 @@ public class IntelliJad implements ApplicationComponent,
                         console.closeConsole();
                         editorManager.closeFile(descriptor.getClassFile());
                         editorManager.openFile(file, true);
-                    } else if (IntelliJadConstants.CURRENTLY_DECOMPILING.isIn(project)) {
-                        LOG.debug("Decompilation of "+IntelliJadConstants.CURRENTLY_DECOMPILING.get(project)+" in progress");    
-                    } else {
-                        IntelliJadConstants.CURRENTLY_DECOMPILING.set(project, descriptor.getClassName());
+                    } else if (!CurrentDecompilation.isInProgress(project, descriptor)) {
+                        CurrentDecompilation.set(project, descriptor);
                         file = decompiler.decompile(descriptor, context);
                         if (file != null) {
                             result = new DecompilationResult(file);
@@ -519,7 +514,7 @@ public class IntelliJad implements ApplicationComponent,
                                                      "error",
                                                      e.getMessage());
                 } finally {
-                    IntelliJadConstants.CURRENTLY_DECOMPILING.set(project, null);
+                    CurrentDecompilation.clear(project, descriptor);
                 }
             }
             consoleContext.close();
@@ -530,7 +525,6 @@ public class IntelliJad implements ApplicationComponent,
         }
         return result;
     }
-
 
     /**
      * Checks if the project SDK has the IntelliJad source root attached, and attaches it if it is not.
