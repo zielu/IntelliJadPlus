@@ -15,21 +15,20 @@
 
 package net.stevechaloner.intellijad.util;
 
-import net.stevechaloner.intellijad.console.ConsoleEntryType;
-import net.stevechaloner.intellijad.decompilers.DecompilationContext;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
+import net.stevechaloner.intellijad.console.ConsoleEntryType;
+import net.stevechaloner.intellijad.decompilers.DecompilationContext;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Pumps the input stream of a process, ensuring it doesn't block.
  *
  * @author Steve Chaloner
  */
-public class StreamPumper implements Runnable
-{
+public class StreamPumper implements Runnable {
     /**
      * End of stream flag.
      */
@@ -53,6 +52,8 @@ public class StreamPumper implements Runnable
     @NotNull
     private final DecompilationContext context;
 
+    private byte[] buffer;
+    
     /**
      * Initialises a new instance of this class.
      *
@@ -73,24 +74,18 @@ public class StreamPumper implements Runnable
      * While the end of the stream hasn't been reached, pump
      * the content of the input stream into the output stream.
      */
-    public void run()
-    {
-        try
-        {
-            while (pump)
-            {
+    public void run() {
+        try {
+            buffer = new byte[512];
+            while (pump) {
                 pump();
                 Thread.sleep(5);
             }
-        }
-        catch (InterruptedException e)
-        {
+        } catch (InterruptedException e) {
             context.getConsoleContext().addMessage(ConsoleEntryType.DECOMPILATION_OPERATION,
                                                    "error",
                                                    e.getMessage());
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             context.getConsoleContext().addMessage(ConsoleEntryType.DECOMPILATION_OPERATION,
                                                    "error",
                                                    e.getMessage());
@@ -102,19 +97,12 @@ public class StreamPumper implements Runnable
      *
      * @throws IOException if there is an error accessing one of the streams.
      */
-    private void pump()
-            throws IOException
-    {
-        byte[] buffer = new byte[512];
-        int bytesRead = in.read(buffer,
-                                0,
-                                buffer.length);
+    private void pump() throws IOException {
+        
+        int bytesRead = in.read(buffer, 0, buffer.length);
 
-        if (bytesRead > 0)
-        {
-            out.write(buffer,
-                      0,
-                      bytesRead);
+        if (bytesRead > 0) {
+            out.write(buffer, 0, bytesRead);
             pump();
         }
     }
