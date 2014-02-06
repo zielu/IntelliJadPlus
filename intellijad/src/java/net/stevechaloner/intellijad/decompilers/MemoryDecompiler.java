@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.base.Optional;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.OrderRootType;
@@ -35,6 +34,7 @@ import net.stevechaloner.intellijad.config.CodeStyle;
 import net.stevechaloner.intellijad.config.Config;
 import net.stevechaloner.intellijad.console.ConsoleContext;
 import net.stevechaloner.intellijad.console.ConsoleEntryType;
+import net.stevechaloner.intellijad.util.AppInvoker;
 import net.stevechaloner.intellijad.util.LibraryUtil;
 import net.stevechaloner.intellijad.vfs.LightMemoryVF;
 import net.stevechaloner.intellijad.vfs.MemoryVF;
@@ -107,7 +107,7 @@ public class MemoryDecompiler extends AbstractDecompiler
                                         @NotNull final String content) throws DecompilationException {
         MemoryVFS vfs = TempMemoryVFS.getInstance(context.getProject());        
         MemoryVF file = vfs.newMemoryFV(descriptor.getClassName() + IntelliJadConstants.DOT_JAVA_EXTENSION, content);
-        file.asVirtualFile().putUserData(IntelliJadConstants.DECOMPILED_BY_INTELLIJAD, true);
+        IntelliJadConstants.DECOMPILED_BY_INTELLIJAD.set(file.asVirtualFile(), true);
 
         Optional<VirtualFile> actualFile = insertIntoFileSystem(descriptor, context, vfs, file);
         if (actualFile.isPresent()) {
@@ -180,33 +180,27 @@ public class MemoryDecompiler extends AbstractDecompiler
     protected void attachSourceToLibraries(@NotNull final DecompilationDescriptor descriptor,
                                            @NotNull final DecompilationContext context,
                                            @NotNull final MemoryVFS vfs,
-                                           @NotNull final List<Library> libraries)
-    {
-//        CommandProcessor.getInstance().execute
-        ApplicationManager.getApplication().runWriteAction(new Runnable()
-        {
-            public void run()
-            {
+                                           @NotNull final List<Library> libraries) {
+
+        AppInvoker.get().runWriteActionAndWait(new Runnable() {
+            public void run() {
                 ConsoleContext consoleContext = context.getConsoleContext();
-                for (Library library : libraries)
-                {
+                for (Library library : libraries) {
                     Library.ModifiableModel model = library.getModifiableModel();
                     String[] urls = model.getUrls(OrderRootType.SOURCES);
                     boolean found = false;
-                    for (int i = 0; !found && i < urls.length; i++)
-                    {
+                    for (int i = 0; !found && i < urls.length; i++) {
                         found = IntelliJadConstants.ROOT_URI.equals(urls[i]);
                     }
-                    if (!found)
-                    {
+                    if (!found) {
                         model.addRoot(vfs.asVirtualFileSystem().findFileByPath(IntelliJadConstants.INTELLIJAD_ROOT),
-                                      OrderRootType.SOURCES);
+                                OrderRootType.SOURCES);
                         model.commit();
                     }
                     consoleContext.addMessage(ConsoleEntryType.LIBRARY_OPERATION,
-                                              "message.associating-source-with-library",
-                                              descriptor.getClassName(),
-                                              library.getName() == null ? IntelliJadResourceBundle.message("message.unnamed-library") : library.getName());
+                            "message.associating-source-with-library",
+                            descriptor.getClassName(),
+                            library.getName() == null ? IntelliJadResourceBundle.message("message.unnamed-library") : library.getName());
                     context.getProject().getUserData(IntelliJadConstants.GENERATED_SOURCE_LIBRARIES).add(library);
                 }
             }

@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.intellij.openapi.application.Application;
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileEditorManager;
@@ -56,6 +54,7 @@ import net.stevechaloner.intellijad.decompilers.FileSystemDecompiler;
 import net.stevechaloner.intellijad.environment.EnvironmentContext;
 import net.stevechaloner.intellijad.environment.EnvironmentValidator;
 import net.stevechaloner.intellijad.environment.ValidationResult;
+import net.stevechaloner.intellijad.util.AppInvoker;
 import net.stevechaloner.intellijad.util.FileSystemUtil;
 import net.stevechaloner.intellijad.util.PluginUtil;
 import net.stevechaloner.intellijad.vfs.MemoryVFS;
@@ -106,9 +105,11 @@ public class IntelliJad implements ApplicationComponent,
     };
 
     private final Application application;
-
+    private final AppInvoker appInvoker;
+    
     public IntelliJad(Application application) {
         this.application = application;
+        this.appInvoker = new AppInvoker(application);
     }
 
     /**
@@ -187,24 +188,10 @@ public class IntelliJad implements ApplicationComponent,
         }
     }
     
-    private Runnable newSaveAction() {
-        return new Runnable() {
-            @Override
-            public void run() {
-                LOG.info("Saving settings");
-                application.saveSettings();
-            }
-        };    
-    }
-    
-    private void saveAppSettings() {
+    private void saveAppSettings() {        
         if (!application.isUnitTestMode()) {
-            application.invokeAndWait(new Runnable() {
-            @Override
-            public void run() {
-                application.runWriteAction(newSaveAction());
-            }
-        }, ModalityState.NON_MODAL);
+            LOG.info("Saving settings");            
+            appInvoker.saveSettings();
         }
     }
     
@@ -276,13 +263,12 @@ public class IntelliJad implements ApplicationComponent,
     /**
      * {@inheritDoc}
      */
-    public boolean canCloseProject(Project project)
-    {
+    public boolean canCloseProject(Project project) {
         Config config = PluginUtil.getConfig(project);
         if (config.isCleanupSourceRoots()) {
             List<Runnable> tasks = projectClosingTasks.get(project);
             for (Runnable task : tasks) {
-                ApplicationManager.getApplication().runWriteAction(task);
+                appInvoker.runWriteActionAndWait(task);
             }
         }
         IntelliJadConstants.INTELLIJAD_PRIMED.set(project, false);
@@ -436,7 +422,7 @@ public class IntelliJad implements ApplicationComponent,
                 DecompilationContext context = new DecompilationContext(project,
                                                                         consoleContext,
                                                                         info);
-                Decompiler decompiler = new FileSystemDecompiler();
+                Decompiler decompiler = new FileSystemDecompiler(appInvoker);
                 if (debug) {
                     LOG.debug("Decompiler in use: "+decompiler.getClass().getSimpleName());
                 }
@@ -492,41 +478,35 @@ public class IntelliJad implements ApplicationComponent,
         if (LOG.isDebugEnabled()) {
             LOG.debug("Checking SDK root: "+project.getName()+" -> "+root.getPresentableUrl());
         }
-        ApplicationManager.getApplication().runWriteAction(new Runnable()
-        {
-            public void run()
-            {
+        appInvoker.runWriteActionAndWait(new Runnable() {
+            public void run() {
                 final Sdk projectJdk = ProjectRootManager.getInstance(project).getProjectSdk();
                 if (projectJdk != null) {
                     SdkModificator sdkModificator = projectJdk.getSdkModificator();
-                    if (sdkModificator != null) {
-                        VirtualFile[] files = sdkModificator.getRoots(OrderRootType.SOURCES);
-                        boolean attached = false;
-                        for (int i = 0; !attached && i < files.length; i++) {
-                            if (files[i].equals(root)) {
-                                attached = true;
-                            }
+                    VirtualFile[] files = sdkModificator.getRoots(OrderRootType.SOURCES);
+                    boolean attached = false;
+                    for (int i = 0; !attached && i < files.length; i++) {
+                        if (files[i].equals(root)) {
+                            attached = true;
                         }
-                        if (!attached) {
-                            sdkModificator.addRoot(root,
-                                                   OrderRootType.SOURCES);
-                            sdkModificator.commitChanges();
-                            IntelliJadConstants.SDK_SOURCE_ROOT_ATTACHED.set(project, true);
-                            
-                            projectClosingTasks.get(project).add(new Runnable()
-                            {
-                                public void run()
-                                {
-                                    if (projectJdk != null) {
-                                        SdkModificator sdkModificator = projectJdk.getSdkModificator();
-                                        if (sdkModificator != null) {
-                                            sdkModificator.removeRoot(root, OrderRootType.SOURCES);
-                                            sdkModificator.commitChanges();
-                                        }
+                    }
+                    if (!attached) {
+                        sdkModificator.addRoot(root,
+                                OrderRootType.SOURCES);
+                        sdkModificator.commitChanges();
+                        IntelliJadConstants.SDK_SOURCE_ROOT_ATTACHED.set(project, true);
+
+                        projectClosingTasks.get(project).add(new Runnable() {
+                            public void run() {
+                                if (projectJdk != null) {
+                                    SdkModificator sdkModificator = projectJdk.getSdkModificator();
+                                    if (sdkModificator != null) {
+                                        sdkModificator.removeRoot(root, OrderRootType.SOURCES);
+                                        sdkModificator.commitChanges();
                                     }
                                 }
-                            });
-                        }
+                            }
+                        });
                     }
                 }
             }

@@ -15,7 +15,6 @@
 
 package net.stevechaloner.intellijad.format;
 
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
@@ -27,10 +26,9 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.codeStyle.JavaCodeStyleManager;
 import com.intellij.util.IncorrectOperationException;
-
 import net.stevechaloner.intellijad.console.ConsoleEntryType;
 import net.stevechaloner.intellijad.decompilers.DecompilationContext;
-
+import net.stevechaloner.intellijad.util.AppInvoker;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -148,7 +146,7 @@ public class StyleReformatter
                 psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
                 if (psiFile != null)
                 {
-                    ApplicationManager.getApplication().runWriteAction(this);
+                    AppInvoker.get().runWriteActionAndWait(this);
                 }
             }
         }

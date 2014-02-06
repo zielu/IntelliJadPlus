@@ -14,8 +14,23 @@
  */
 package net.stevechaloner.intellijad.vfs;
 
-import com.intellij.openapi.application.Application;
-import com.intellij.openapi.application.ApplicationManager;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.List;
+
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTree;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
+
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -35,24 +50,9 @@ import net.stevechaloner.intellijad.gui.tree.CheckBoxTreeNode;
 import net.stevechaloner.intellijad.gui.tree.CheckBoxTreeNodeListener;
 import net.stevechaloner.intellijad.gui.tree.TreeEvent;
 import net.stevechaloner.intellijad.gui.tree.VisitableTreeNode;
+import net.stevechaloner.intellijad.util.AppInvoker;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTree;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Enumeration;
-import java.util.List;
 
 /**
  * A basic management GUI for the memory file system, allowing users to see and delete files.
@@ -170,12 +170,12 @@ public class MemoryFileSystemManager implements CheckBoxTreeNodeListener
         attachIntelliJadRootButton.setEnabled(!attached);
         detachIntelliJadRootButton.setEnabled(attached);
 
-        final Application application = ApplicationManager.getApplication();
+        final AppInvoker appInvoker = AppInvoker.get();
         detachIntelliJadRootButton.addActionListener(new ActionListener()
         {
             public void actionPerformed(ActionEvent event)
             {
-                application.runWriteAction(new Runnable()
+                appInvoker.runWriteActionAndWait(new Runnable()
                 {
                     public void run()
                     {
@@ -189,15 +189,14 @@ public class MemoryFileSystemManager implements CheckBoxTreeNodeListener
                 });
                 attachIntelliJadRootButton.setEnabled(true);
                 detachIntelliJadRootButton.setEnabled(false);
-                project.putUserData(IntelliJadConstants.SDK_SOURCE_ROOT_ATTACHED,
-                                    Boolean.TRUE);
+                IntelliJadConstants.SDK_SOURCE_ROOT_ATTACHED.set(project, true);
             }
         });
         attachIntelliJadRootButton.addActionListener(new ActionListener()
         {
             public void actionPerformed(ActionEvent event)
             {
-                application.runWriteAction(new Runnable()
+                appInvoker.runWriteActionAndWait(new Runnable()
                 {
                     public void run()
                     {
@@ -211,8 +210,7 @@ public class MemoryFileSystemManager implements CheckBoxTreeNodeListener
                 });
                 attachIntelliJadRootButton.setEnabled(false);
                 detachIntelliJadRootButton.setEnabled(true);
-                project.putUserData(IntelliJadConstants.SDK_SOURCE_ROOT_ATTACHED,
-                                    Boolean.FALSE);
+                IntelliJadConstants.SDK_SOURCE_ROOT_ATTACHED.set(project, false);                
             }
         });
     }

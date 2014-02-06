@@ -15,25 +15,25 @@
 
 package net.stevechaloner.intellijad.decompilers;
 
+import java.io.File;
+import java.util.Map;
+
+import com.google.common.collect.Maps;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
-
+import com.intellij.openapi.util.UserDataHolder;
 import net.stevechaloner.intellijad.config.Config;
 import net.stevechaloner.intellijad.console.ConsoleContext;
 import net.stevechaloner.intellijad.util.PluginUtil;
-
 import org.jetbrains.annotations.NotNull;
-
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The context a decompilation occurs in.
  *
  * @author Steve Chaloner
  */
-public class DecompilationContext
+public class DecompilationContext implements UserDataHolder
 {
     /**
      * The console context to use for reporting.
@@ -58,7 +58,7 @@ public class DecompilationContext
     /**
      * User data.
      */
-    private final Map<Key, Object> userData = new HashMap<Key, Object>();
+    private final Map<Key, Object> userData = Maps.newConcurrentMap();
 
     /**
      * Initialises a new instance of this class.
@@ -110,12 +110,9 @@ public class DecompilationContext
         return PluginUtil.getConfig(project);
     }
 
-    // javadoc unnecessary
-    public <T> void addUserData(@NotNull Key<T> key,
-                                @NotNull T value)
-    {
-        userData.put(key,
-                     value);
+    @Override
+    public <T> void putUserData(@NotNull Key<T> key, @Nullable T value) {
+        userData.put(key, value);
     }
 
     // javadoc unnecessary

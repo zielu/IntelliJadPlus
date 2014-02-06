@@ -23,7 +23,7 @@ public enum CurrentDecompilation {
     public static boolean isInProgress(Project project, DecompilationDescriptor descriptor) {
         if (ALLOW_SINGLE) {
             boolean decompiling = IntelliJadConstants.CURRENTLY_DECOMPILING.isIn(project);
-            if (LOG.isDebugEnabled()) {
+            if (decompiling && LOG.isDebugEnabled()) {
                 LOG.debug("Decompilation of "+IntelliJadConstants.CURRENTLY_DECOMPILING.get(project)+" in progress");
             }
             return decompiling;

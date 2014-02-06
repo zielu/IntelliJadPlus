@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Optional;
-import com.intellij.openapi.application.ApplicationManager;
+import com.google.common.base.Preconditions;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.OrderRootType;
@@ -38,6 +38,7 @@ import net.stevechaloner.intellijad.IntelliJadResourceBundle;
 import net.stevechaloner.intellijad.config.Config;
 import net.stevechaloner.intellijad.console.ConsoleContext;
 import net.stevechaloner.intellijad.console.ConsoleEntryType;
+import net.stevechaloner.intellijad.util.AppInvoker;
 import net.stevechaloner.intellijad.util.LibraryUtil;
 import net.stevechaloner.intellijad.vfs.MemoryVF;
 import net.stevechaloner.intellijad.vfs.MemoryVFS;
@@ -61,6 +62,12 @@ public class FileSystemDecompiler extends MemoryDecompiler
     private static final Key<Boolean> CANNOT_STORE = new Key<Boolean>("FileSystemDecompiler.cannot-store-in-fs");
 
     private static final Key<VirtualFile> LOCAL_FS_FILE = new Key<VirtualFile>("FileSystemDecompiler.local-fs-file");
+
+    private final AppInvoker appInvoker;
+
+    public FileSystemDecompiler(AppInvoker appInvoker) {
+        this.appInvoker = appInvoker;
+    }
 
     /** {@inheritDoc} */
     protected OperationStatus setup(DecompilationDescriptor descriptor,
@@ -105,7 +112,7 @@ public class FileSystemDecompiler extends MemoryDecompiler
         }
 
         boolean cannotStore = !messages.isEmpty();
-        context.addUserData(CANNOT_STORE, cannotStore);        
+        CANNOT_STORE.set(context, cannotStore);        
         if (cannotStore) {
             status = OperationStatus.ABORT;
             LOG.error("Result cannot be stored");
@@ -171,30 +178,33 @@ public class FileSystemDecompiler extends MemoryDecompiler
                     LOG.debug("Closed");
                 }
                 final VirtualFile[] files = new VirtualFile[1];
-                ApplicationManager.getApplication().runWriteAction(new Runnable() {
+                appInvoker.runWriteActionAndWait(new Runnable() {
                     public void run() {
                         if (debug) {
-                            LOG.debug("Looking for file: "+localFile.getAbsolutePath());
+                            LOG.debug("Looking for file: " + localFile.getAbsolutePath());
                         }
                         files[0] = lvfs.refreshAndFindFileByIoFile(localFile);
                         if (debug) {
-                            LOG.debug("Found "+String.valueOf(files[0]));
+                            LOG.debug("Found " + String.valueOf(files[0]));
                         }
                     }
                 });
 
                 insertFile = Optional.of(files[0]);
-                context.addUserData(LOCAL_FS_FILE, files[0]);
+                LOCAL_FS_FILE.set(context, Preconditions.checkNotNull(files[0]));
+                if (debug) {
+                    LOG.debug("Key ["+LOCAL_FS_FILE.toString()+"] is "+LOCAL_FS_FILE.get(context));                                    
+                }
             } catch (IOException e) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Could not save file", e);
                 }
-                context.addUserData(CANNOT_STORE, true);
+                CANNOT_STORE.set(context, true);
                 insertFile = Optional.absent();
             }
         } else {
             LOG.warn("Path: "+localPath.getAbsolutePath()+", exists="+exists+", canWrite="+canWrite+", mkDirs="+mkDirs); 
-            context.addUserData(CANNOT_STORE, true);
+            CANNOT_STORE.set(context, true);
             insertFile = Optional.absent();
         }
 
@@ -207,11 +217,11 @@ public class FileSystemDecompiler extends MemoryDecompiler
                                            @NotNull MemoryVFS vfs,
                                            @NotNull List<Library> libraries)
     {
-        if (context.getUserData(CANNOT_STORE)) {
+        if (CANNOT_STORE.get(context, false)) {
             // something has occurred to make storing the file on disk a problem            
             LOG.error("Cannot attach source: name="+descriptor.getClassName()+", vfs="+vfs);            
         } else {
-            attachSource(descriptor, context, context.getUserData(LOCAL_FS_FILE));
+            attachSource(descriptor, context, LOCAL_FS_FILE.get(context));
         }
     }
 
@@ -224,49 +234,38 @@ public class FileSystemDecompiler extends MemoryDecompiler
         Config config = context.getConfig();
         File td = new File(config.getOutputDirectory());
         final VirtualFile targetDirectory = vfs.findFileByIoFile(td);
-
-        ApplicationManager.getApplication().runWriteAction(new Runnable()
-        {
-            public void run()
-            {
+        
+        appInvoker.runWriteActionAndWait(new Runnable() {
+            public void run() {
                 final List<Library> libraries = LibraryUtil.findLibrariesByClass(descriptor.getFullyQualifiedName(),
-                                                                                 project);
-                if (!libraries.isEmpty())
-                {
-                    ApplicationManager.getApplication().runWriteAction(new Runnable()
-                    {
-                        public void run()
-                        {
-                            ConsoleContext consoleContext = context.getConsoleContext();
-                            for (Library library : libraries) {                             
-                                String[] urls = library.getUrls(OrderRootType.SOURCES);
-                                boolean found = false;
-                                for (int i = 0; !found && i < urls.length; i++) {
-                                    found = targetDirectory.getUrl().equals(urls[i]);
-                                }
-                                if (!found) {
-                                    Library.ModifiableModel model = library.getModifiableModel();
-                                    model.addRoot(targetDirectory, OrderRootType.SOURCES);
-                                    model.commit();
-                                }
-
-                                project.getUserData(IntelliJadConstants.GENERATED_SOURCE_LIBRARIES).add(library);
-                                consoleContext.addMessage(ConsoleEntryType.LIBRARY_OPERATION,
-                                                          "message.associating-source-with-library",
-                                                          descriptor.getClassName(),
-                                                          library.getName() == null ? IntelliJadResourceBundle.message("message.unnamed-library") : library.getName());
-                            }
+                        project);
+                if (!libraries.isEmpty()) {                    
+                    ConsoleContext consoleContext = context.getConsoleContext();
+                    for (Library library : libraries) {
+                        String[] urls = library.getUrls(OrderRootType.SOURCES);
+                        boolean found = false;
+                        for (int i = 0; !found && i < urls.length; i++) {
+                            found = targetDirectory.getUrl().equals(urls[i]);
                         }
-                    });
-                }
-                else
-                {
+                        if (!found) {
+                            Library.ModifiableModel model = library.getModifiableModel();
+                            model.addRoot(targetDirectory, OrderRootType.SOURCES);
+                            model.commit();
+                        }
+
+                        IntelliJadConstants.GENERATED_SOURCE_LIBRARIES.get(project).add(library);
+                        consoleContext.addMessage(ConsoleEntryType.LIBRARY_OPERATION,
+                                "message.associating-source-with-library",
+                                descriptor.getClassName(),
+                                library.getName() == null ? IntelliJadResourceBundle.message("message.unnamed-library") : library.getName());
+                    }
+                } else {
                     // there are two reasons we could be in here - the class file was opened from an arbitrary location
                     // outside of the project, or the class is found in the SDK.  In the first instance, there is no
                     // library
                     context.getConsoleContext().addMessage(ConsoleEntryType.LIBRARY_OPERATION,
-                                                           "message.library-not-found-for-class",
-                                                           descriptor.getClassName());
+                            "message.library-not-found-for-class",
+                            descriptor.getClassName());
                 }
             }
         });
@@ -283,13 +282,15 @@ public class FileSystemDecompiler extends MemoryDecompiler
     protected void lockFile(@NotNull DecompilationContext context,
                             @NotNull MemoryVF file)
     {
-        if (context.getUserData(CANNOT_STORE)) {
+        if (context.containsUserData(CANNOT_STORE) && context.getUserData(CANNOT_STORE)) {
             LOG.error("Cannot lock file: "+file);
         } else {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("About to lock file: "+file);
+            }
             Config config = context.getConfig();
-            if (config.isReadOnly())
-            {
-                VirtualFile fsFile = context.getUserData(LOCAL_FS_FILE);
+            if (config.isReadOnly()) {
+                VirtualFile fsFile = LOCAL_FS_FILE.get(context);
                 new File(fsFile.getPath()).setReadOnly();
             }
         }
