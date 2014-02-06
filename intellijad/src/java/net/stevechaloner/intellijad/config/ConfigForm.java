@@ -616,7 +616,7 @@ public class ConfigForm
         return outputDirectoryTextField;
     }
 
-    public boolean isReportOutputDirectoryNotSet() {
+    public boolean isOutputDirectoryNotSet() {
         return !decompileToMemoryCheckBox.isSelected() && StringUtil.isEmptyOrSpaces(outputDirectoryTextField.getText());
     }
     

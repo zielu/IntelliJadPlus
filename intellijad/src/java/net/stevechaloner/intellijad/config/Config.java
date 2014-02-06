@@ -964,7 +964,7 @@ public class Config implements DOMable
         setForcedDecompileToMemory(config.isForcedDecompileToMemory());
     }
 
-    public boolean isReportOutputDirectoryNotSet() {
+    public boolean isOutputDirectoryNotSet() {
         return !isDecompileToMemory() && StringUtil.isEmptyOrSpaces(getOutputDirectory());
     }
 }

@@ -15,23 +15,22 @@
 
 package net.stevechaloner.intellijad.config;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.swing.Icon;
+
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.util.JDOMExternalizable;
 import com.intellij.openapi.util.WriteExternalException;
-
-import javax.swing.Icon;
-import java.util.HashMap;
-import java.util.Map;
-
 import net.stevechaloner.idea.util.properties.DOMable;
 import net.stevechaloner.intellijad.IntelliJadConstants;
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
 import net.stevechaloner.intellijad.config.rules.RuleContext;
 import net.stevechaloner.intellijad.gui.IntelliJadIcon;
-
 import org.jdom.Element;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -89,11 +88,11 @@ abstract class ConfigComponent implements Configurable,
     public boolean isModified()
     {
         boolean modified = form != null && form.isModified(config);
-        afterIsModified(modified);
+        afterIsModified(modified, config);
         return modified;
     }
 
-    protected void afterIsModified(boolean modified) {}
+    protected abstract void afterIsModified(boolean modified, Config config);
 
     /** {@inheritDoc} */
     public void apply() throws ConfigurationException

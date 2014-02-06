@@ -15,23 +15,21 @@
 
 package net.stevechaloner.intellijad.config;
 
+import javax.swing.Icon;
+import javax.swing.JComponent;
+
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.util.JDOMExternalizable;
 import com.intellij.openapi.util.WriteExternalException;
-
 import net.stevechaloner.intellijad.util.PluginUtil;
-
 import org.jdom.Element;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import javax.swing.Icon;
-import javax.swing.JComponent;
 
 /**
  * Component for the project-level configuation.
@@ -66,6 +64,11 @@ public class ProjectConfigComponent implements ProjectComponent,
         {
             ConfigForm form = getForm();
             return form == null ? createForm(project).getRoot() : form.getRoot();
+        }
+
+        @Override
+        protected boolean shouldReportOutputDirectoryNotSet(Config config) {
+            return config.isUseProjectSpecificSettings();
         }
     };
 

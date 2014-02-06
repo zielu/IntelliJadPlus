@@ -15,6 +15,9 @@
 
 package net.stevechaloner.intellijad.config;
 
+import javax.swing.Icon;
+import javax.swing.JComponent;
+
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.util.InvalidDataException;
@@ -25,9 +28,6 @@ import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import javax.swing.Icon;
-import javax.swing.JComponent;
 
 /**
  * The component for the application-level configuration.
@@ -62,6 +62,11 @@ public class ApplicationConfigComponent implements ApplicationComponent,
         {
             ConfigForm form = getForm();
             return form == null ? createForm().getRoot() : form.getRoot();
+        }
+
+        @Override
+        protected boolean shouldReportOutputDirectoryNotSet(Config config) {
+            return true;
         }
     };
 

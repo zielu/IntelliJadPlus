@@ -24,11 +24,13 @@ public abstract class UiConfigComponent extends ConfigComponent {
     protected Alarm getAlarm() {
         return myAlarm;
     }
-
+    
+    protected abstract boolean shouldReportOutputDirectoryNotSet(Config config);
+    
     @Override
     protected void afterReset(Config config) {
         ConfigForm form = getForm();
-        if (config.isReportOutputDirectoryNotSet()) {
+        if (config.isOutputDirectoryNotSet() && shouldReportOutputDirectoryNotSet(config)) {
             DelayedBalloonInfo delayedBalloonInfo = new DelayedBalloonInfo(MessageType.ERROR,
                     form.getOutputDirectoryInputComponent(),
                     getAlarm(), IntelliJadResourceBundle.message("error.output-directory-not-set"));
@@ -39,14 +41,13 @@ public abstract class UiConfigComponent extends ConfigComponent {
                 }
             });
             delayedBalloonInfo.show();
-
         }
     }
 
     @Override
-    protected void afterIsModified(boolean modified) {
+    protected void afterIsModified(boolean modified, Config config) {
         ConfigForm form = getForm();
-        if (closedAfterReset && form.isReportOutputDirectoryNotSet()) {
+        if (closedAfterReset && form.isOutputDirectoryNotSet() && shouldReportOutputDirectoryNotSet(config)) {
             new DelayedBalloonInfo(MessageType.ERROR, form.getOutputDirectoryInputComponent(),
                 getAlarm(), IntelliJadResourceBundle.message("error.output-directory-not-set")).run();
         }
