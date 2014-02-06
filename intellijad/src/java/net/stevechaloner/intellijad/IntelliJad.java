@@ -40,7 +40,6 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
-import com.intellij.openapi.vfs.VirtualFileSystem;
 import net.stevechaloner.intellijad.actions.NavigationListener;
 import net.stevechaloner.intellijad.config.Config;
 import net.stevechaloner.intellijad.console.ConsoleContext;
@@ -54,7 +53,6 @@ import net.stevechaloner.intellijad.decompilers.DecompilationException;
 import net.stevechaloner.intellijad.decompilers.DecompilationResult;
 import net.stevechaloner.intellijad.decompilers.Decompiler;
 import net.stevechaloner.intellijad.decompilers.FileSystemDecompiler;
-import net.stevechaloner.intellijad.decompilers.MemoryDecompiler;
 import net.stevechaloner.intellijad.environment.EnvironmentContext;
 import net.stevechaloner.intellijad.environment.EnvironmentValidator;
 import net.stevechaloner.intellijad.environment.ValidationResult;
@@ -83,8 +81,6 @@ public class IntelliJad implements ApplicationComponent,
 
     private static final Logger LOG = Logger.getInstance(IntelliJad.class);
     
-    private static Boolean isVirtualFsDisabled;
-    
     /**
      * The per-project map of closing tasks.
      */
@@ -101,11 +97,9 @@ public class IntelliJad implements ApplicationComponent,
         public List<Runnable> get(@NotNull Object key)
         {
             List<Runnable> list = super.get(key);
-            if (list == null)
-            {
+            if (list == null) {
                 list = new ArrayList<Runnable>();
-                put((Project) key,
-                    list);
+                put((Project) key, list);
             }
             return list;
         }
@@ -214,15 +208,6 @@ public class IntelliJad implements ApplicationComponent,
         }
     }
     
-    private void reverseForcedDecompilationToDirectory(Config config, Project project) {
-        if (config.isForcedDecompileToMemory()) {
-            config.setDecompileToMemory(true);
-            setupTempOutputDir(config, project, false);
-            config.setForcedDecompileToMemory(false);
-            saveAppSettings();
-        }
-    }
-    
     public void forceDecompilationToDirectory(Config config) {
         if (config.isDecompileToMemory()) {
             LOG.info("Forcing decompilation to filesystem");
@@ -260,39 +245,32 @@ public class IntelliJad implements ApplicationComponent,
      */
     public void primeProject(final Project project)
     {
-        project.putUserData(IntelliJadConstants.GENERATED_SOURCE_LIBRARIES,
-                            new ArrayList<Library>());
-        project.putUserData(IntelliJadConstants.DECOMPILATION_DISABLED, false);
+        IntelliJadConstants.GENERATED_SOURCE_LIBRARIES.set(project, new ArrayList<Library>());
+        IntelliJadConstants.DECOMPILATION_DISABLED.set(project, false);
         NavigationListener navigationListener = new NavigationListener(project, this);
         project.getMessageBus().connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, navigationListener);
-        project.putUserData(IntelliJadConstants.DECOMPILE_LISTENER, navigationListener);
+        IntelliJadConstants.DECOMPILE_LISTENER.set(project, navigationListener);
 
         projectClosingTasks.get(project).add(new Runnable()
         {
             public void run()
             {
-                List<Library> list = project.getUserData(IntelliJadConstants.GENERATED_SOURCE_LIBRARIES);
-                for (Library library : list)
-                {
+                List<Library> list = IntelliJadConstants.GENERATED_SOURCE_LIBRARIES.get(project);
+                for (Library library : list) {
                     Library.ModifiableModel model = library.getModifiableModel();
                     VirtualFile[] files = model.getFiles(OrderRootType.SOURCES);
-                    for (VirtualFile file : files)
-                    {
-                        if (file.getParent() == null && IntelliJadConstants.ROOT_URI.equals(file.getUrl()))
-                        {
-                            model.removeRoot(file.getUrl(),
-                                             OrderRootType.SOURCES);
+                    for (VirtualFile file : files) {
+                        if (file.getParent() == null && IntelliJadConstants.ROOT_URI.equals(file.getUrl())) {
+                            model.removeRoot(file.getUrl(), OrderRootType.SOURCES);
                         }
                     }
-                    if (files.length > 0)
-                    {
+                    if (files.length > 0) {
                         model.commit();
                     }
                 }
             }
         });
-        project.putUserData(IntelliJadConstants.INTELLIJAD_PRIMED,
-                            true);
+        IntelliJadConstants.INTELLIJAD_PRIMED.set(project, true);
     }
 
     /**
@@ -301,16 +279,13 @@ public class IntelliJad implements ApplicationComponent,
     public boolean canCloseProject(Project project)
     {
         Config config = PluginUtil.getConfig(project);
-        if (config.isCleanupSourceRoots())
-        {
+        if (config.isCleanupSourceRoots()) {
             List<Runnable> tasks = projectClosingTasks.get(project);
-            for (Runnable task : tasks)
-            {
+            for (Runnable task : tasks) {
                 ApplicationManager.getApplication().runWriteAction(task);
             }
         }
-        project.putUserData(IntelliJadConstants.INTELLIJAD_PRIMED,
-                            false);
+        IntelliJadConstants.INTELLIJAD_PRIMED.set(project, false);
         return true;
     }
 
@@ -321,16 +296,16 @@ public class IntelliJad implements ApplicationComponent,
     {
         consoleManager.disposeConsole(project);
         projectClosingTasks.remove(project);
-        project.putUserData(IntelliJadConstants.DECOMPILE_LISTENER, null);
-        MemoryVFS vfs = project.getUserData(IntelliJadConstants.MEMORY_VFS);
+        IntelliJadConstants.DECOMPILE_LISTENER.set(project, null);
+        MemoryVFS vfs = IntelliJadConstants.MEMORY_VFS.get(project);
         if (vfs != null) {
-            vfs.dispose();
-            project.putUserData(IntelliJadConstants.MEMORY_VFS, null);
+            IntelliJadConstants.MEMORY_VFS.set(project, null);
+            vfs.dispose();            
         }
-        List<Library> libraries = project.getUserData(IntelliJadConstants.GENERATED_SOURCE_LIBRARIES);
+        List<Library> libraries = IntelliJadConstants.GENERATED_SOURCE_LIBRARIES.get(project);
         if (libraries != null) {
             libraries.clear();
-            project.putUserData(IntelliJadConstants.GENERATED_SOURCE_LIBRARIES, null);
+            IntelliJadConstants.GENERATED_SOURCE_LIBRARIES.set(project, null);
         }
     }
 
@@ -343,22 +318,14 @@ public class IntelliJad implements ApplicationComponent,
     }
 
     public void onStartup() {
-        Config config = PluginUtil.getApplicationConfig();
-        if (isVirtualFsDisabled()) {
-            forceDecompilationToDirectory(config);
-        } else {
-            reverseForcedDecompilationToDirectory(config);    
-        }    
+        Config config = PluginUtil.getApplicationConfig();        
+        forceDecompilationToDirectory(config);            
     }
     
     public void onStartup(Project project) {
         Config config = PluginUtil.getConfig(project);
-        if (isVirtualFsDisabled()) {
-            //this will reconfigure project to decompile to file system
-            forceDecompilationToDirectory(config, project);
-        } else {
-            reverseForcedDecompilationToDirectory(config, project);   
-        }
+        //this will reconfigure project to decompile to file system
+        forceDecompilationToDirectory(config, project);        
     }
     /**
      * {@inheritDoc}
@@ -387,17 +354,17 @@ public class IntelliJad implements ApplicationComponent,
                 outDirFile = lfs.refreshAndFindFileByIoFile(targetDir);
             } else {
                 LOG.error("Output directory creation failed: "+outputDir);
-                project.putUserData(IntelliJadConstants.DECOMPILATION_DISABLED, true);
+                IntelliJadConstants.DECOMPILATION_DISABLED.set(project, true);
             }
         }
-        if (!project.getUserData(IntelliJadConstants.DECOMPILATION_DISABLED)) {
+        if (!IntelliJadConstants.DECOMPILATION_DISABLED.get(project, false)) {
             checkSDKRoot(project, outDirFile);
         }
         return outDirFile;
     } 
     
     public static boolean isPrimed(Project project) {
-        Boolean isPrimed = project.getUserData(IntelliJadConstants.INTELLIJAD_PRIMED);
+        Boolean isPrimed = IntelliJadConstants.INTELLIJAD_PRIMED.get(project);
         return isPrimed != null && isPrimed;
     }
     
@@ -424,59 +391,43 @@ public class IntelliJad implements ApplicationComponent,
                                                                                      envContext,
                                                                                      consoleContext);
         
-        if (!validationResult.isCancelled() && validationResult.isValid()) {
-            if (config.isDecompileToMemory()) {
-                checkSDKRoot(project);
-            } else {
-                LocalFileSystem lfs = (LocalFileSystem) VirtualFileManager.getInstance().getFileSystem(LocalFileSystem.PROTOCOL);
-                String outputDir = config.getOutputDirectory();
+        if (!validationResult.isCancelled() && validationResult.isValid()) {            
+            LocalFileSystem lfs = (LocalFileSystem) VirtualFileManager.getInstance().getFileSystem(LocalFileSystem.PROTOCOL);
+            String outputDir = config.getOutputDirectory();
 
+            if (debug) {
+                LOG.debug("Will decompile to directory: "+String.valueOf(outputDir));
+            }
+
+            boolean emptyOutDir = StringUtil.isEmptyOrSpaces(outputDir);
+            if (emptyOutDir) {
                 if (debug) {
-                    LOG.debug("Will decompile to directory: "+String.valueOf(outputDir));
+                    LOG.debug("Output directory not set");
                 }
-
-                boolean emptyOutDir = StringUtil.isEmptyOrSpaces(outputDir);
-                if (emptyOutDir) {
-                    if (debug) {
-                        LOG.debug("Output directory not set");
-                    }
-                    if (isVirtualFsDisabled()) {
-                        handleDisabledVirtualFs(lfs, config, project);
-                    } else {
-                        checkSDKRoot(project);    
-                    }    
-                } else {
-                    VirtualFile outDirFile = lfs.findFileByPath(outputDir);
-                    if (outDirFile == null && config.isCreateOutputDirectory()) {
-                        File targetDir = FileSystemUtil.createTargetDir(config);
-                        if (targetDir != null) {
-                            outDirFile = lfs.refreshAndFindFileByIoFile(targetDir);
-                            if (debug) {
-                                LOG.debug("Will decompile to created directory: "+outDirFile);
-                            }
-                            checkSDKRoot(project, outDirFile);
-                        } else {
-                            if (debug) {
-                                LOG.debug("Output directory creation failed");
-                            }
-                            if (isVirtualFsDisabled()) {
-                                handleDisabledVirtualFs(lfs, config, project);
-                            } else {
-                                checkSDKRoot(project);    
-                            }                            
+                handleDisabledVirtualFs(lfs, config, project);                    
+            } else {
+                VirtualFile outDirFile = lfs.findFileByPath(outputDir);
+                if (outDirFile == null && config.isCreateOutputDirectory()) {
+                    File targetDir = FileSystemUtil.createTargetDir(config);
+                    if (targetDir != null) {
+                        outDirFile = lfs.refreshAndFindFileByIoFile(targetDir);
+                        if (debug) {
+                            LOG.debug("Will decompile to created directory: "+outDirFile);
                         }
-                    } else if (outDirFile == null) {
-                        if (isVirtualFsDisabled()) {
-                            handleDisabledVirtualFs(lfs, config, project);     
-                        } else {
-                            checkSDKRoot(project);
-                        }
-                    } else {
                         checkSDKRoot(project, outDirFile);
+                    } else {
+                        if (debug) {
+                            LOG.debug("Output directory creation failed");
+                        }
+                        handleDisabledVirtualFs(lfs, config, project);                                                     
                     }
+                } else if (outDirFile == null) {
+                    handleDisabledVirtualFs(lfs, config, project);                        
+                } else {
+                    checkSDKRoot(project, outDirFile);
                 }
             }
-            if (project.getUserData(IntelliJadConstants.DECOMPILATION_DISABLED)) {
+            if (IntelliJadConstants.DECOMPILATION_DISABLED.get(project, false)) {
                 consoleContext.addSectionMessage(ConsoleEntryType.ERROR,
                                                 "error",
                                                 "Target directory "+config.getOutputDirectory()+" creation failed");    
@@ -485,7 +436,7 @@ public class IntelliJad implements ApplicationComponent,
                 DecompilationContext context = new DecompilationContext(project,
                                                                         consoleContext,
                                                                         info);
-                Decompiler decompiler = config.isDecompileToMemory() ? new MemoryDecompiler() : new FileSystemDecompiler();
+                Decompiler decompiler = new FileSystemDecompiler();
                 if (debug) {
                     LOG.debug("Decompiler in use: "+decompiler.getClass().getSimpleName());
                 }
@@ -527,31 +478,6 @@ public class IntelliJad implements ApplicationComponent,
     }
 
     /**
-     * Checks if the project SDK has the IntelliJad source root attached, and attaches it if it is not.
-     * <p>
-     * This has to be done just-in-time to ensure the SDK directory index has been initialised; it can't be done in the
-     * {@link IntelliJad#projectOpened} method.
-     * </p>
-     *
-     * @param project the project
-     */
-    private void checkSDKRoot(final Project project)
-    {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Checking SDK root: "+project.getName());
-        }
-        if (project.getUserData(IntelliJadConstants.SDK_SOURCE_ROOT_ATTACHED) != Boolean.TRUE)
-        {
-            VirtualFileSystem vfs = VirtualFileManager.getInstance().getFileSystem(
-                        IntelliJadConstants.INTELLIJAD_PROTOCOL);
-            checkSDKRoot(project,
-                         vfs.findFileByPath(IntelliJadConstants.INTELLIJAD_ROOT));
-            project.putUserData(IntelliJadConstants.SDK_SOURCE_ROOT_ATTACHED,
-                                Boolean.TRUE);
-        }
-    }
-
-    /**
      * Checks if the project SDK has the given source root attached, and attaches it if it is not.
      * <p>
      * This has to be done just-in-time to ensure the SDK directory index has been initialised; it can't be done in the
@@ -562,8 +488,7 @@ public class IntelliJad implements ApplicationComponent,
      * @param root    the source root
      */
     private void checkSDKRoot(final Project project,
-                              final VirtualFile root)
-    {
+                              final VirtualFile root) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Checking SDK root: "+project.getName()+" -> "+root.getPresentableUrl());
         }
@@ -572,39 +497,30 @@ public class IntelliJad implements ApplicationComponent,
             public void run()
             {
                 final Sdk projectJdk = ProjectRootManager.getInstance(project).getProjectSdk();
-                if (projectJdk != null)
-                {
+                if (projectJdk != null) {
                     SdkModificator sdkModificator = projectJdk.getSdkModificator();
-                    if (sdkModificator != null)
-                    {
+                    if (sdkModificator != null) {
                         VirtualFile[] files = sdkModificator.getRoots(OrderRootType.SOURCES);
                         boolean attached = false;
-                        for (int i = 0; !attached && i < files.length; i++)
-                        {
-                            if (files[i].equals(root))
-                            {
+                        for (int i = 0; !attached && i < files.length; i++) {
+                            if (files[i].equals(root)) {
                                 attached = true;
                             }
                         }
-                        if (!attached)
-                        {
+                        if (!attached) {
                             sdkModificator.addRoot(root,
                                                    OrderRootType.SOURCES);
                             sdkModificator.commitChanges();
-                            project.putUserData(IntelliJadConstants.SDK_SOURCE_ROOT_ATTACHED,
-                                                Boolean.TRUE);
+                            IntelliJadConstants.SDK_SOURCE_ROOT_ATTACHED.set(project, true);
                             
                             projectClosingTasks.get(project).add(new Runnable()
                             {
                                 public void run()
                                 {
-                                    if (projectJdk != null)
-                                    {
+                                    if (projectJdk != null) {
                                         SdkModificator sdkModificator = projectJdk.getSdkModificator();
-                                        if (sdkModificator != null)
-                                        {
-                                            sdkModificator.removeRoot(root,
-                                                                      OrderRootType.SOURCES);
+                                        if (sdkModificator != null) {
+                                            sdkModificator.removeRoot(root, OrderRootType.SOURCES);
                                             sdkModificator.commitChanges();
                                         }
                                     }
@@ -627,14 +543,11 @@ public class IntelliJad implements ApplicationComponent,
      */
     private void checkConsole(Config config,
                               IntelliJadConsole console,
-                              ConsoleContext consoleContext)
-    {
-        if (consoleContext.isWorthDisplaying() || !config.isClearAndCloseConsoleOnSuccess())
-        {
+                              ConsoleContext consoleContext) {
+        if (consoleContext.isWorthDisplaying() || !config.isClearAndCloseConsoleOnSuccess()) {
             console.openConsole();
         }
-        else if (config.isClearAndCloseConsoleOnSuccess() && !consoleContext.isWorthDisplaying())
-        {
+        else if (config.isClearAndCloseConsoleOnSuccess() && !consoleContext.isWorthDisplaying()) {
             console.clearConsoleContent();
             console.closeConsole();
         }
@@ -647,17 +560,5 @@ public class IntelliJad implements ApplicationComponent,
      */
     public static Logger getLogger() {
         return Logger.getInstance(IntelliJadConstants.INTELLIJAD);
-    }
-
-    /**
-     * Enables workaround for Idea 12 indexing issues
-     * @return
-     */
-    public static boolean isVirtualFsDisabled() {
-        if (isVirtualFsDisabled == null) {
-            VirtualFileSystem vfs = VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
-            isVirtualFsDisabled = vfs == null;
-        }
-        return isVirtualFsDisabled;
     }
 }

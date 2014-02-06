@@ -67,7 +67,7 @@ public class ConsoleContextImpl implements ConsoleContext {
     /**
      * {@inheritDoc}
      */
-    public void addMessage(ConsoleEntryType entryType,
+    public String addMessage(ConsoleEntryType entryType,
                            String message,
                            Object... parameters) {
         String formattedMessage = IntelliJadResourceBundle.message(message, parameters);
@@ -77,6 +77,7 @@ public class ConsoleContextImpl implements ConsoleContext {
             LOG.debug(formattedMessage);                        
         }
         consoleTreeModel.addMessage(entryType, this, formattedMessage);
+        return formattedMessage;
     }
 
     /**

@@ -15,20 +15,18 @@
 
 package net.stevechaloner.intellijad.config;
 
-import com.intellij.ide.util.PackageChooserDialog;
-import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.PackageChooser;
-import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.psi.PsiPackage;
-import net.stevechaloner.idea.util.fs.ApplicationFileSelectionAction;
-import net.stevechaloner.idea.util.fs.FileSelectionDescriptor;
-import net.stevechaloner.idea.util.fs.ProjectFileSelectionAction;
-import net.stevechaloner.intellijad.IntelliJad;
-import net.stevechaloner.intellijad.IntelliJadResourceBundle;
-import net.stevechaloner.intellijad.util.FileSystemUtil;
-import net.stevechaloner.intellijad.util.PluginUtil;
-import org.jetbrains.annotations.Nullable;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Field;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -42,18 +40,20 @@ import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.lang.reflect.Field;
-import java.util.List;
+
+import com.intellij.ide.util.PackageChooserDialog;
+import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.PackageChooser;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.psi.PsiPackage;
+import net.stevechaloner.idea.util.fs.ApplicationFileSelectionAction;
+import net.stevechaloner.idea.util.fs.FileSelectionDescriptor;
+import net.stevechaloner.idea.util.fs.ProjectFileSelectionAction;
+import net.stevechaloner.intellijad.IntelliJadResourceBundle;
+import net.stevechaloner.intellijad.util.FileSystemUtil;
+import net.stevechaloner.intellijad.util.PluginUtil;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * IntelliJad configuration form.  This class deals with both application- and
@@ -191,7 +191,7 @@ public class ConfigForm
             public void stateChanged(ChangeEvent e)
             {
                 toggleToDiskControls(project);
-                toggleToMemoryControls(project);
+                disableToMemoryControls(project);
             }
         });
 
@@ -247,14 +247,12 @@ public class ConfigForm
                 {
                     setControlsEnabled(project,
                                        useProjectSpecificIntelliJadCheckBox.isSelected());
-                    if (IntelliJad.isVirtualFsDisabled()) {
-                        toggleToMemoryControls(project);
-                    }
+                    disableToMemoryControls(project);
                     if (useProjectSpecificIntelliJadCheckBox.isSelected()) {
                         if (StringUtil.isEmptyOrSpaces(jadTextField.getText())) {
                             jadTextField.setText(PluginUtil.getApplicationConfig().getJadPath());        
                         }
-                        if (IntelliJad.isVirtualFsDisabled() && StringUtil.isEmptyOrSpaces(outputDirectoryTextField.getText())) {
+                        if (StringUtil.isEmptyOrSpaces(outputDirectoryTextField.getText())) {
                             outputDirectoryTextField.setText(FileSystemUtil.generateTempOutputDir(project));
                             createIfDirectoryDoesnCheckBox.setSelected(true);
                         }
@@ -264,8 +262,7 @@ public class ConfigForm
                             StringUtil.equals(applicationJadPath, jadTextField.getText())) {
                             jadTextField.setText("");
                         }
-                        if (IntelliJad.isVirtualFsDisabled() && 
-                            !StringUtil.isEmptyOrSpaces(PluginUtil.getApplicationConfig().getOutputDirectory())) {
+                        if (!StringUtil.isEmptyOrSpaces(PluginUtil.getApplicationConfig().getOutputDirectory())) {
                             outputDirectoryTextField.setText("");
                             createIfDirectoryDoesnCheckBox.setSelected(false);
                         }
@@ -293,20 +290,15 @@ public class ConfigForm
         }
     }
 
-    private void toggleToMemoryControls(@Nullable Project project) {
+    private void disableToMemoryControls(@Nullable Project project) {
         if (project == null ||
-                    useProjectSpecificIntelliJadCheckBox.isSelected()) {
-            if (IntelliJad.isVirtualFsDisabled()) {           
-                decompileToMemoryCheckBox.setSelected(false);
-                decompileToMemoryCheckBox.setEnabled(false);
-                decompileToMemoryCheckBox.setToolTipText(IntelliJadResourceBundle.message("config.compatibility-mode-tip"));
-                keepDecompiledToMemory.setSelected(false);
-                keepDecompiledToMemory.setEnabled(false);
-                keepDecompiledToMemory.setToolTipText(IntelliJadResourceBundle.message("config.compatibility-mode-tip"));
-            } else {
-                boolean decompileToMemory = decompileToMemoryCheckBox.isSelected();
-                keepDecompiledToMemory.setEnabled(decompileToMemory);    
-            }
+                    useProjectSpecificIntelliJadCheckBox.isSelected()) {           
+            decompileToMemoryCheckBox.setSelected(false);
+            decompileToMemoryCheckBox.setEnabled(false);
+            decompileToMemoryCheckBox.setToolTipText(IntelliJadResourceBundle.message("config.compatibility-mode-tip"));
+            keepDecompiledToMemory.setSelected(false);
+            keepDecompiledToMemory.setEnabled(false);
+            keepDecompiledToMemory.setToolTipText(IntelliJadResourceBundle.message("config.compatibility-mode-tip"));            
         }
     }
 
@@ -344,7 +336,7 @@ public class ConfigForm
         if (enabled && decompileToMemoryCheckBox.isSelected())
         {
             toggleToDiskControls(project);
-            toggleToMemoryControls(project);
+            disableToMemoryControls(project);
         }
 
         root.validate();
@@ -664,10 +656,8 @@ public class ConfigForm
         if (project != null) {
             setControlsEnabled(project, data.isUseProjectSpecificSettings());           
         }
-        if (IntelliJad.isVirtualFsDisabled()) {
-            decompileToMemoryCheckBox.setSelected(false);
-            toggleToMemoryControls(project);
-        }
+        decompileToMemoryCheckBox.setSelected(false);
+        disableToMemoryControls(project);
     }
 
     public void getData(Config data) {

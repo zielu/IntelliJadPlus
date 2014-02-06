@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.base.Optional;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
@@ -28,7 +29,6 @@ import com.intellij.openapi.roots.libraries.Library;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.VirtualFileSystem;
-import net.stevechaloner.intellijad.IntelliJad;
 import net.stevechaloner.intellijad.IntelliJadConstants;
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
 import net.stevechaloner.intellijad.config.CodeStyle;
@@ -101,53 +101,37 @@ public class MemoryDecompiler extends AbstractDecompiler
      * @return a file representing the decompiled file
      * @throws DecompilationException if the processing fails
      */
+    @Nullable
     protected VirtualFile processOutput(@NotNull final DecompilationDescriptor descriptor,
                                         @NotNull final DecompilationContext context,
-                                        @NotNull final String content) throws DecompilationException
-    {
-        MemoryVFS vfs;
-        if (IntelliJad.isVirtualFsDisabled()) {
-            vfs = TempMemoryVFS.getInstance(context.getProject());    
+                                        @NotNull final String content) throws DecompilationException {
+        MemoryVFS vfs = TempMemoryVFS.getInstance(context.getProject());        
+        MemoryVF file = vfs.newMemoryFV(descriptor.getClassName() + IntelliJadConstants.DOT_JAVA_EXTENSION, content);
+        file.asVirtualFile().putUserData(IntelliJadConstants.DECOMPILED_BY_INTELLIJAD, true);
+
+        Optional<VirtualFile> actualFile = insertIntoFileSystem(descriptor, context, vfs, file);
+        if (actualFile.isPresent()) {
+            reformatToStyle(context, new LightMemoryVF(actualFile.get()));
+                    
+            lockFile(context, file);
+    
+            Project project = context.getProject();
+            List<Library> libraries = LibraryUtil.findLibrariesByClass(descriptor.getFullyQualifiedName(),
+                                                                       project);
+    
+            if (!libraries.isEmpty()) {
+                attachSourceToLibraries(descriptor, context, vfs, libraries);
+            } else {
+                context.getConsoleContext().addMessage(ConsoleEntryType.LIBRARY_OPERATION,
+                                                       "message.library-not-found-for-class",
+                                                       descriptor.getClassName());
+            }
+    
+            lockFile(context, file);
+            return actualFile.get();
         } else {
-            vfs = (MemoryVFS) VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
-        }
-        MemoryVF file = vfs.newMemoryFV(descriptor.getClassName() + IntelliJadConstants.DOT_JAVA_EXTENSION,
-                                                             content);
-        file.asVirtualFile().putUserData(IntelliJadConstants.DECOMPILED_BY_INTELLIJAD,
-                true);
-
-        VirtualFile actualFile;
-        if (IntelliJad.isVirtualFsDisabled()) {
-            actualFile = insertIntoFileSystem(descriptor, context, vfs, file); 
-            reformatToStyle(context, new LightMemoryVF(actualFile));
-        } else {
-            reformatToStyle(context, file);            
-            actualFile = insertIntoFileSystem(descriptor, context, vfs, file);    
-        }
-        
-        lockFile(context, file);
-
-        Project project = context.getProject();
-        List<Library> libraries = LibraryUtil.findLibrariesByClass(descriptor.getFullyQualifiedName(),
-                                                                   project);
-
-        if (!libraries.isEmpty())
-        {
-            attachSourceToLibraries(descriptor,
-                                    context,
-                                    vfs,
-                                    libraries);
-        }
-        else
-        {
-            context.getConsoleContext().addMessage(ConsoleEntryType.LIBRARY_OPERATION,
-                                                   "message.library-not-found-for-class",
-                                                   descriptor.getClassName());
-        }
-
-        lockFile(context, file);
-
-        return actualFile;
+            return null;
+        }        
     }
 
     /**
@@ -175,15 +159,14 @@ public class MemoryDecompiler extends AbstractDecompiler
      * @param file the file to insert
      * @return the file inserted into the file system
      */
-    protected VirtualFile insertIntoFileSystem(@NotNull DecompilationDescriptor descriptor,
+    protected Optional<VirtualFile> insertIntoFileSystem(@NotNull DecompilationDescriptor descriptor,
                                                @NotNull final DecompilationContext context,
                                                @NotNull MemoryVFS vfs,
-                                               @NotNull MemoryVF file)
-    {
+                                               @NotNull MemoryVF file) {
         vfs.addFile(file);
         MemoryVF parentFile = "".equals(descriptor.getPackageName()) ? (MemoryVF) vfs.asVirtualFileSystem().findFileByPath(IntelliJadConstants.INTELLIJAD_ROOT) : vfs.getFileForPackage(descriptor.getPackageName());
         MemoryVF child = parentFile.addChild(file);
-        return child.asVirtualFile();
+        return Optional.of(child.asVirtualFile());
     }
 
     /**

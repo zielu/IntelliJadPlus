@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Optional;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
@@ -57,7 +58,7 @@ public class FileSystemDecompiler extends MemoryDecompiler
 {
     private final Logger LOG = Logger.getInstance(getClass());
     
-    private static final Key<Boolean> STORE_IN_MEMORY = new Key<Boolean>("FileSystemDecompiler.store-in-memory");
+    private static final Key<Boolean> CANNOT_STORE = new Key<Boolean>("FileSystemDecompiler.cannot-store-in-fs");
 
     private static final Key<VirtualFile> LOCAL_FS_FILE = new Key<VirtualFile>("FileSystemDecompiler.local-fs-file");
 
@@ -67,11 +68,9 @@ public class FileSystemDecompiler extends MemoryDecompiler
     {
         boolean debug = LOG.isDebugEnabled();
 
-        OperationStatus status = super.setup(descriptor,
-                                             context);
+        OperationStatus status = super.setup(descriptor, context);
 
         Map<String, Object[]> messages = new HashMap<String, Object[]>();
-        boolean storeInMemory = false;
 
         if (status == OperationStatus.CONTINUE)
         {
@@ -85,25 +84,19 @@ public class FileSystemDecompiler extends MemoryDecompiler
                 {
                     if (!outputDirectory.mkdirs())
                     {
-                        storeInMemory = true;
                         messages.put("error.could-not-create-output-directory", new String[] { config.getOutputDirectory() });
                         if (debug) {
                             LOG.debug("Output directory could not be created");
                         }
                     }
-                }
-                else if (!outputDirExists)
-                {
-                    storeInMemory = true;
+                } else if (!outputDirExists) {
                     messages.put("error.non-existant-output-directory", new String[] { config.getOutputDirectory() });
                     if (debug) {
                         LOG.debug("Output directory does not exist");
                     }
                 }
             }
-            else
-            {
-                storeInMemory = true;
+            else {
                 messages.put("error.output-directory-not-set", new String[] { config.getOutputDirectory() });
                 if (debug) {
                     LOG.debug("Directory not set");
@@ -111,110 +104,98 @@ public class FileSystemDecompiler extends MemoryDecompiler
             }
         }
 
-        context.addUserData(STORE_IN_MEMORY,
-                            storeInMemory);
-        if (storeInMemory)
-        {
-            if (debug) {
-                LOG.debug("Result will be stored in memory");
-            }
-
-            ConsoleContext consoleContext = context.getConsoleContext();
-            for (String key : messages.keySet())
-            {
-                consoleContext.addMessage(ConsoleEntryType.DECOMPILATION_OPERATION,
-                                          key,
-                                          messages.get(key));
-            }
-            consoleContext.addMessage(ConsoleEntryType.DECOMPILATION_OPERATION,
-                                      "error.storing-class-in-memory",
-                                      descriptor.getClassName());
-            consoleContext.setWorthDisplaying(true);
+        boolean cannotStore = !messages.isEmpty();
+        context.addUserData(CANNOT_STORE, cannotStore);        
+        if (cannotStore) {
+            status = OperationStatus.ABORT;
+            LOG.error("Result cannot be stored");
         }
+        
+        ConsoleContext consoleContext = context.getConsoleContext();
+        for (Map.Entry<String, Object[]> entry : messages.entrySet()) {
+            String errorMessage = consoleContext.addMessage(ConsoleEntryType.DECOMPILATION_OPERATION, entry.getKey(), entry.getValue());
+            LOG.error(errorMessage);
+        }
+        consoleContext.addMessage(ConsoleEntryType.DECOMPILATION_OPERATION,
+                                  "error.storing-class-in-fs",
+                                  descriptor.getClassName());
+        consoleContext.setWorthDisplaying(true);
 
         return status;
     }
 
     /* {@inheritDoc} */
-    protected VirtualFile insertIntoFileSystem(@NotNull DecompilationDescriptor descriptor,
+    protected Optional<VirtualFile> insertIntoFileSystem(@NotNull DecompilationDescriptor descriptor,
                                                @NotNull final DecompilationContext context,
                                                @NotNull MemoryVFS vfs,
                                                @NotNull MemoryVF file)
     {
         final boolean debug = LOG.isDebugEnabled();
-        
-        VirtualFile insertFile;
-        if (context.getUserData(STORE_IN_MEMORY))
-        {
-            insertFile = super.insertIntoFileSystem(descriptor, context, vfs, file);
+                        
+        if (debug) {
+            LOG.debug("Inserting into local file system");
         }
-        else
-        {
-            if (debug) {
-                LOG.debug("Inserting into local file system");
-            }
-            
-            final LocalFileSystem lvfs = getLocalFileSystem();
-            Config config = context.getConfig();
-            File localPath = new File(config.getOutputDirectory() + '/' + descriptor.getPackageNameAsPath());
-            
-            if (debug) {
-                LOG.debug("Insert into "+localPath.getAbsolutePath());
-            }
-            
-            if (localPath.exists() & localPath.canWrite() || localPath.mkdirs())
-            {
-                try
-                {
-                    final File localFile = new File(localPath,
-                                                    descriptor.getClassName() + IntelliJadConstants.DOT_JAVA_EXTENSION);
-                    if (debug) {
-                        LOG.debug("Insert into local file "+localFile.getAbsolutePath());
-                    }
-                    FileWriter writer = new FileWriter(localFile);
-                    if (debug) {
-                        LOG.debug("Writing...");
-                    }
-                    writer.write(file.getContent());
-                    if (debug) {
-                        LOG.debug("Written");
-                    }
-                    writer.close();
-                    if (debug) {
-                        LOG.debug("Closed");
-                    }
-                    final VirtualFile[] files = new VirtualFile[1];
-                    ApplicationManager.getApplication().runWriteAction(new Runnable()
-                    {
-                        public void run()
-                        {
-                            if (debug) {
-                                LOG.debug("Looking for file: "+localFile.getAbsolutePath());
-                            }
-                            files[0] = lvfs.refreshAndFindFileByIoFile(localFile);
-                            if (debug) {
-                                LOG.debug("Found "+String.valueOf(files[0]));
-                            }
+        
+        final LocalFileSystem lvfs = getLocalFileSystem();
+        Config config = context.getConfig();
+        File localPath = new File(config.getOutputDirectory() + File.pathSeparator + descriptor.getPackageNameAsPath());
+        
+        if (debug) {
+            LOG.debug("Insert into "+localPath.getAbsolutePath());
+        }
+        
+        Optional<VirtualFile> insertFile;
+        boolean exists = localPath.exists();
+        boolean canWrite = localPath.canWrite();
+        boolean mkDirs = true;
+        if (!exists) {
+            mkDirs = localPath.mkdirs();
+        }
+        if ((exists & canWrite) || mkDirs) {            
+            try {
+                final File localFile = new File(localPath,
+                                                descriptor.getClassName() + IntelliJadConstants.DOT_JAVA_EXTENSION);
+                if (debug) {
+                    LOG.debug("Insert into local file "+localFile.getAbsolutePath());
+                }
+                FileWriter writer = new FileWriter(localFile);
+                if (debug) {
+                    LOG.debug("Writing...");
+                }
+                writer.write(file.getContent());
+                if (debug) {
+                    LOG.debug("Written");
+                }
+                writer.close();
+                if (debug) {
+                    LOG.debug("Closed");
+                }
+                final VirtualFile[] files = new VirtualFile[1];
+                ApplicationManager.getApplication().runWriteAction(new Runnable() {
+                    public void run() {
+                        if (debug) {
+                            LOG.debug("Looking for file: "+localFile.getAbsolutePath());
                         }
-                    });
-
-                    insertFile = files[0];
-                    context.addUserData(LOCAL_FS_FILE, files[0]);
-                }
-                catch (IOException e)
-                {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Could not save file", e);
+                        files[0] = lvfs.refreshAndFindFileByIoFile(localFile);
+                        if (debug) {
+                            LOG.debug("Found "+String.valueOf(files[0]));
+                        }
                     }
-                    insertFile = super.insertIntoFileSystem(descriptor, context, vfs, file);
-                    context.addUserData(STORE_IN_MEMORY, true);
+                });
+
+                insertFile = Optional.of(files[0]);
+                context.addUserData(LOCAL_FS_FILE, files[0]);
+            } catch (IOException e) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Could not save file", e);
                 }
+                context.addUserData(CANNOT_STORE, true);
+                insertFile = Optional.absent();
             }
-            else
-            {
-                insertFile = super.insertIntoFileSystem(descriptor, context, vfs, file);
-                context.addUserData(STORE_IN_MEMORY, true);
-            }
+        } else {
+            LOG.warn("Path: "+localPath.getAbsolutePath()+", exists="+exists+", canWrite="+canWrite+", mkDirs="+mkDirs); 
+            context.addUserData(CANNOT_STORE, true);
+            insertFile = Optional.absent();
         }
 
         return insertFile;
@@ -226,20 +207,11 @@ public class FileSystemDecompiler extends MemoryDecompiler
                                            @NotNull MemoryVFS vfs,
                                            @NotNull List<Library> libraries)
     {
-        if (context.getUserData(STORE_IN_MEMORY))
-        {
-            // something has occurred to make storing the file on disk a problem, so
-            // keep it in memory instead
-            super.attachSourceToLibraries(descriptor,
-                                          context,
-                                          vfs,
-                                          libraries);
-        }
-        else
-        {
-            attachSource(descriptor,
-                         context,
-                         context.getUserData(LOCAL_FS_FILE));
+        if (context.getUserData(CANNOT_STORE)) {
+            // something has occurred to make storing the file on disk a problem            
+            LOG.error("Cannot attach source: name="+descriptor.getClassName()+", vfs="+vfs);            
+        } else {
+            attachSource(descriptor, context, context.getUserData(LOCAL_FS_FILE));
         }
     }
 
@@ -311,12 +283,9 @@ public class FileSystemDecompiler extends MemoryDecompiler
     protected void lockFile(@NotNull DecompilationContext context,
                             @NotNull MemoryVF file)
     {
-        if (context.getUserData(STORE_IN_MEMORY))
-        {
-            super.lockFile(context, file);
-        }
-        else
-        {
+        if (context.getUserData(CANNOT_STORE)) {
+            LOG.error("Cannot lock file: "+file);
+        } else {
             Config config = context.getConfig();
             if (config.isReadOnly())
             {
@@ -336,15 +305,13 @@ public class FileSystemDecompiler extends MemoryDecompiler
     public VirtualFile getVirtualFile(@NotNull DecompilationDescriptor descriptor,
                                       @NotNull DecompilationContext context)
     {
-        VirtualFile file = null;
-        if (context.containsUserData(STORE_IN_MEMORY) && context.getUserData(STORE_IN_MEMORY))
-        {
-            file = super.getVirtualFile(descriptor,
-                                        context);
-        }
-        else if (context.containsUserData(LOCAL_FS_FILE))
-        {
+        VirtualFile file;
+        if (context.containsUserData(CANNOT_STORE) && context.getUserData(CANNOT_STORE)) {
+            file = null;
+        } else if (context.containsUserData(LOCAL_FS_FILE)) {
             file = context.getUserData(LOCAL_FS_FILE);
+        } else {
+            file = null;
         }
         return file;
     }

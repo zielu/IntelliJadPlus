@@ -15,6 +15,9 @@
 
 package net.stevechaloner.intellijad.config;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.intellij.openapi.util.text.StringUtil;
 import net.stevechaloner.idea.util.properties.DOMable;
 import net.stevechaloner.idea.util.properties.DOMableCollectionContentType;
@@ -26,12 +29,8 @@ import net.stevechaloner.idea.util.properties.PropertyContainer;
 import net.stevechaloner.idea.util.properties.PropertyDescriptor;
 import net.stevechaloner.idea.util.properties.converters.ConverterFactory;
 import net.stevechaloner.intellijad.config.rules.RuleContext;
-
 import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * The IntelliJad configuration.
@@ -45,7 +44,7 @@ public class Config implements DOMable
     private static final PropertyDescriptor<Boolean> CREATE_OUTPUT_DIRECTORY = new ImmutablePropertyDescriptor<Boolean>("create-output-directory");
     private static final PropertyDescriptor<Boolean> ALWAYS_EXCLUDE_RECURSIVELY = new ImmutablePropertyDescriptor<Boolean>("always-exclude-recursively");
     private static final PropertyDescriptor<Boolean> CLEAR_AND_CLOSE_CONSOLE_ON_SUCCESS = new ImmutablePropertyDescriptor<Boolean>("clear-and-close-console-on-success");
-    private static final PropertyDescriptor<Boolean> DECOMPILE_TO_MEMORY = new ImmutablePropertyDescriptor<Boolean>("decompile-to-memory", Boolean.TRUE);
+    private static final PropertyDescriptor<Boolean> DECOMPILE_TO_MEMORY = new ImmutablePropertyDescriptor<Boolean>("decompile-to-memory", Boolean.FALSE);
     private static final PropertyDescriptor<Boolean> KEEP_DECOMPILED_TO_MEMORY = new ImmutablePropertyDescriptor<Boolean>("keep-decompiled-to-memory", Boolean.FALSE);
     private static final PropertyDescriptor<ExclusionTableModel> EXCLUSION_TABLE_MODEL = new ImmutablePropertyDescriptor<ExclusionTableModel>("exclusion-table-model");
     private static final PropertyDescriptor<String> JAD_PATH = new ImmutablePropertyDescriptor<String>("jad-path");

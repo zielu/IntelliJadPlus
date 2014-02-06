@@ -44,7 +44,7 @@ public interface ConsoleContext
      * @param message resource bundle key key
      * @param parameters resource bundle parameters
      */
-    void addMessage(ConsoleEntryType entryType,
+    String addMessage(ConsoleEntryType entryType,
                     String message,
                     Object... parameters);
 
