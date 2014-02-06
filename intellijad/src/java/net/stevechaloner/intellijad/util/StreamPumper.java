@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import com.intellij.openapi.diagnostic.Logger;
 import net.stevechaloner.intellijad.console.ConsoleEntryType;
 import net.stevechaloner.intellijad.decompilers.DecompilationContext;
 import org.jetbrains.annotations.NotNull;
@@ -29,6 +30,8 @@ import org.jetbrains.annotations.NotNull;
  * @author Steve Chaloner
  */
 public class StreamPumper implements Runnable {
+    private final Logger LOG = Logger.getInstance(getClass());
+    
     /**
      * End of stream flag.
      */
@@ -89,6 +92,10 @@ public class StreamPumper implements Runnable {
             context.getConsoleContext().addMessage(ConsoleEntryType.DECOMPILATION_OPERATION,
                                                    "error",
                                                    e.getMessage());
+        } finally {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Pumper finished");
+            }
         }
     }
 

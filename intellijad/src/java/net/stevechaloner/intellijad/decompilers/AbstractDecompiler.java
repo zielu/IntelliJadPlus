@@ -32,7 +32,7 @@ import net.stevechaloner.intellijad.console.ConsoleContext;
 import net.stevechaloner.intellijad.console.ConsoleEntryType;
 import net.stevechaloner.intellijad.format.SourceReorganiser;
 import net.stevechaloner.intellijad.format.StyleReformatter;
-import net.stevechaloner.intellijad.util.StreamPumper;
+import net.stevechaloner.intellijad.util.ProcessGobbler;
 import net.stevechaloner.intellijad.vfs.MemoryVF;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -307,38 +307,12 @@ public abstract class AbstractDecompiler implements Decompiler
         }
 
         Process process = Runtime.getRuntime().exec(command);
-        StreamPumper outputPumper = new StreamPumper(context,
-                                                     process.getInputStream(),
-                                                     output);
-        Thread outputThread = new Thread(outputPumper);
-        outputThread.start();
-        StreamPumper errPumper = new StreamPumper(context,
-                                                  process.getErrorStream(),
-                                                  err);
-        Thread errThread = new Thread(errPumper);
-        errThread.start();
-
-        if (debug) {
-            LOG.debug("Waiting for process finish");
-        }
+        ProcessGobbler gobbler = new ProcessGobbler(process);
         
         //magic code indicating InterruptedException
-        int exitCode = 9000;
-        try {
-            exitCode = process.waitFor();
+        int exitCode = gobbler.waitFor(context, output, err);
 
-            if (debug) {
-                LOG.debug("Process finished, exit code: "+exitCode);
-            }
-        } finally {
-            //always stop pumping
-            outputPumper.stopPumping();
-            errPumper.stopPumping();
-        }
-
-        return checkDecompilationStatus(exitCode,
-                                        err,
-                                        output);
+        return checkDecompilationStatus(exitCode, err, output);
     }
 
     /**
