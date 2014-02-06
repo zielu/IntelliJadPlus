@@ -15,6 +15,12 @@
 
 package net.stevechaloner.intellijad.decompilers;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.JarFile;
@@ -30,12 +36,6 @@ import net.stevechaloner.intellijad.util.StreamPumper;
 import net.stevechaloner.intellijad.vfs.MemoryVF;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * The generic decompilation operations required to decompile and display a class.
@@ -321,15 +321,20 @@ public abstract class AbstractDecompiler implements Decompiler
         if (debug) {
             LOG.debug("Waiting for process finish");
         }
+        
+        //magic code indicating InterruptedException
+        int exitCode = 9000;
+        try {
+            exitCode = process.waitFor();
 
-        int exitCode = process.waitFor();
-
-        if (debug) {
-            LOG.debug("Process finished, exit code: "+exitCode);
+            if (debug) {
+                LOG.debug("Process finished, exit code: "+exitCode);
+            }
+        } finally {
+            //always stop pumping
+            outputPumper.stopPumping();
+            errPumper.stopPumping();
         }
-
-        outputPumper.stopPumping();
-        errPumper.stopPumping();
 
         return checkDecompilationStatus(exitCode,
                                         err,
