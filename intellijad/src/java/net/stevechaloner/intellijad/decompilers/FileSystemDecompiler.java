@@ -123,10 +123,13 @@ public class FileSystemDecompiler extends MemoryDecompiler
             String errorMessage = consoleContext.addMessage(ConsoleEntryType.DECOMPILATION_OPERATION, entry.getKey(), entry.getValue());
             LOG.error(errorMessage);
         }
-        consoleContext.addMessage(ConsoleEntryType.DECOMPILATION_OPERATION,
+        
+        if (cannotStore) {
+            consoleContext.addMessage(ConsoleEntryType.DECOMPILATION_OPERATION,
                                   "error.storing-class-in-fs",
                                   descriptor.getClassName());
-        consoleContext.setWorthDisplaying(true);
+            consoleContext.setWorthDisplaying(true);
+        }
 
         return status;
     }
@@ -145,7 +148,7 @@ public class FileSystemDecompiler extends MemoryDecompiler
         
         final LocalFileSystem lvfs = getLocalFileSystem();
         Config config = context.getConfig();
-        File localPath = new File(config.getOutputDirectory() + File.pathSeparator + descriptor.getPackageNameAsPath());
+        File localPath = new File(config.getOutputDirectory() + File.separator + descriptor.getPackageNameAsPath());
         
         if (debug) {
             LOG.debug("Insert into "+localPath.getAbsolutePath());
