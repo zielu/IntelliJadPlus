@@ -18,6 +18,7 @@ package net.stevechaloner.intellijad.util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.intellij.openapi.diagnostic.Logger;
 import net.stevechaloner.intellijad.console.ConsoleEntryType;
@@ -30,12 +31,13 @@ import org.jetbrains.annotations.NotNull;
  * @author Steve Chaloner
  */
 public class StreamPumper implements Runnable {
+    
     private final Logger LOG = Logger.getInstance(getClass());
     
     /**
      * End of stream flag.
      */
-    private boolean pump = true;
+    private final AtomicBoolean pump = new AtomicBoolean(true);
 
     /**
      * The target output stream.
@@ -54,8 +56,9 @@ public class StreamPumper implements Runnable {
      */
     @NotNull
     private final DecompilationContext context;
-
-    private byte[] buffer;
+    
+    @NotNull
+    private final String name;
     
     /**
      * Initialises a new instance of this class.
@@ -65,10 +68,11 @@ public class StreamPumper implements Runnable {
      * @param out the output stream
      */
     public StreamPumper(@NotNull DecompilationContext context,
+                        @NotNull String name,
                         @NotNull InputStream in,
-                        @NotNull OutputStream out)
-    {
+                        @NotNull OutputStream out) {
         this.context = context;
+        this.name = name;
         this.in = in;
         this.out = out;
     }
@@ -78,11 +82,22 @@ public class StreamPumper implements Runnable {
      * the content of the input stream into the output stream.
      */
     public void run() {
+        final boolean debug = LOG.isDebugEnabled();
+        
+        if (debug) {
+            LOG.debug("["+name+"] started");
+        }
+        
         try {
-            buffer = new byte[512];
-            while (pump) {
-                pump();
-                Thread.sleep(5);
+            byte[] buffer = new byte[512];
+            while (!Thread.currentThread().isInterrupted() && pump.get()) {
+                int pumped = pump(buffer);
+                if (debug) {
+                    LOG.debug("["+name+"] pumped "+pumped+" bytes");
+                }
+                if (pumped == 0) {
+                    Thread.sleep(5);
+                }
             }
         } catch (InterruptedException e) {
             context.getConsoleContext().addMessage(ConsoleEntryType.DECOMPILATION_OPERATION,
@@ -93,32 +108,35 @@ public class StreamPumper implements Runnable {
                                                    "error",
                                                    e.getMessage());
         } finally {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Pumper finished");
+            if (debug) {
+                if (Thread.currentThread().isInterrupted()) {
+                    LOG.info("["+name+"] interrupted");                    
+                } else {
+                    LOG.debug("["+name+"] finished");
+                }
             }
         }
     }
 
     /**
-     * Repeatedly pumps the stream if content is available.
+     * Pumps chunk of the stream if content is available.
      *
      * @throws IOException if there is an error accessing one of the streams.
      */
-    private void pump() throws IOException {
+    private int pump(byte[] buffer) throws IOException {
         
         int bytesRead = in.read(buffer, 0, buffer.length);
 
         if (bytesRead > 0) {
-            out.write(buffer, 0, bytesRead);
-            pump();
+            out.write(buffer, 0, bytesRead);            
         }
+        return bytesRead;
     }
 
     /**
      * Stops the pump.
      */
-    public void stopPumping()
-    {
-        pump = false;
+    public void stopPumping() {
+        pump.compareAndSet(true, false);
     }
 }

@@ -31,11 +31,13 @@ public class ProcessGobbler {
         final boolean debug = LOG.isDebugEnabled();
         
         StreamPumper outputPumper = new StreamPumper(context,
+                                                     "output",
                                                      process.getInputStream(),
                                                      output);
         Thread outputThread = new Thread(outputPumper);
         outputThread.start();
         StreamPumper errPumper = new StreamPumper(context,
+                                                  "error",
                                                   process.getErrorStream(),
                                                   err);
         Thread errThread = new Thread(errPumper);
