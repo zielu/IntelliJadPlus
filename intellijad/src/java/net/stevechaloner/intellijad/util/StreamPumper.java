@@ -95,7 +95,7 @@ public class StreamPumper implements Runnable {
                 if (debug) {
                     LOG.debug("["+name+"] pumped "+pumped+" bytes");
                 }
-                if (pumped == 0) {
+                if (pumped <= 0) {
                     Thread.sleep(5);
                 }
             }
