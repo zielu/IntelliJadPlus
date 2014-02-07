@@ -96,8 +96,6 @@ public class ConfigForm
     @Control private JButton addExclusionButton;
     @Control private JTable exclusionTable;
     @Control private JComboBox navTriggeredDecomp;
-    @Control private JCheckBox decompileToMemoryCheckBox;
-    @Control private JCheckBox keepDecompiledToMemory;
     @Control private JTextField excludePackageTextField;
     @Control private JButton browseButton1;
     @Control private JCheckBox createIfDirectoryDoesnCheckBox;
@@ -186,15 +184,6 @@ public class ConfigForm
                                                                                                                                               jadTextField,
                                                                                                                                               FileSelectionDescriptor.FILES_ONLY));
 
-        decompileToMemoryCheckBox.addChangeListener(new ChangeListener()
-        {
-            public void stateChanged(ChangeEvent e)
-            {
-                toggleToDiskControls(project);
-                disableToMemoryControls(project);
-            }
-        });
-
         addExclusionButton.setEnabled(false);
         excludePackageTextField.addKeyListener(new KeyAdapter()
         {
@@ -247,7 +236,6 @@ public class ConfigForm
                 {
                     setControlsEnabled(project,
                                        useProjectSpecificIntelliJadCheckBox.isSelected());
-                    disableToMemoryControls(project);
                     if (useProjectSpecificIntelliJadCheckBox.isSelected()) {
                         if (StringUtil.isEmptyOrSpaces(jadTextField.getText())) {
                             jadTextField.setText(PluginUtil.getApplicationConfig().getJadPath());        
@@ -269,36 +257,6 @@ public class ConfigForm
                     }
                 }
             });
-        }
-    }
-
-    /**
-     * Toggles the use of the to-disk controls.
-     *
-     * @param project the current project
-     */
-    private void toggleToDiskControls(@Nullable Project project)
-    {
-        if (project == null ||
-            useProjectSpecificIntelliJadCheckBox.isSelected()) {
-            // prevents an annoying model-driven state switch
-            boolean decompileToMemory = decompileToMemoryCheckBox.isSelected();
-            outputDirBrowseButton.setEnabled(!decompileToMemory);
-            createIfDirectoryDoesnCheckBox.setEnabled(!decompileToMemory);
-            outputDirectoryTextField.setEnabled(!decompileToMemory);
-            markDecompiledFilesAsCheckBox.setEnabled(!decompileToMemory);
-        }
-    }
-
-    private void disableToMemoryControls(@Nullable Project project) {
-        if (project == null ||
-                    useProjectSpecificIntelliJadCheckBox.isSelected()) {           
-            decompileToMemoryCheckBox.setSelected(false);
-            decompileToMemoryCheckBox.setEnabled(false);
-            decompileToMemoryCheckBox.setToolTipText(IntelliJadResourceBundle.message("config.compatibility-mode-tip"));
-            keepDecompiledToMemory.setSelected(false);
-            keepDecompiledToMemory.setEnabled(false);
-            keepDecompiledToMemory.setToolTipText(IntelliJadResourceBundle.message("config.compatibility-mode-tip"));            
         }
     }
 
@@ -330,13 +288,6 @@ public class ConfigForm
         catch (IllegalAccessException e)
         {
             Logger.getInstance(getClass().getName()).error(e);
-        }
-
-        // special case
-        if (enabled && decompileToMemoryCheckBox.isSelected())
-        {
-            toggleToDiskControls(project);
-            disableToMemoryControls(project);
         }
 
         root.validate();
@@ -506,13 +457,6 @@ public class ConfigForm
         {
             return true;
         }
-        if (decompileToMemoryCheckBox.isSelected() != data.isDecompileToMemory())
-        {
-            return true;
-        }
-        if (keepDecompiledToMemory.isSelected() != data.isKeepDecompiledToMemory()) {
-            return true;
-        }
         if (clearAndCloseConsoleCheckBox.isSelected() != data.isClearAndCloseConsoleOnSuccess())
         {
             return true;
@@ -617,7 +561,7 @@ public class ConfigForm
     }
 
     public boolean isOutputDirectoryNotSet() {
-        return !decompileToMemoryCheckBox.isSelected() && StringUtil.isEmptyOrSpaces(outputDirectoryTextField.getText());
+        return StringUtil.isEmptyOrSpaces(outputDirectoryTextField.getText());
     }
     
     public void setData(Config data)
@@ -626,8 +570,6 @@ public class ConfigForm
         jadTextField.setText(data.getJadPath());
         outputDirectoryTextField.setText(data.getOutputDirectory());
         createIfDirectoryDoesnCheckBox.setSelected(data.isCreateOutputDirectory());
-        decompileToMemoryCheckBox.setSelected(data.isDecompileToMemory());
-        keepDecompiledToMemory.setSelected(data.isKeepDecompiledToMemory());
         markDecompiledFilesAsCheckBox.setSelected(data.isReadOnly());
         clearAndCloseConsoleCheckBox.setSelected(data.isClearAndCloseConsoleOnSuccess());
         printDefaultInitializersForCheckBox.setSelected(data.isDefaultInitializers());
@@ -656,8 +598,6 @@ public class ConfigForm
         if (project != null) {
             setControlsEnabled(project, data.isUseProjectSpecificSettings());           
         }
-        decompileToMemoryCheckBox.setSelected(false);
-        disableToMemoryControls(project);
     }
 
     public void getData(Config data) {
@@ -665,8 +605,6 @@ public class ConfigForm
         data.setJadPath(jadTextField.getText());
         data.setOutputDirectory(outputDirectoryTextField.getText());
         data.setCreateOutputDirectory(createIfDirectoryDoesnCheckBox.isSelected());
-        data.setDecompileToMemory(decompileToMemoryCheckBox.isSelected());
-        data.setKeepDecompiledToMemory(keepDecompiledToMemory.isSelected());
         data.setReadOnly(markDecompiledFilesAsCheckBox.isSelected());
         data.setClearAndCloseConsoleOnSuccess(clearAndCloseConsoleCheckBox.isSelected());
         data.setDefaultInitializers(printDefaultInitializersForCheckBox.isSelected());

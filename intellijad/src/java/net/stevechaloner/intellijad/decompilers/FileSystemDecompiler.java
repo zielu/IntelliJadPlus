@@ -56,7 +56,7 @@ import org.jetbrains.annotations.Nullable;
  *
  * @author Steve Chaloner
  */
-public class FileSystemDecompiler extends MemoryDecompiler {
+public class FileSystemDecompiler extends DecompilerBase {
     private final Logger LOG = Logger.getInstance(getClass());
 
     private static final Key<Boolean> CANNOT_STORE = new Key<Boolean>("FileSystemDecompiler.cannot-store-in-fs");

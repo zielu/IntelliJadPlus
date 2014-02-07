@@ -15,22 +15,14 @@
 
 package net.stevechaloner.intellijad.actions;
 
-import com.intellij.openapi.diagnostic.Logger;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.DialogBuilder;
-import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.VirtualFileManager;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import net.stevechaloner.intellijad.IntelliJadConstants;
-import net.stevechaloner.intellijad.IntelliJadResourceBundle;
 import net.stevechaloner.intellijad.config.Config;
 import net.stevechaloner.intellijad.config.NavigationTriggeredDecompile;
 import net.stevechaloner.intellijad.decompilers.DecompilationChoiceListener;
@@ -39,9 +31,6 @@ import net.stevechaloner.intellijad.decompilers.DecompilationDescriptorFactory;
 import net.stevechaloner.intellijad.environment.EnvironmentContext;
 import net.stevechaloner.intellijad.util.Exclusion;
 import net.stevechaloner.intellijad.util.PluginUtil;
-
-import net.stevechaloner.intellijad.vfs.MemoryVF;
-import net.stevechaloner.intellijad.vfs.MemoryVFS;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -49,46 +38,37 @@ import org.jetbrains.annotations.NotNull;
  *
  * @author Steve Chaloner
  */
-public class NavigationListener implements FileEditorManagerListener
-{
+public class NavigationListener implements FileEditorManagerListener {
     /**
      * Handler classes for the result of navigation actions.
      */
-    private final Map<NavigationTriggeredDecompile, NavigationOption> navigationOptions = new HashMap<NavigationTriggeredDecompile, NavigationOption>()
-    {
+    private final Map<NavigationTriggeredDecompile, NavigationOption> navigationOptions = new HashMap<NavigationTriggeredDecompile, NavigationOption>() {
         {
             put(NavigationTriggeredDecompile.ALWAYS,
-                new NavigationOption()
-                {
-                    public void execute(@NotNull Config config,
-                                        @NotNull DecompilationDescriptor descriptor)
-                    {
-                        boolean excluded = new Exclusion(config).isExcluded(descriptor);
-                        if (!excluded)
-                        {
-                            decompilationListener.decompile(new EnvironmentContext(project),
-                                                            descriptor);
+                    new NavigationOption() {
+                        public void execute(@NotNull Config config,
+                                            @NotNull DecompilationDescriptor descriptor) {
+                            boolean excluded = new Exclusion(config).isExcluded(descriptor);
+                            if (!excluded) {
+                                decompilationListener.decompile(new EnvironmentContext(project),
+                                        descriptor);
+                            }
                         }
-                    }
-                });
+                    });
             put(NavigationTriggeredDecompile.ON_DEMAND,
-                new NavigationOption()
-                {
-                    public void execute(@NotNull Config config,
-                                        @NotNull DecompilationDescriptor descriptor)
-                    {
-                        // no-op
-                    }
-                });
+                    new NavigationOption() {
+                        public void execute(@NotNull Config config,
+                                            @NotNull DecompilationDescriptor descriptor) {
+                            // no-op
+                        }
+                    });
             put(NavigationTriggeredDecompile.NEVER,
-                new NavigationOption()
-                {
-                    public void execute(@NotNull Config config,
-                                        @NotNull DecompilationDescriptor descriptor)
-                    {
-                        // no-op
-                    }
-                });
+                    new NavigationOption() {
+                        public void execute(@NotNull Config config,
+                                            @NotNull DecompilationDescriptor descriptor) {
+                            // no-op
+                        }
+                    });
         }
     };
 
@@ -111,8 +91,7 @@ public class NavigationListener implements FileEditorManagerListener
      * @param decompilationListener the decompilation listener
      */
     public NavigationListener(@NotNull Project project,
-                              @NotNull DecompilationChoiceListener decompilationListener)
-    {
+                              @NotNull DecompilationChoiceListener decompilationListener) {
         this.project = project;
         this.decompilationListener = decompilationListener;
     }
@@ -122,12 +101,12 @@ public class NavigationListener implements FileEditorManagerListener
         return NavigationTriggeredDecompile.getByName(config.getDecompileOnNavigation());
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public void fileOpened(FileEditorManager fileEditorManager,
-                           VirtualFile file)
-    {
-        if (file != null && "class".equals(file.getExtension()))
-        {
+                           VirtualFile file) {
+        if (file != null && "class".equals(file.getExtension())) {
             Config config = PluginUtil.getConfig(project);
             DecompilationDescriptor dd = DecompilationDescriptorFactory.getFactoryForFile(file).create(file);
             NavigationOption navigationOption = navigationOptions.get(getDecompileMode());
@@ -139,33 +118,20 @@ public class NavigationListener implements FileEditorManagerListener
      * {@inheritDoc}
      */
     public void fileClosed(FileEditorManager fileEditorManager,
-                           VirtualFile virtualFile)
-    {
-        if (virtualFile instanceof MemoryVF) {
-            Config config = PluginUtil.getConfig(project);
-            if (!config.isKeepDecompiledToMemory()) {
-                MemoryVFS vfs = (MemoryVFS) VirtualFileManager.getInstance().getFileSystem(IntelliJadConstants.INTELLIJAD_PROTOCOL);
-                try {
-                    vfs.deleteFile(this, virtualFile);
-                }
-                catch (IOException e) {
-                    Logger.getInstance(getClass().getName()).error(e);
-                }
-            }
-        }
+                           VirtualFile virtualFile) {        
     }
 
-    /** {@inheritDoc} */
-    public void selectionChanged(FileEditorManagerEvent fileEditorManagerEvent)
-    {
+    /**
+     * {@inheritDoc}
+     */
+    public void selectionChanged(FileEditorManagerEvent fileEditorManagerEvent) {
         // no-op
     }
 
     /**
      * Handles the result of a navigation-based action decision.
      */
-    private interface NavigationOption
-    {
+    private interface NavigationOption {
         /**
          * Handle the choice.
          *
