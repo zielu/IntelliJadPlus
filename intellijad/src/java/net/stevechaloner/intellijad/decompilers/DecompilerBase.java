@@ -97,7 +97,7 @@ public abstract class DecompilerBase extends AbstractDecompiler {
         MemoryVF file = vfs.newMemoryFV(descriptor.getClassName() + IntelliJadConstants.DOT_JAVA_EXTENSION, content);
         IntelliJadConstants.DECOMPILED_BY_INTELLIJAD.set(file.asVirtualFile(), true);
 
-        Optional<VirtualFile> actualFile = insertIntoFileSystem(descriptor, context, vfs, file);
+        Optional<VirtualFile> actualFile = insertIntoFileSystem(descriptor, context, file);
         if (actualFile.isPresent()) {
             reformatToStyle(context, new LightMemoryVF(actualFile.get()));
 
@@ -108,7 +108,7 @@ public abstract class DecompilerBase extends AbstractDecompiler {
                     project);
 
             if (!libraries.isEmpty()) {
-                attachSourceToLibraries(descriptor, context, vfs, libraries);
+                attachSourceToLibraries(descriptor, context, libraries);
             } else {
                 context.getConsoleContext().addMessage(ConsoleEntryType.LIBRARY_OPERATION,
                         "message.library-not-found-for-class",
@@ -135,13 +135,11 @@ public abstract class DecompilerBase extends AbstractDecompiler {
      *
      * @param descriptor the decompilation descriptor
      * @param context    the decompilation context
-     * @param vfs        the virtual file system
      * @param file       the file to insert
      * @return the file inserted into the file system
      */
     protected abstract Optional<VirtualFile> insertIntoFileSystem(@NotNull DecompilationDescriptor descriptor,
-                                                         @NotNull final DecompilationContext context,
-                                                         @NotNull MemoryVFS vfs,
+                                                         @NotNull DecompilationContext context,
                                                          @NotNull MemoryVF file);
 
     /**
@@ -149,12 +147,10 @@ public abstract class DecompilerBase extends AbstractDecompiler {
      *
      * @param descriptor the decompilation descriptor
      * @param context    the decompilation context
-     * @param vfs        the memory virtual file system
      * @param libraries  the libraries containing class files that match the decompiled source
      */
     protected abstract void attachSourceToLibraries(@NotNull final DecompilationDescriptor descriptor,
                                            @NotNull final DecompilationContext context,
-                                           @NotNull final MemoryVFS vfs,
                                            @NotNull final List<Library> libraries);
 
     /**

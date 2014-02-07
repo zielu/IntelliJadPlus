@@ -15,20 +15,27 @@
 
 package net.stevechaloner.intellijad.decompilers;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.io.Closer;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.roots.libraries.Library;
 import com.intellij.openapi.util.Key;
+import com.intellij.openapi.util.io.StreamUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtilCore;
@@ -42,7 +49,6 @@ import net.stevechaloner.intellijad.console.ConsoleEntryType;
 import net.stevechaloner.intellijad.util.AppInvoker;
 import net.stevechaloner.intellijad.util.LibraryUtil;
 import net.stevechaloner.intellijad.vfs.MemoryVF;
-import net.stevechaloner.intellijad.vfs.MemoryVFS;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -133,7 +139,6 @@ public class FileSystemDecompiler extends DecompilerBase {
     /* {@inheritDoc} */
     protected Optional<VirtualFile> insertIntoFileSystem(@NotNull DecompilationDescriptor descriptor,
                                                          @NotNull final DecompilationContext context,
-                                                         @NotNull MemoryVFS vfs,
                                                          @NotNull MemoryVF file) {
         final boolean debug = LOG.isDebugEnabled();
 
@@ -141,7 +146,7 @@ public class FileSystemDecompiler extends DecompilerBase {
             LOG.debug("Inserting into local file system");
         }
 
-        final LocalFileSystem lvfs = getLocalFileSystem();
+        final LocalFileSystem localFs = getLocalFileSystem();
         Config config = context.getConfig();
         File localPath = new File(config.getOutputDirectory() + File.separator + descriptor.getPackageNameAsPath());
 
@@ -156,55 +161,68 @@ public class FileSystemDecompiler extends DecompilerBase {
         if (!exists) {
             mkDirs = localPath.mkdirs();
         }
+        boolean cannotStore = false;
         if ((exists & canWrite) || mkDirs) {
-            try {
-                final File localFile = new File(localPath,
-                        descriptor.getClassName() + IntelliJadConstants.DOT_JAVA_EXTENSION);
+            String fileName = descriptor.getClassName() + IntelliJadConstants.DOT_JAVA_EXTENSION;
+            final File localFile = new File(localPath, fileName);
+            if (!localFile.setWritable(true)) {
+                LOG.warn("Could not set "+localFile.getAbsolutePath()+" as writable");
+            }
+            Closer closer = Closer.create();            
+            try {                
                 if (debug) {
                     LOG.debug("Insert into local file " + localFile.getAbsolutePath());
                 }
-                FileWriter writer = new FileWriter(localFile);
+                OutputStream output = closer.register(new BufferedOutputStream(new FileOutputStream(localFile)));
                 if (debug) {
                     LOG.debug("Writing...");
                 }
-                writer.write(file.getContent());
+                InputStream input = closer.register(new BufferedInputStream(file.getInputStream()));
+                StreamUtil.copyStreamContent(input, output);
                 if (debug) {
                     LOG.debug("Written");
                 }
-                writer.close();
+                output.close();
                 if (debug) {
                     LOG.debug("Closed");
+                }                
+            } catch (IOException e) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Could not save file", e);
                 }
-                final VirtualFile[] files = new VirtualFile[1];
+                cannotStore = true;                
+            } finally {
+                try {
+                    closer.close();
+                } catch (IOException e) {
+                    LOG.error("Could not close files", e);
+                }
+            }
+            if (cannotStore) {
+                insertFile = Optional.absent();
+            } else {
+                final AtomicReference<VirtualFile> foundFile = new AtomicReference<VirtualFile>();
                 appInvoker.runWriteActionAndWait(new Runnable() {
                     public void run() {
                         if (debug) {
                             LOG.debug("Looking for file: " + localFile.getAbsolutePath());
                         }
-                        files[0] = lvfs.refreshAndFindFileByIoFile(localFile);
+                        foundFile.set(localFs.refreshAndFindFileByIoFile(localFile));
                         if (debug) {
-                            LOG.debug("Found " + String.valueOf(files[0]));
+                            LOG.debug("Found " + String.valueOf(foundFile.get()));
                         }
                     }
                 });
-
-                insertFile = Optional.of(files[0]);
-                LOCAL_FS_FILE.set(context, Preconditions.checkNotNull(files[0]));
-                if (debug) {
-                    LOG.debug("Key [" + LOCAL_FS_FILE.toString() + "] is " + LOCAL_FS_FILE.get(context));
-                }
-            } catch (IOException e) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Could not save file", e);
-                }
-                CANNOT_STORE.set(context, true);
-                insertFile = Optional.absent();
+    
+                insertFile = Optional.of(foundFile.get());
+                LOCAL_FS_FILE.set(context, insertFile.get());
             }
         } else {
             LOG.warn("Path: " + localPath.getAbsolutePath() + ", exists=" + exists + ", canWrite=" + canWrite + ", mkDirs=" + mkDirs);
-            CANNOT_STORE.set(context, true);
+            cannotStore = true;
             insertFile = Optional.absent();
         }
+        CANNOT_STORE.set(context, cannotStore);
 
         return insertFile;
     }
@@ -212,11 +230,10 @@ public class FileSystemDecompiler extends DecompilerBase {
     /* {@inheritDoc} */
     protected void attachSourceToLibraries(@NotNull DecompilationDescriptor descriptor,
                                            @NotNull DecompilationContext context,
-                                           @NotNull MemoryVFS vfs,
                                            @NotNull List<Library> libraries) {
         if (CANNOT_STORE.get(context, false)) {
             // something has occurred to make storing the file on disk a problem            
-            LOG.error("Cannot attach source: name=" + descriptor.getClassName() + ", vfs=" + vfs);
+            LOG.error("Cannot attach source: " + descriptor.getClassName());
         } else {
             attachSource(descriptor, context, LOCAL_FS_FILE.get(context));
         }
@@ -229,7 +246,7 @@ public class FileSystemDecompiler extends DecompilerBase {
         LocalFileSystem vfs = getLocalFileSystem();
         Config config = context.getConfig();
         File td = new File(config.getOutputDirectory());
-        final VirtualFile targetDirectory = vfs.findFileByIoFile(td);
+        final VirtualFile targetDirectory = Preconditions.checkNotNull(vfs.findFileByIoFile(td), "VF not found for "+td.getAbsolutePath());
 
         appInvoker.runWriteActionAndWait(new Runnable() {
             public void run() {

@@ -5,9 +5,9 @@ package net.stevechaloner.intellijad.vfs;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
-import java.nio.charset.Charset;
 
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
@@ -30,10 +30,15 @@ public class LightMemoryVF implements MemoryVF {
     @Override
     public String getContent() {
         try {
-            return new String(virtualFile.contentsToByteArray(), Charset.forName("UTF-8"));
+            return new String(virtualFile.contentsToByteArray(), CharsetName);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public long size() {
+        return virtualFile.getLength();
     }
 
     @Override
@@ -43,7 +48,7 @@ public class LightMemoryVF implements MemoryVF {
 
     @Override
     public String getName() {
-        throw new UnsupportedOperationException("Not implemented");
+        return virtualFile.getName();
     }
 
     @Override
@@ -53,7 +58,13 @@ public class LightMemoryVF implements MemoryVF {
 
     @Override
     public void setWritable(boolean writable) throws IOException {
-        throw new UnsupportedOperationException("Not implemented");
+        virtualFile.setWritable(writable);
+    }
+
+    @NotNull
+    @Override
+    public InputStream getInputStream() throws IOException {
+        return virtualFile.getInputStream();
     }
 
     @Override
@@ -62,9 +73,9 @@ public class LightMemoryVF implements MemoryVF {
             OutputStream out = virtualFile.getOutputStream(this);
             BufferedReader reader = new BufferedReader(new StringReader(content));
             String line;
-            byte[] newLine = "\n".getBytes("UTF-8");
+            byte[] newLine = "\n".getBytes(CharsetName);
             while ((line = reader.readLine()) != null) {
-                out.write(line.getBytes("UTF-8"));
+                out.write(line.getBytes(CharsetName));
                 out.write(newLine);
             }
             reader.close();

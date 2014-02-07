@@ -15,10 +15,6 @@
 
 package net.stevechaloner.intellijad.format;
 
-import com.intellij.openapi.diagnostic.Logger;
-import net.stevechaloner.intellijad.decompilers.DecompilationContext;
-import net.stevechaloner.intellijad.vfs.MemoryVF;
-
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.StringReader;
@@ -29,6 +25,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.intellij.openapi.diagnostic.Logger;
+import net.stevechaloner.intellijad.decompilers.DecompilationContext;
+import net.stevechaloner.intellijad.vfs.MemoryVF;
 
 /**
  * Reorganises decompiled code to allow debugging.
@@ -55,7 +55,7 @@ public class SourceReorganiser
     public static void reorganise(DecompilationContext context, MemoryVF file)
     {
         LineNumberReader in = null;
-        StringWriter out = new StringWriter();
+        StringWriter out = new StringWriter((int) file.size());
         boolean retainLineNumbers = context.getConfig().isLineNumbersAsComments();
         try
         {
