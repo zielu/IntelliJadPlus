@@ -165,7 +165,7 @@ public class FileSystemDecompiler extends DecompilerBase {
         if ((exists & canWrite) || mkDirs) {
             String fileName = descriptor.getClassName() + IntelliJadConstants.DOT_JAVA_EXTENSION;
             final File localFile = new File(localPath, fileName);
-            if (!localFile.setWritable(true)) {
+            if (localFile.exists() && !localFile.setWritable(true)) {
                 LOG.warn("Could not set "+localFile.getAbsolutePath()+" as writable");
             }
             Closer closer = Closer.create();            
@@ -187,9 +187,7 @@ public class FileSystemDecompiler extends DecompilerBase {
                     LOG.debug("Closed");
                 }                
             } catch (IOException e) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Could not save file", e);
-                }
+                LOG.error("Could not save file", e);
                 cannotStore = true;                
             } finally {
                 try {
@@ -318,8 +316,8 @@ public class FileSystemDecompiler extends DecompilerBase {
                 File ioFile = VfsUtilCore.virtualToIoFile(fsFile);
                 boolean roSet = ioFile.setReadOnly();
                 
-                if (!roSet && LOG.isDebugEnabled()) {
-                    LOG.debug("Could not set " + ioFile.getAbsolutePath() + " as read-only");
+                if (!roSet) {
+                    LOG.info("Could not set " + ioFile.getAbsolutePath() + " as read-only");
                 }
             }
         }
