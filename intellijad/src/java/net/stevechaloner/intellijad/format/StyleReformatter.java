@@ -15,6 +15,10 @@
 
 package net.stevechaloner.intellijad.format;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.command.WriteCommandAction.Simple;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
@@ -32,88 +36,81 @@ import net.stevechaloner.intellijad.util.AppInvoker;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Reformats the source code of a file to match the preferred source formatting.
+ * Formats the source code of a file to match the preferred source formatting.
  *
  * @author Steve Chaloner
  */
-public class StyleReformatter
-{
+public class StyleReformatter {
+    private static final Logger LOG = Logger.getInstance(StyleReformatter.class);
+    
     /**
      * Reformats the content of the given file to match the IDE settings.
      *
      * @param context the context the decompilation is occurring in
-     * @param file the file representing the source code
+     * @param file    the file representing the source code
      * @return true if reformatted
      */
     public static boolean reformat(@NotNull final DecompilationContext context,
-                                   @NotNull final VirtualFile file)
-    {
-        final boolean[] result = { false };
-        Reformatter reformatter = new Reformatter()
-        {
-            public void run()
-            {
-                try
-                {
-                    JavaCodeStyleManager.getInstance(context.getProject()).optimizeImports(psiFile);
-                    CodeStyleManager.getInstance(context.getProject()).reformat(psiFile);
+                                   @NotNull final VirtualFile file) {
+        final AtomicBoolean result = new AtomicBoolean();
+        Reformatter reformatter = new Reformatter() {
+            public void run() {
+                final boolean debug = LOG.isDebugEnabled();
+                if (debug) {
+                    LOG.debug("About to reformat");
+                }
+                try {                    
+                    WriteCommandAction writeCommand = new Simple(context.getProject(), psiFile) {
+                        @Override
+                        protected void run() throws Throwable {
+                            JavaCodeStyleManager.getInstance(context.getProject()).optimizeImports(psiFile);
+                            CodeStyleManager.getInstance(context.getProject()).reformat(psiFile);
+                        }
+                    };
+                    writeCommand.execute();
                     fileDocManager.saveDocument(document);
                     context.getConsoleContext().addSectionMessage(ConsoleEntryType.INFO,
-                                                                  "message.reformatting",
-                                                                  file.getName());
-                    result[0] = true;
-                }
-                catch (IncorrectOperationException e)
-                {
-                    Logger.getInstance(StyleReformatter.class.getName()).error(e);
+                            "message.reformatting", file.getName());
+                    result.compareAndSet(false, true);
+                } catch (IncorrectOperationException e) {
+                    LOG.error(e);
                 }
             }
         };
-        reformatter.execute(context,
-                            file);
-        return result[0];
+        reformatter.execute(context, file);
+        return result.get();
     }
 
     /**
      * Reindents the contents of the file.
      *
      * @param context the decompilation context
-     * @param file the file to reindent
+     * @param file    the file to reindent
      * @return true if reindented
      */
     public static boolean reindent(@NotNull final DecompilationContext context,
-                                   @NotNull VirtualFile file)
-    {
-        final boolean[] result = { false };
-        Reformatter reformatter = new Reformatter()
-        {
-            public void run()
-            {
+                                   @NotNull VirtualFile file) {
+        final boolean[] result = {false};
+        Reformatter reformatter = new Reformatter() {
+            public void run() {
                 CodeStyleManager styleManager = CodeStyleManager.getInstance(context.getProject());
-                try
-                {
-                    styleManager.adjustLineIndent(psiFile,
-                                                  new TextRange(0,
-                                                                document.getTextLength()));
+                try {
+                    styleManager.adjustLineIndent(psiFile, new TextRange(0, document.getTextLength()));
                     fileDocManager.saveDocument(document);
                     result[0] = true;
-                }
-                catch (IncorrectOperationException e)
-                {
-                    Logger.getInstance(getClass().getName()).error(e);
+                } catch (IncorrectOperationException e) {
+                    LOG.error(e);
                 }
             }
         };
-        reformatter.execute(context,
-                            file);
+        reformatter.execute(context, file);
         return result[0];
     }
 
     /**
      * Contains common functionality for reformatting operations.
      */
-    private abstract static class Reformatter implements Runnable
-    {
+    private abstract static class Reformatter implements Runnable {
         /**
          * The PSI file.
          */
@@ -131,21 +128,18 @@ public class StyleReformatter
 
         /**
          * Executes the reformatting operation.
-         * 
+         *
          * @param context the decompilation context
-         * @param file the file representing the source
+         * @param file    the file representing the source
          */
         void execute(@NotNull DecompilationContext context,
-                     @NotNull VirtualFile file)
-        {
+                     @NotNull VirtualFile file) {
             fileDocManager = FileDocumentManager.getInstance();
             document = fileDocManager.getDocument(file);
-            if (document != null)
-            {
+            if (document != null) {
                 Project project = context.getProject();
                 psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
-                if (psiFile != null)
-                {
+                if (psiFile != null) {
                     AppInvoker.get().runWriteActionAndWait(this);
                 }
             }
