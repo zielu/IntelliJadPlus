@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import com.google.common.base.Preconditions;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -40,7 +41,7 @@ public class TempMemoryVFS implements MemoryVFS {
     }
 
     private VirtualFile initRoot(TempFileSystem fs, Project project) {
-        VirtualFile fsRoot = fs.getRoot();
+        VirtualFile fsRoot = Preconditions.checkNotNull(fs.findFileByPath("/"), "Null VFile for path '/'");
         String rootName = FileSystemUtil.generateTempDirName(project);
         VirtualFile commonRoot = fsRoot.findChild("intellijad");
         
@@ -63,12 +64,20 @@ public class TempMemoryVFS implements MemoryVFS {
     }
     
     public static MemoryVFS getInstance(Project project) {
-        MemoryVFS memoryVFS = project.getUserData(IntelliJadConstants.MEMORY_VFS);
+        MemoryVFS memoryVFS = IntelliJadConstants.MEMORY_VFS.get(project);
         if (memoryVFS == null) {
             memoryVFS = new TempMemoryVFS(TempFileSystem.getInstance(), project);
-            project.putUserData(IntelliJadConstants.MEMORY_VFS, memoryVFS);
+            IntelliJadConstants.MEMORY_VFS.set(project, memoryVFS);
         }
         return memoryVFS;    
+    }
+    
+    public static void dispose(Project project) {
+        MemoryVFS vfs = IntelliJadConstants.MEMORY_VFS.get(project);
+        if (vfs != null) {
+            IntelliJadConstants.MEMORY_VFS.set(project, null);
+            vfs.dispose();            
+        }
     }
     
     @Override

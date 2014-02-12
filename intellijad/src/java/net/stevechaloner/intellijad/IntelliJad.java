@@ -57,7 +57,7 @@ import net.stevechaloner.intellijad.environment.ValidationResult;
 import net.stevechaloner.intellijad.util.AppInvoker;
 import net.stevechaloner.intellijad.util.FileSystemUtil;
 import net.stevechaloner.intellijad.util.PluginUtil;
-import net.stevechaloner.intellijad.vfs.MemoryVFS;
+import net.stevechaloner.intellijad.vfs.TempMemoryVFS;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -283,11 +283,7 @@ public class IntelliJad implements ApplicationComponent,
         consoleManager.disposeConsole(project);
         projectClosingTasks.remove(project);
         IntelliJadConstants.DECOMPILE_LISTENER.set(project, null);
-        MemoryVFS vfs = IntelliJadConstants.MEMORY_VFS.get(project);
-        if (vfs != null) {
-            IntelliJadConstants.MEMORY_VFS.set(project, null);
-            vfs.dispose();            
-        }
+        TempMemoryVFS.dispose(project);        
         List<Library> libraries = IntelliJadConstants.GENERATED_SOURCE_LIBRARIES.get(project);
         if (libraries != null) {
             libraries.clear();
