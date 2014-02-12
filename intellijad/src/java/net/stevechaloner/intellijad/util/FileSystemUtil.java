@@ -3,12 +3,11 @@
  */
 package net.stevechaloner.intellijad.util;
 
+import java.io.File;
+
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import net.stevechaloner.intellijad.config.Config;
-import net.stevechaloner.intellijad.decompilers.DecompilationContext;
-
-import java.io.File;
 
 /**
  * <p></p>
@@ -24,15 +23,13 @@ public class FileSystemUtil {
     }
     
     public static String generateTempOutputDir(Project project) {
-        String fileSeparator = System.getProperty("file.separator");
-        return generateTempOutputDir() + fileSeparator + generateTempDirName(project);
+        return generateTempOutputDir() + File.separator + generateTempDirName(project);
     } 
     
     public static String generateTempOutputDir() {
         String tempDirPath = System.getProperty("java.io.tmpdir");
-        String fileSeparator = System.getProperty("file.separator");
-        if (!tempDirPath.endsWith(fileSeparator)) {
-            tempDirPath = tempDirPath + fileSeparator;
+        if (!tempDirPath.endsWith(File.separator)) {
+            tempDirPath = tempDirPath + File.separator;
         }
         return tempDirPath + "intellijad";
     } 
