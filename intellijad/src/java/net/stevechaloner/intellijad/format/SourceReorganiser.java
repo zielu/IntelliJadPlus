@@ -51,11 +51,19 @@ public class SourceReorganiser
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
     private static final int LINE_NUMBER_MARKER_LENGTH = 8;
-
+    
+    private static int getWriterSize(MemoryVF file) {
+        if (file.size() > Integer.MAX_VALUE) {
+            return Integer.MAX_VALUE;
+        } else {
+            return (int) file.size();
+        }
+    }
+    
     public static void reorganise(DecompilationContext context, MemoryVF file)
     {
         LineNumberReader in = null;
-        StringWriter out = new StringWriter((int) file.size());
+        StringWriter out = new StringWriter(getWriterSize(file));
         boolean retainLineNumbers = context.getConfig().isLineNumbersAsComments();
         try
         {
