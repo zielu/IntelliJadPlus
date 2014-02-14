@@ -41,7 +41,7 @@ public class TempMemoryVFS implements MemoryVFS {
     }
 
     private VirtualFile initRoot(TempFileSystem fs, Project project) {
-        VirtualFile fsRoot = Preconditions.checkNotNull(fs.findFileByPath("/"), "Null VFile for path '/'");
+        VirtualFile fsRoot = Preconditions.checkNotNull(fs.getRoot(), "Null FS root");
         String rootName = FileSystemUtil.generateTempDirName(project);
         VirtualFile commonRoot = fsRoot.findChild("intellijad");
         
