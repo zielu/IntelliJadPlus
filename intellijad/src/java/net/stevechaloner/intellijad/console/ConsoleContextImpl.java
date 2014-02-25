@@ -15,6 +15,7 @@
 
 package net.stevechaloner.intellijad.console;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
 import org.jetbrains.annotations.NotNull;
@@ -100,7 +101,9 @@ public class ConsoleContextImpl implements ConsoleContext {
     }
 
     public void close() {
-        nodeHandler.select(this.contextNode);
+        if (!ApplicationManager.getApplication().isUnitTestMode()) {
+            nodeHandler.select(this.contextNode);
+        }
     }
 
     /**

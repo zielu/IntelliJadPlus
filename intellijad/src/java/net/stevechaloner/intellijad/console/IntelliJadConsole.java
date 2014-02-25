@@ -28,6 +28,7 @@ import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.tree.TreePath;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.help.HelpManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
@@ -149,27 +150,28 @@ public class IntelliJadConsole implements NodeHandler
     /**
      * Opens the console.
      */
-    public void openConsole()
-    {
-        jitInit();
-        ToolWindowManager toolWindowManager = ToolWindowManager.getInstance(project);
+    public void openConsole() {
+        if (!ApplicationManager.getApplication().isUnitTestMode()) {
+            jitInit();
+            ToolWindowManager toolWindowManager = ToolWindowManager.getInstance(project);
 
-        ToolWindow window;
-        if (toolWindowManager != null)
-        {
-            window = toolWindowManager.getToolWindow(TOOL_WINDOW_ID);
-            if (window == null)
+            ToolWindow window;
+            if (toolWindowManager != null)
             {
-                window = toolWindowManager.registerToolWindow(TOOL_WINDOW_ID,
-                                                              true,
-                                                              ToolWindowAnchor.BOTTOM);
-                ContentFactory contentFactory = SERVICE.getInstance();
+                window = toolWindowManager.getToolWindow(TOOL_WINDOW_ID);
+                if (window == null)
+                {
+                    window = toolWindowManager.registerToolWindow(TOOL_WINDOW_ID,
+                                                                  true,
+                                                                  ToolWindowAnchor.BOTTOM);
+                    ContentFactory contentFactory = SERVICE.getInstance();
 
-                Content content = contentFactory.createContent(getRoot(), TOOL_WINDOW_ID, false);
-                window.getContentManager().addContent(content);
+                    Content content = contentFactory.createContent(getRoot(), TOOL_WINDOW_ID, false);
+                    window.getContentManager().addContent(content);
+                }
+                window.setIcon(IntelliJadIcon.INTELLIJAD_LOGO_13X13.get());
+                window.show(EMPTY_RUNNABLE);
             }
-            window.setIcon(IntelliJadIcon.INTELLIJAD_LOGO_13X13.get());
-            window.show(EMPTY_RUNNABLE);
         }
     }
 
