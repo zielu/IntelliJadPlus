@@ -356,6 +356,8 @@ public class IntelliJad implements ApplicationComponent,
     public DecompilationResult decompile(EnvironmentContext envContext, DecompilationDescriptor descriptor) {
         final boolean debug = LOG.isDebugEnabled();
 
+        final DecompilationTask task = new DecompilationTask(envContext.getProject());
+        task.queue();
         long startTime = System.currentTimeMillis();
         DecompilationResult result = new DecompilationResult();
         Project project = envContext.getProject();
@@ -456,6 +458,7 @@ public class IntelliJad implements ApplicationComponent,
         if (debug) {
             LOG.debug("Decompilation finished: "+descriptor.getClassFile().getPath());
         }
+        task.finish();
         return result;
     }
 

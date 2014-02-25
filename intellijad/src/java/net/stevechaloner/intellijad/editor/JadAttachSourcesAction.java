@@ -39,7 +39,7 @@ public class JadAttachSourcesAction implements AttachSourcesAction {
 
     @Override
     public String getBusyText() {
-        return IntelliJadResourceBundle.message("attachSources.Decompile.text.busyText");
+        return IntelliJadResourceBundle.message("message.decompile.text.busyText");
     }
 
     @Override
