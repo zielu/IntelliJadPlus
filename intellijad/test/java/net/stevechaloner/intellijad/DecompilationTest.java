@@ -5,6 +5,7 @@ package net.stevechaloner.intellijad;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 
 import com.intellij.openapi.application.Application;
@@ -125,8 +126,9 @@ public class DecompilationTest extends LightCodeInsightFixtureTestCase {
         
         DecompilationDescriptor dd = DecompilationDescriptorFactory.getFactoryForFile(testFile).create(testFile);
         assertNotNull(dd);
-        final DecompilationResult result = listener.decompile(new EnvironmentContext(getProject()), dd);
+        Future<DecompilationResult> resultFuture = listener.decompile(new EnvironmentContext(getProject()), dd);
         LOG.info("Decompilation finished");
+        final DecompilationResult result = resultFuture.get();
         assertTrue(result.isSuccessful());
         assertTrue(result.getResultFile().exists());
         

@@ -17,6 +17,7 @@ package net.stevechaloner.intellijad.console;
 
 import net.stevechaloner.intellijad.IntelliJadConstants;
 
+import net.stevechaloner.intellijad.util.AppInvoker;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.tree.DefaultTreeModel;

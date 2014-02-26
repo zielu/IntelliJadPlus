@@ -18,7 +18,10 @@ package net.stevechaloner.intellijad.console;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
+import net.stevechaloner.intellijad.util.AppInvoker;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.concurrent.Callable;
 
 /**
  * @author Steve Chaloner
@@ -71,38 +74,54 @@ public class ConsoleContextImpl implements ConsoleContext {
     /**
      * {@inheritDoc}
      */
-    public String addMessage(ConsoleEntryType entryType,
+    public String addMessage(final ConsoleEntryType entryType,
                            String message,
                            Object... parameters) {
-        String formattedMessage = IntelliJadResourceBundle.message(message, parameters);
+        final String formattedMessage = IntelliJadResourceBundle.message(message, parameters);
         if (entryType == ConsoleEntryType.ERROR) {
-            LOG.error(formattedMessage);            
+            LOG.error(formattedMessage);
         } else if (LOG.isDebugEnabled()) {
-            LOG.debug(formattedMessage);                        
+            LOG.debug(formattedMessage);
         }
-        consoleTreeModel.addMessage(entryType, this, formattedMessage);
+
+        AppInvoker.get().invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                consoleTreeModel.addMessage(entryType, ConsoleContextImpl.this, formattedMessage);
+            }
+        });
         return formattedMessage;
     }
 
     /**
      * {@inheritDoc}
      */
-    public String addSectionMessage(ConsoleEntryType entryType,
-                                  String message,
-                                  Object... parameters) {
-        String formattedMessage = IntelliJadResourceBundle.message(message, parameters);
+    public String addSectionMessage(final ConsoleEntryType entryType,
+                                  final String message,
+                                  final Object... parameters) {
+        final String formattedMessage = IntelliJadResourceBundle.message(message, parameters);
         if (entryType == ConsoleEntryType.ERROR) {
             LOG.error(formattedMessage);
         } else if (LOG.isDebugEnabled()) {
             LOG.debug(formattedMessage);
         }
-        consoleTreeModel.addSectionMessage(this, formattedMessage);
+        AppInvoker.get().invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                consoleTreeModel.addSectionMessage(ConsoleContextImpl.this, formattedMessage);
+            }
+        });
         return formattedMessage;
     }
 
     public void close() {
         if (!ApplicationManager.getApplication().isUnitTestMode()) {
-            nodeHandler.select(this.contextNode);
+            AppInvoker.get().invokeAndWait(new Runnable() {
+                @Override
+                public void run() {
+                    nodeHandler.select(contextNode);
+                }
+            });
         }
     }
 

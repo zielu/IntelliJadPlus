@@ -17,6 +17,8 @@ package net.stevechaloner.intellijad.decompilers;
 
 import net.stevechaloner.intellijad.environment.EnvironmentContext;
 
+import java.util.concurrent.Future;
+
 /**
  * Listener for navigation-based decompilation that required the
  * user to choose an option.
@@ -33,6 +35,6 @@ public interface DecompilationChoiceListener
      *                                
      * @return result description
      */
-    DecompilationResult decompile(EnvironmentContext environmentContext,
+    Future<DecompilationResult> decompile(EnvironmentContext environmentContext,
                    DecompilationDescriptor decompilationDescriptor);
 }

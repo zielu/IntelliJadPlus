@@ -20,8 +20,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 import com.intellij.openapi.application.Application;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileEditorManager;
@@ -324,7 +326,7 @@ public class IntelliJad implements ApplicationComponent,
     }
 
     @Nullable
-    private VirtualFile handleDisabledVirtualFs(LocalFileSystem lfs, Config config, Project project) {
+    VirtualFile handleDisabledVirtualFs(LocalFileSystem lfs, Config config, Project project) {
         String outputDir = config.getOutputDirectory();
         if (StringUtil.isEmptyOrSpaces(outputDir)) {
             outputDir = setupTempOutputDir(config, project, true);
@@ -353,113 +355,10 @@ public class IntelliJad implements ApplicationComponent,
     /**
      * {@inheritDoc}
      */
-    public DecompilationResult decompile(EnvironmentContext envContext, DecompilationDescriptor descriptor) {
-        final boolean debug = LOG.isDebugEnabled();
-
-        final DecompilationTask task = new DecompilationTask(envContext.getProject());
+    public Future<DecompilationResult> decompile(EnvironmentContext envContext, DecompilationDescriptor descriptor) {
+        DecompilationTask task = new DecompilationTask(this, envContext, descriptor);
         task.queue();
-        long startTime = System.currentTimeMillis();
-        DecompilationResult result = new DecompilationResult();
-        Project project = envContext.getProject();
-
-        // this allows recovery from a canProjectClose method vetoed by another manager
-        if (!isPrimed(project)) {
-            primeProject(project);
-        }
-
-        IntelliJadConsole console = consoleManager.getConsole(project);
-        ConsoleContext consoleContext = console.createConsoleContext("message.class",
-                                                                     descriptor.getClassName());
-        Config config = PluginUtil.getConfig(project);
-        ValidationResult validationResult = EnvironmentValidator.validateEnvironment(config,
-                                                                                     envContext,
-                                                                                     consoleContext);
-        
-        if (!validationResult.isCancelled() && validationResult.isValid()) {            
-            LocalFileSystem lfs = (LocalFileSystem) VirtualFileManager.getInstance().getFileSystem(LocalFileSystem.PROTOCOL);
-            String outputDir = config.getOutputDirectory();
-
-            if (debug) {
-                LOG.debug("Will decompile to directory: "+String.valueOf(outputDir));
-            }
-
-            boolean emptyOutDir = StringUtil.isEmptyOrSpaces(outputDir);
-            if (emptyOutDir) {
-                if (debug) {
-                    LOG.debug("Output directory not set");
-                }
-                handleDisabledVirtualFs(lfs, config, project);                    
-            } else {
-                VirtualFile outDirFile = lfs.findFileByPath(outputDir);
-                if (outDirFile == null && config.isCreateOutputDirectory()) {
-                    File targetDir = FileSystemUtil.createTargetDir(config);
-                    if (targetDir != null) {
-                        outDirFile = lfs.refreshAndFindFileByIoFile(targetDir);
-                        if (debug) {
-                            LOG.debug("Will decompile to created directory: "+outDirFile);
-                        }
-                        checkSDKRoot(project, outDirFile);
-                    } else {
-                        if (debug) {
-                            LOG.debug("Output directory creation failed");
-                        }
-                        handleDisabledVirtualFs(lfs, config, project);                                                     
-                    }
-                } else if (outDirFile == null) {
-                    handleDisabledVirtualFs(lfs, config, project);                        
-                } else {
-                    checkSDKRoot(project, outDirFile);
-                }
-            }
-            if (IntelliJadConstants.DECOMPILATION_DISABLED.get(project, false)) {
-                consoleContext.addSectionMessage(ConsoleEntryType.ERROR,
-                                                "error",
-                                                "Target directory "+config.getOutputDirectory()+" creation failed");    
-            } else {
-                String info = config.getJadPath() + " " + config.renderCommandLinePropertyDescriptors();                
-                DecompilationContext context = new DecompilationContext(project,
-                                                                        consoleContext,
-                                                                        info);
-                Decompiler decompiler = new FileSystemDecompiler(appInvoker);
-                if (debug) {
-                    LOG.debug("Decompiler in use: "+decompiler.getClass().getSimpleName());
-                }
-                try {
-                    VirtualFile file = decompiler.getVirtualFile(descriptor, context);
-                    FileEditorManager editorManager = FileEditorManager.getInstance(project);
-                    if (file != null && editorManager.isFileOpen(file)) {
-                        result = new DecompilationResult(file);
-                        console.closeConsole();
-                        editorManager.closeFile(descriptor.getClassFile());
-                        editorManager.openFile(file, true);
-                    } else if (!CurrentDecompilation.isInProgress(project, descriptor)) {
-                        CurrentDecompilation.set(project, descriptor);
-                        file = decompiler.decompile(descriptor, context);
-                        if (file != null) {
-                            result = new DecompilationResult(file);
-                            editorManager.closeFile(descriptor.getClassFile());
-                            editorManager.openFile(file, true);
-                        }
-                        consoleContext.addSectionMessage(ConsoleEntryType.INFO,
-                                                         "message.operation-time",
-                                                         System.currentTimeMillis() - startTime);
-                    }
-                } catch (DecompilationException e) {
-                    consoleContext.addSectionMessage(ConsoleEntryType.ERROR,
-                                                     "error",
-                                                     e.getMessage());
-                } finally {
-                    CurrentDecompilation.clear(project, descriptor);
-                }
-            }
-            consoleContext.close();
-            checkConsole(config, console, consoleContext);
-        }
-        if (debug) {
-            LOG.debug("Decompilation finished: "+descriptor.getClassFile().getPath());
-        }
-        task.finish();
-        return result;
+        return task.result();
     }
 
     /**
@@ -472,7 +371,7 @@ public class IntelliJad implements ApplicationComponent,
      * @param project the project
      * @param root    the source root
      */
-    private void checkSDKRoot(final Project project,
+    void checkSDKRoot(final Project project,
                               final VirtualFile root) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Checking SDK root: "+project.getName()+" -> "+root.getPresentableUrl());
@@ -520,7 +419,7 @@ public class IntelliJad implements ApplicationComponent,
      * @param console        the console
      * @param consoleContext the console context
      */
-    private void checkConsole(Config config,
+    void checkConsole(Config config,
                               IntelliJadConsole console,
                               ConsoleContext consoleContext) {
         if (consoleContext.isWorthDisplaying() || !config.isClearAndCloseConsoleOnSuccess()) {
@@ -539,5 +438,13 @@ public class IntelliJad implements ApplicationComponent,
      */
     public static Logger getLogger() {
         return Logger.getInstance(IntelliJadConstants.INTELLIJAD);
+    }
+
+    public ConsoleManager getConsoleManager() {
+        return consoleManager;
+    }
+
+    public AppInvoker getAppInvoker() {
+        return appInvoker;
     }
 }

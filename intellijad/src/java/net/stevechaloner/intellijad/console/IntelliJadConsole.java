@@ -18,6 +18,7 @@ package net.stevechaloner.intellijad.console;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -40,6 +41,7 @@ import com.intellij.ui.content.ContentFactory.SERVICE;
 import net.stevechaloner.intellijad.IntelliJadConstants;
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
 import net.stevechaloner.intellijad.gui.IntelliJadIcon;
+import net.stevechaloner.intellijad.util.AppInvoker;
 import net.stevechaloner.intellijad.util.PluginUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -152,44 +154,53 @@ public class IntelliJadConsole implements NodeHandler
      */
     public void openConsole() {
         if (!ApplicationManager.getApplication().isUnitTestMode()) {
-            jitInit();
-            ToolWindowManager toolWindowManager = ToolWindowManager.getInstance(project);
+            AppInvoker.get().invokeAndWait(new Runnable() {
+                @Override
+                public void run() {
+                    jitInit();
+                    ToolWindowManager toolWindowManager = ToolWindowManager.getInstance(project);
 
-            ToolWindow window;
-            if (toolWindowManager != null)
-            {
-                window = toolWindowManager.getToolWindow(TOOL_WINDOW_ID);
-                if (window == null)
-                {
-                    window = toolWindowManager.registerToolWindow(TOOL_WINDOW_ID,
-                                                                  true,
-                                                                  ToolWindowAnchor.BOTTOM);
-                    ContentFactory contentFactory = SERVICE.getInstance();
+                    ToolWindow window;
+                    if (toolWindowManager != null)
+                    {
+                        window = toolWindowManager.getToolWindow(TOOL_WINDOW_ID);
+                        if (window == null)
+                        {
+                            window = toolWindowManager.registerToolWindow(TOOL_WINDOW_ID,
+                                    true,
+                                    ToolWindowAnchor.BOTTOM);
+                            ContentFactory contentFactory = SERVICE.getInstance();
 
-                    Content content = contentFactory.createContent(getRoot(), TOOL_WINDOW_ID, false);
-                    window.getContentManager().addContent(content);
+                            Content content = contentFactory.createContent(getRoot(), TOOL_WINDOW_ID, false);
+                            window.getContentManager().addContent(content);
+                        }
+                        window.setIcon(IntelliJadIcon.INTELLIJAD_LOGO_13X13.get());
+                        window.show(EMPTY_RUNNABLE);
+                    }
                 }
-                window.setIcon(IntelliJadIcon.INTELLIJAD_LOGO_13X13.get());
-                window.show(EMPTY_RUNNABLE);
-            }
+            });
         }
     }
 
     /**
      * Closes the console.
      */
-    public void closeConsole()
-    {
-        ToolWindowManager toolWindowManager = ToolWindowManager.getInstance(project);
-        ToolWindow window;
-        if (toolWindowManager != null)
-        {
-            window = toolWindowManager.getToolWindow(TOOL_WINDOW_ID);
-            if (window != null)
-            {
-                window.hide(EMPTY_RUNNABLE);
+    public void closeConsole() {
+        AppInvoker.get().invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                ToolWindowManager toolWindowManager = ToolWindowManager.getInstance(project);
+                ToolWindow window;
+                if (toolWindowManager != null)
+                {
+                    window = toolWindowManager.getToolWindow(TOOL_WINDOW_ID);
+                    if (window != null)
+                    {
+                        window.hide(EMPTY_RUNNABLE);
+                    }
+                }
             }
-        }
+        });
     }
 
     /**
@@ -207,11 +218,14 @@ public class IntelliJadConsole implements NodeHandler
      * @param parameters any parameters used in the message
      * @return a new console context
      */
-    public ConsoleContext createConsoleContext(String message,
-                                               Object... parameters)
-    {
-        return treeModel.createConsoleContext(IntelliJadResourceBundle.message(message,
-                                                                               parameters));
+    public ConsoleContext createConsoleContext(final String message,
+                                               final Object... parameters) {
+        return AppInvoker.get().invokeAndWait(new Callable<ConsoleContext>() {
+            @Override
+            public ConsoleContext call() {
+                return treeModel.createConsoleContext(IntelliJadResourceBundle.message(message, parameters));
+            }
+        });
     }
 
     /**
