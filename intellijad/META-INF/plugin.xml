@@ -8,7 +8,7 @@
     <p>All credit goes to Steve Chaloner for creating the <a href="http://plugins.jetbrains.com/plugin/1570">original plugin</a></p>     
     <p>If you find this plugin useful please leave your rating !</p>
     ]]></description>
-    <version>13.0.1-dev2</version>
+    <version>13.1.0</version>
     <vendor url="https://github.com/zielu" logo="/scn-idea-16.png">Łukasz Zieliński</vendor>
     <idea-version since-build="130.1179" until-build="134.9999"/>
 
@@ -73,7 +73,7 @@
     <helpset file="intellijad-help.jar" path="/helpset.hs"/>
 
     <change-notes><![CDATA[
-      <h3>Changes in 13.0.1-dev2</h3>
+      <h3>Changes in 13.1.0</h3>
       <ul>
         <li>Fixed StackOverflow (<a href="https://github.com/zielu/IntelliJadPlus/issues/38">issue #38</a>)</li>
         <li>Removed in memory decompilation code paths (<a href="https://github.com/zielu/IntelliJadPlus/issues/38">issue #36</a>)</li>
