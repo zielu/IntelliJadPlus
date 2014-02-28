@@ -41,12 +41,15 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import com.intellij.ide.BrowserUtil;
 import com.intellij.ide.util.PackageChooserDialog;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.PackageChooser;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiPackage;
+import com.intellij.ui.components.labels.LinkLabel;
+import com.intellij.ui.components.labels.LinkListener;
 import net.stevechaloner.idea.util.fs.ApplicationFileSelectionAction;
 import net.stevechaloner.idea.util.fs.FileSelectionDescriptor;
 import net.stevechaloner.idea.util.fs.ProjectFileSelectionAction;
@@ -104,6 +107,7 @@ public class ConfigForm
     @Control private JButton packageChooserButton;
     @Control private JCheckBox cleanupSourceRootsCheckBox;
     @Control private JCheckBox clearAndCloseConsoleCheckBox;
+    private LinkLabel getJadLink;
 
     private ExclusionTableModel exclusionTableModel;
 
@@ -258,6 +262,12 @@ public class ConfigForm
                 }
             });
         }
+        getJadLink.setListener(new LinkListener() {
+            @Override
+            public void linkSelected(LinkLabel aSource, Object url) {
+                BrowserUtil.launchBrowser((String) url);
+            }
+        }, "http://varaneckas.com/jad/");
     }
 
     /**

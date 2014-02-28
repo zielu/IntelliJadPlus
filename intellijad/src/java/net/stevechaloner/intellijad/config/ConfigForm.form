@@ -164,6 +164,15 @@
                   <text resource-bundle="net/stevechaloner/intellijad/messages-i18n" key="config.cleanup-source-roots"/>
                 </properties>
               </component>
+              <component id="3ca6d" class="com.intellij.ui.components.labels.LinkLabel" binding="getJadLink">
+                <constraints>
+                  <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="Get Jad"/>
+                  <toolTipText value="Open Jad mirror site"/>
+                </properties>
+              </component>
             </children>
           </grid>
           <grid id="d3a91" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
