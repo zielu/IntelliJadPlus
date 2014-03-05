@@ -28,6 +28,7 @@ import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.testFramework.fixtures.LightCodeInsightFixtureTestCase;
 import com.intellij.util.messages.MessageBusConnection;
+import net.stevechaloner.intellijad.config.CodeStyle;
 import net.stevechaloner.intellijad.config.Config;
 import net.stevechaloner.intellijad.decompilers.DecompilationChoiceListener;
 import net.stevechaloner.intellijad.decompilers.DecompilationDescriptor;
@@ -90,7 +91,8 @@ public class DecompilationTest extends LightCodeInsightFixtureTestCase {
                 semaphore.release();
             }
         });
-        
+        LOG.info("Awaiting indexing end");
+        semaphore.acquire();
     }
 
     @Override
@@ -101,9 +103,7 @@ public class DecompilationTest extends LightCodeInsightFixtureTestCase {
         super.tearDown();
     }
 
-    public void testDecompilation() throws Exception {
-        LOG.info("Awaiting indexing end");
-        semaphore.acquire();
+    private PreparedDecompilation setupDecompilation() throws Exception{
         VirtualFileManager virtualFileManager = VirtualFileManager.getInstance();
         assertNotNull(virtualFileManager);
         String fileUrl = libJar.getUrl() + "org/junit/Assert.class";
@@ -122,8 +122,17 @@ public class DecompilationTest extends LightCodeInsightFixtureTestCase {
         assertTrue(jad.exists());
         assertTrue(jad.isFile());
         config.setJadPath(jad.getAbsolutePath());
-        intelliJad.primeProject(getProject());       
+        intelliJad.primeProject(getProject());
         
+        return new PreparedDecompilation(testFile, listener, config);
+    }
+    
+    public void testDecompilation_ToPreferredStyle() throws Exception {
+        PreparedDecompilation preparedDecompilation = setupDecompilation();
+        preparedDecompilation.config.setReformatStyle(CodeStyle.PREFERRED_STYLE.getName());
+        
+        DecompilationChoiceListener listener = preparedDecompilation.listener;
+        VirtualFile testFile = preparedDecompilation.testFile;
         DecompilationDescriptor dd = DecompilationDescriptorFactory.getFactoryForFile(testFile).create(testFile);
         assertNotNull(dd);
         Future<DecompilationResult> resultFuture = listener.decompile(new EnvironmentContext(getProject()), dd);
@@ -131,7 +140,35 @@ public class DecompilationTest extends LightCodeInsightFixtureTestCase {
         final DecompilationResult result = resultFuture.get();
         assertTrue(result.isSuccessful());
         assertTrue(result.getResultFile().exists());
+        Application application = ApplicationManager.getApplication();
+        application.runWriteAction(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    result.getResultFile().delete(this);
+                    LOG.info("Deleted file "+result.getResultFile().getPath());
+                } catch (IOException e) {
+                    LOG.info("Failed to delete "+result.getResultFile().getPath(), e);
+                }
+            }
+        });
         
+    }
+    
+    public void testDecompilation_ToDebuggableStyle() throws Exception {
+        PreparedDecompilation preparedDecompilation = setupDecompilation();
+        preparedDecompilation.config.setReformatStyle(CodeStyle.DEBUGGABLE_STYLE.getName());
+        
+        DecompilationChoiceListener listener = preparedDecompilation.listener;
+        VirtualFile testFile = preparedDecompilation.testFile;
+        DecompilationDescriptor dd = DecompilationDescriptorFactory.getFactoryForFile(testFile).create(testFile);
+        assertNotNull(dd);
+        Future<DecompilationResult> resultFuture = listener.decompile(new EnvironmentContext(getProject()), dd);
+        LOG.info("Decompilation finished");
+        final DecompilationResult result = resultFuture.get();
+        assertTrue(result.isSuccessful());
+        assertTrue(result.getResultFile().exists());
+        Application application = ApplicationManager.getApplication();
         application.runWriteAction(new Runnable() {
             @Override
             public void run() {

@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 
 import com.intellij.openapi.diagnostic.Logger;
 import net.stevechaloner.intellijad.decompilers.DecompilationContext;
+import net.stevechaloner.intellijad.util.AppInvoker;
 import net.stevechaloner.intellijad.vfs.MemoryVF;
 
 /**
@@ -38,8 +39,7 @@ import net.stevechaloner.intellijad.vfs.MemoryVF;
  *
  * @author Steve Chaloner
  */
-public class SourceReorganiser
-{
+public class SourceReorganiser {
     /**
      * Defines the placement of line numbers inserted as comments by Jad.
      */
@@ -51,7 +51,7 @@ public class SourceReorganiser
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
     private static final int LINE_NUMBER_MARKER_LENGTH = 8;
-    
+
     private static int getWriterSize(MemoryVF file) {
         if (file.size() > Integer.MAX_VALUE) {
             return Integer.MAX_VALUE;
@@ -59,89 +59,69 @@ public class SourceReorganiser
             return (int) file.size();
         }
     }
-    
-    public static void reorganise(DecompilationContext context, MemoryVF file)
-    {
+
+    public static void reorganise(DecompilationContext context, final MemoryVF file) {
         LineNumberReader in = null;
-        StringWriter out = new StringWriter(getWriterSize(file));
+        final StringWriter out = new StringWriter(getWriterSize(file));
         boolean retainLineNumbers = context.getConfig().isLineNumbersAsComments();
-        try
-        {
+        try {
             in = new LineNumberReader(new StringReader(file.getContent()));
             List<String> lines = reformat(in);
             Block currentBlock = new Block();
-            for (String line : lines)
-            {
+            for (String line : lines) {
                 Matcher lineNumberMatcher = LINE_NUMBER_PATTERN.matcher(line);
-                if (lineNumberMatcher.find())
-                {
+                if (lineNumberMatcher.find()) {
                     // we have a line  number
                     String lineNumberString = lineNumberMatcher.group(1);
                     int lineNumber = Integer.parseInt(lineNumberString);
                     String lineStringWithoutNumber = line.substring(lineNumberMatcher.end());
-                    if (currentBlock.getLastLine() != null && currentBlock.getLastLine().getNumber() == lineNumber)
-                    {
+                    if (currentBlock.getLastLine() != null && currentBlock.getLastLine().getNumber() == lineNumber) {
                         // if the last line exists and has the same number, add this line to it without number
                         currentBlock.getLastLine().add(lineStringWithoutNumber);
-                    }
-                    else
-                    {
+                    } else {
                         // if this line is a new line, i.e. the last line has a different number, add a new line to the block
                         currentBlock.add(new Line(lineStringWithoutNumber,
-                                                  lineNumber,
-                                                  retainLineNumbers));
+                                lineNumber,
+                                retainLineNumbers));
                     }
                     String lastLine = currentBlock.getLastLine().getContent();
-                    if (lastLine.endsWith("{"))
-                    {
+                    if (lastLine.endsWith("{")) {
                         currentBlock = new Block(currentBlock,
-                                                 currentBlock.removeLastLine());
+                                currentBlock.removeLastLine());
                     }
-                }
-                else
-                {
+                } else {
                     // no line number
                     String trimmedLineString = line.trim();
-                    if ("{".equals(trimmedLineString))
-                    {
+                    if ("{".equals(trimmedLineString)) {
                         currentBlock.getLastLine().add("{");
                         // this means we are starting a new block
                         currentBlock = new Block(currentBlock, currentBlock.removeLastLine());
-                    }
-                    else if (trimmedLineString.endsWith("{"))
-                    {
-                        if (trimmedLineString.startsWith("}"))
-                        {
+                    } else if (trimmedLineString.endsWith("{")) {
+                        if (trimmedLineString.startsWith("}")) {
                             int closingBrace = line.indexOf('}');
                             // get rid of whatever is coming after '}'
                             currentBlock.add(new Line(line.substring(0,
-                                                                     closingBrace + 1)));
+                                    closingBrace + 1)));
                             currentBlock = currentBlock.getParent();
                             // get rid of '}'
                             line = line.substring(0, closingBrace) + line.substring(closingBrace + 1).trim();
                         }
                         // this means we are starting a new block
                         currentBlock = new Block(currentBlock,
-                                                 new Line(line));
-                    }
-                    else if ("}".equals(trimmedLineString))
-                    {
+                                new Line(line));
+                    } else if ("}".equals(trimmedLineString)) {
                         currentBlock.add(new Line(line));
                         currentBlock = currentBlock.getParent();
-                    }
-                    else if (trimmedLineString.startsWith("}"))
-                    {
+                    } else if (trimmedLineString.startsWith("}")) {
                         int closingBrace = line.indexOf('}');
                         // get rid of whatever is coming after '}'
                         currentBlock.add(new Line(line.substring(0,
-                                                                 closingBrace + 1)));
+                                closingBrace + 1)));
                         currentBlock = currentBlock.getParent();
                         // get rid of '}'
                         line = line.substring(0, closingBrace) + line.substring(closingBrace + 1).trim();
                         currentBlock.add(new Line(line));
-                    }
-                    else
-                    {
+                    } else {
                         currentBlock.add(new Line(line));
                     }
                 }
@@ -150,200 +130,158 @@ public class SourceReorganiser
             currentBlock.sort();
             // let's print it out
             currentBlock.write(out);
-        }
-        finally
-        {
-            if (in != null)
-            {
-                try
-                {
+        } finally {
+            if (in != null) {
+                try {
                     in.close();
-                }
-                catch (IOException e)
-                {
+                } catch (IOException e) {
                     Logger.getInstance(SourceReorganiser.class.getName()).error(e);
                 }
             }
-            if (out != null)
-            {
-                try
-                {
+            if (out != null) {
+                try {
                     out.close();
-                }
-                catch (IOException e)
-                {
+                } catch (IOException e) {
                     Logger.getInstance(SourceReorganiser.class.getName()).error(e);
                 }
             }
         }
-        file.setContent(out.getBuffer().toString());
+        AppInvoker.get().runWriteActionAndWait(new Runnable() {
+            @Override
+            public void run() {
+                file.setContent(out.getBuffer().toString());
+            }
+        });
     }
 
-    private static List<String> reformat(LineNumberReader in)
-    {
+    private static List<String> reformat(LineNumberReader in) {
         String lineString;
         int lastIndent = 0;
         int indent = -1;
         boolean lastLineHadNoNumber = false;
         List<String> lines = new ArrayList<String>();
-        try
-        {
-            while ((lineString = in.readLine()) != null)
-            {
-                if (lineString.length() > LINE_NUMBER_MARKER_LENGTH && !lineString.startsWith("/*"))
-                {
+        try {
+            while ((lineString = in.readLine()) != null) {
+                if (lineString.length() > LINE_NUMBER_MARKER_LENGTH && !lineString.startsWith("/*")) {
                     int thisIndent = 0;
                     // count spaces or tabs
-                    for (; thisIndent < lineString.length() && (lineString.charAt(thisIndent) == ' ' || lineString.charAt(thisIndent) == '\t'); thisIndent++)
-                    {
+                    for (; thisIndent < lineString.length() && (lineString.charAt(thisIndent) == ' ' || lineString.charAt(thisIndent) == '\t'); thisIndent++) {
                     }
                     thisIndent = thisIndent - LINE_NUMBER_MARKER_LENGTH;
-                    if (indent == -1 && thisIndent > 0)
-                    {
+                    if (indent == -1 && thisIndent > 0) {
                         indent = thisIndent;
                     }
-                    if ((thisIndent - lastIndent) / indent == 2 && lastLineHadNoNumber)
-                    {
+                    if ((thisIndent - lastIndent) / indent == 2 && lastLineHadNoNumber) {
                         // add this line to the last line
                         String l = lines.get(lines.size() - 1) + ' ' + lineString.trim();
                         lines.set(lines.size() - 1, l);
-                    }
-                    else
-                    {
+                    } else {
                         lastIndent = thisIndent;
                         lines.add(lineString);
                     }
                     lastLineHadNoNumber = true;
-                }
-                else
-                {
+                } else {
                     // strip case statement comments, which have the form "case 2: // '\002'"
                     int casePos = lineString.indexOf("case");
                     int colon;
-                    if (casePos != -1 && (colon = lineString.indexOf(": //", casePos)) != -1)
-                    {
+                    if (casePos != -1 && (colon = lineString.indexOf(": //", casePos)) != -1) {
                         lineString = lineString.substring(0, colon + 2);
                     }
                     lines.add(lineString);
                     lastLineHadNoNumber = false;
                 }
             }
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             Logger.getInstance(SourceReorganiser.class.getName()).error(e);
         }
         return lines;
     }
 
-    private abstract static class Element
-    {
+    private abstract static class Element {
         public abstract boolean hasNumber();
 
         public abstract int getNumber();
     }
 
-    private static class Line extends Element
-    {
+    private static class Line extends Element {
         private int number = -1;
         private String content;
         private boolean lineNumberAsSuffix;
 
-        Line(String content)
-        {
+        Line(String content) {
             this(content,
-                 -1,
-                 false);
+                    -1,
+                    false);
         }
 
         Line(String content,
-                    int number,
-                    boolean lineNumberAsSuffix)
-        {
+             int number,
+             boolean lineNumberAsSuffix) {
             this.number = number;
             this.content = content;
             this.lineNumberAsSuffix = lineNumberAsSuffix;
         }
 
-        void add(String content)
-        {
+        void add(String content) {
             this.content = this.content + " " + content.trim();
         }
 
-        public int getNumber()
-        {
+        public int getNumber() {
             return number;
         }
 
-        public boolean hasNumber()
-        {
+        public boolean hasNumber() {
             return number != -1;
         }
 
-        String getContent()
-        {
+        String getContent() {
             return content;
         }
 
-        boolean getLineNumberAsSuffix()
-        {
+        boolean getLineNumberAsSuffix() {
             return lineNumberAsSuffix;
         }
     }
 
-    private static class Block extends Element
-    {
+    private static class Block extends Element {
 
         private Block parent;
         private List<Element> elements;
 
-        Block()
-        {
+        Block() {
             elements = new ArrayList<Element>();
         }
 
-        Block(Block parent, Line firstLine)
-        {
+        Block(Block parent, Line firstLine) {
             this();
             this.parent = parent;
-            if (parent != null)
-            {
+            if (parent != null) {
                 parent.add(this);
             }
             add(firstLine);
         }
 
-        void sort()
-        {
-            if (isSorted())
-            {
+        void sort() {
+            if (isSorted()) {
                 // naive sorting algo
                 List<Element> sortedElements = new ArrayList<Element>();
                 int insertionPos = 0;
                 Element lastElement = elements.get(elements.size() - 1);
                 int size = elements.size();
-                if (lastElement instanceof Line)
-                {
+                if (lastElement instanceof Line) {
                     size--;
                 }
-                for (int i = 0; i < size; i++)
-                {
+                for (int i = 0; i < size; i++) {
                     Element element = elements.get(i);
-                    if (element instanceof Block)
-                    {
+                    if (element instanceof Block) {
                         ((Block) element).sort();
                     }
-                    if (!element.hasNumber())
-                    {
+                    if (!element.hasNumber()) {
                         sortedElements.add(insertionPos, element);
-                    }
-                    else
-                    {
-                        for (insertionPos = 0; insertionPos < sortedElements.size(); insertionPos++)
-                        {
+                    } else {
+                        for (insertionPos = 0; insertionPos < sortedElements.size(); insertionPos++) {
                             Element sortedElement = sortedElements.get(insertionPos);
-                            if (sortedElement.hasNumber() && sortedElement.getNumber() > element.getNumber())
-                            {
+                            if (sortedElement.hasNumber() && sortedElement.getNumber() > element.getNumber()) {
                                 break;
                             }
                         }
@@ -351,59 +289,47 @@ public class SourceReorganiser
                     }
                     insertionPos++;
                 }
-                if (lastElement instanceof Line)
-                {
+                if (lastElement instanceof Line) {
                     sortedElements.add(lastElement);
                 }
                 elements = sortedElements;
             }
         }
 
-        Block getParent()
-        {
+        Block getParent() {
             return parent;
         }
 
-        Line getLastLine()
-        {
+        Line getLastLine() {
             Object lastElement = elements.get(elements.size() - 1);
-            if (lastElement instanceof Line)
-            {
+            if (lastElement instanceof Line) {
                 return (Line) lastElement;
             }
             return null;
         }
 
-        Line removeLastLine()
-        {
+        Line removeLastLine() {
             Object lastElement = elements.get(elements.size() - 1);
-            if (lastElement instanceof Line)
-            {
+            if (lastElement instanceof Line) {
                 elements.remove(elements.size() - 1);
                 return (Line) lastElement;
             }
             return null;
         }
 
-        void add(Element element)
-        {
+        void add(Element element) {
             elements.add(element);
         }
 
-        public boolean hasNumber()
-        {
+        public boolean hasNumber() {
             return getNumber() != -1;
         }
 
-        public int getNumber()
-        {
+        public int getNumber() {
             int lowestNumber = -1;
-            for (Element element : elements)
-            {
-                if (element.hasNumber())
-                {
-                    if (lowestNumber == -1 || element.getNumber() < lowestNumber)
-                    {
+            for (Element element : elements) {
+                if (element.hasNumber()) {
+                    if (lowestNumber == -1 || element.getNumber() < lowestNumber) {
                         lowestNumber = element.getNumber();
                     }
                 }
@@ -416,20 +342,15 @@ public class SourceReorganiser
          *
          * @return true if the lines are sorted
          */
-        boolean isSorted()
-        {
+        boolean isSorted() {
             int currentLineNumber = 0;
-            for (Element element : elements)
-            {
-                if (element instanceof Line)
-                {
+            for (Element element : elements) {
+                if (element instanceof Line) {
                     Line line = (Line) element;
-                    if (line.hasNumber() && line.getNumber() < currentLineNumber)
-                    {
+                    if (line.hasNumber() && line.getNumber() < currentLineNumber) {
                         return false;
                     }
-                    if (line.hasNumber())
-                    {
+                    if (line.hasNumber()) {
                         currentLineNumber = line.getNumber();
                     }
                 }
@@ -437,72 +358,58 @@ public class SourceReorganiser
             return true;
         }
 
-        void write(StringWriter out)
-        {
+        void write(StringWriter out) {
             List<Line> lines = getLines();
             Map<Integer, Line> offLines = findOffLines(lines);
             int currentLine = 1;
             boolean lastLineHadNumber = false;
-            for (int i = 0; i < lines.size(); i++)
-            {
+            for (int i = 0; i < lines.size(); i++) {
                 Line line = lines.get(i);
-                if (line.hasNumber())
-                {
-                    while (currentLine < line.getNumber())
-                    {
+                if (line.hasNumber()) {
+                    while (currentLine < line.getNumber()) {
                         out.write(LINE_SEPARATOR);
                         currentLine++;
                         checkOffLines(offLines,
-                                      line,
-                                      currentLine,
-                                      out);
+                                line,
+                                currentLine,
+                                out);
                     }
                     lastLineHadNumber = true;
-                    if (currentLine != line.getNumber())
-                    {
+                    if (currentLine != line.getNumber()) {
                         out.write("/*  */");
                     }
-                }
-                else
-                {
+                } else {
                     Line nextLineWithNumber = null;
                     int linesInbetween = 0;
-                    for (int j = i + 1; j < lines.size(); j++)
-                    {
+                    for (int j = i + 1; j < lines.size(); j++) {
                         Line l = lines.get(j);
-                        if (l.hasNumber())
-                        {
+                        if (l.hasNumber()) {
                             nextLineWithNumber = l;
                             linesInbetween = j - i;
                             break;
                         }
                     }
-                    if (nextLineWithNumber != null)
-                    {
+                    if (nextLineWithNumber != null) {
                         int linesToSkip = nextLineWithNumber.getNumber() - currentLine - linesInbetween;
-                        if (lastLineHadNumber)
-                        {
+                        if (lastLineHadNumber) {
                             linesToSkip = Math.min(1,
-                                                   linesToSkip);
+                                    linesToSkip);
                         }
-                        for (int k = 0, max = linesToSkip; k < max; k++)
-                        {
+                        for (int k = 0, max = linesToSkip; k < max; k++) {
                             out.write(LINE_SEPARATOR);
                             currentLine++;
                             checkOffLines(offLines,
-                                          line,
-                                          currentLine,
-                                          out);
+                                    line,
+                                    currentLine,
+                                    out);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         out.write(LINE_SEPARATOR);
                         currentLine++;
                         checkOffLines(offLines,
-                                      line,
-                                      currentLine,
-                                      out);
+                                line,
+                                currentLine,
+                                out);
                     }
                     lastLineHadNumber = false;
                 }
@@ -513,33 +420,24 @@ public class SourceReorganiser
         private void checkOffLines(Map offLines,
                                    Line line,
                                    int currentLine,
-                                   StringWriter out)
-        {
-            if (offLines.containsKey(currentLine))
-            {
+                                   StringWriter out) {
+            if (offLines.containsKey(currentLine)) {
                 Line offLine = (Line) offLines.get(currentLine);
-                if (!offLine.getContent().equals(line.getContent()))
-                {
+                if (!offLine.getContent().equals(line.getContent())) {
                     out.write("// off: " + offLine.getContent().substring(8));
                 }
             }
         }
 
-        private Map<Integer, Line> findOffLines(List<Line> lines)
-        {
+        private Map<Integer, Line> findOffLines(List<Line> lines) {
             Map<Integer, Line> offLines = new HashMap<Integer, Line>();
             int currentLine = 1;
-            for (Line line : lines)
-            {
-                if (line.hasNumber())
-                {
-                    if (line.getNumber() < currentLine)
-                    {
+            for (Line line : lines) {
+                if (line.hasNumber()) {
+                    if (line.getNumber() < currentLine) {
                         offLines.put(line.getNumber(),
-                                     line);
-                    }
-                    else
-                    {
+                                line);
+                    } else {
                         currentLine = line.getNumber();
                     }
                 }
@@ -547,17 +445,12 @@ public class SourceReorganiser
             return offLines;
         }
 
-        private List<Line> getLines()
-        {
+        private List<Line> getLines() {
             List<Line> lines = new ArrayList<Line>();
-            for (Element element : elements)
-            {
-                if (element instanceof Line)
-                {
+            for (Element element : elements) {
+                if (element instanceof Line) {
                     lines.add((Line) element);
-                }
-                else
-                {
+                } else {
                     Block block = (Block) element;
                     lines.addAll(block.getLines());
                 }
@@ -565,28 +458,21 @@ public class SourceReorganiser
             return lines;
         }
 
-        public String toString()
-        {
+        public String toString() {
             return toString(0);
         }
 
-        private String toString(int indent)
-        {
+        private String toString(int indent) {
             StringBuffer sb = new StringBuffer();
             sb.append("Block ").append(getNumber()).append("\r\n");
-            for (Element element : elements)
-            {
-                if (element instanceof Line)
-                {
-                    for (int j = 0; j < indent; j++)
-                    {
+            for (Element element : elements) {
+                if (element instanceof Line) {
+                    for (int j = 0; j < indent; j++) {
                         sb.append("+");
                     }
                     sb.append("|").append(element.getNumber()).append(' ').append(((Line) element).getContent()).append("\r\n");
-                }
-                else
-                {
-                    sb.append(((Block)element).toString(indent + 1));
+                } else {
+                    sb.append(((Block) element).toString(indent + 1));
                 }
             }
             return sb.toString();
