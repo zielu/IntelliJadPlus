@@ -90,7 +90,7 @@ public class DecompilationContext implements UserDataHolder
                 Preconditions.checkState(tempDir.mkdirs(), "Could not mkdirs: "+tempDir.getAbsolutePath());
             }
         } else {
-            tempDir = OsUtil.getTempDir();
+            tempDir = OsUtil.tempDir();
         }
         return new File(tempDir, "ij" + System.currentTimeMillis());
     }

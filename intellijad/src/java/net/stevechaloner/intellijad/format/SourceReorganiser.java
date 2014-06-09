@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 import com.intellij.openapi.diagnostic.Logger;
 import net.stevechaloner.intellijad.decompilers.DecompilationContext;
 import net.stevechaloner.intellijad.util.AppInvoker;
+import net.stevechaloner.intellijad.util.OsUtil;
 import net.stevechaloner.intellijad.vfs.MemoryVF;
 
 /**
@@ -48,7 +49,7 @@ public class SourceReorganiser {
     /**
      * The system line separator.
      */
-    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+    private static final String LINE_SEPARATOR = OsUtil.lineSeparator();
 
     private static final int LINE_NUMBER_MARKER_LENGTH = 8;
 

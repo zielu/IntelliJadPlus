@@ -30,6 +30,7 @@ import net.stevechaloner.intellijad.config.CodeStyle;
 import net.stevechaloner.intellijad.config.Config;
 import net.stevechaloner.intellijad.console.ConsoleEntryType;
 import net.stevechaloner.intellijad.util.LibraryUtil;
+import net.stevechaloner.intellijad.util.OsUtil;
 import net.stevechaloner.intellijad.vfs.LightMemoryVF;
 import net.stevechaloner.intellijad.vfs.MemoryVF;
 import net.stevechaloner.intellijad.vfs.MemoryVFS;
@@ -58,7 +59,7 @@ public abstract class DecompilerBase extends AbstractDecompiler {
                                        @NotNull ByteArrayOutputStream err) throws DecompilationException {
                 StringBuilder sb = new StringBuilder(output.toString());
                 sb.insert(0,
-                        System.getProperty("line.separator"));
+                        OsUtil.lineSeparator());
                 sb.insert(0,
                         IntelliJadResourceBundle.message("message.decompiled-through-intellijad"));
 

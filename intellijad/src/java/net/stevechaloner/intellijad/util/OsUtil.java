@@ -5,11 +5,15 @@ import java.io.File;
 public enum OsUtil {
     instance;
 
-    public static File getTempDir() {
-        return new File(getTempDirPath());
+    public static File tempDir() {
+        return new File(tempDirPath());
     }
 
-    public static String getTempDirPath() {
+    public static String tempDirPath() {
         return System.getProperty("java.io.tmpdir");
+    }
+
+    public static String lineSeparator() {
+        return System.getProperty("line.separator");
     }
 }
