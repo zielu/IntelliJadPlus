@@ -73,6 +73,9 @@ class JarExtractor
                 int lastIndex = name.lastIndexOf("/");
                 File outputFile = new File(context.getTargetDirectory(),
                                            name.substring(lastIndex));
+                context.getConsoleContext().addMessage(ConsoleEntryType.JAR_OPERATION,
+                        "message.extracting-done",
+                        entry.getName(), outputFile.getAbsolutePath());
                 outputFile.deleteOnExit();
                 FileOutputStream fos = new FileOutputStream(outputFile);
                 StreamUtil.copyStreamContent(inputStream,
