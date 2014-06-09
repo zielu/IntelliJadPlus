@@ -32,6 +32,10 @@
         <antcall target="-cleanup"/>
     </target>
 
+    <target name="build-4-plugin" depends="build">
+        <copy file="${dist.dir}/${lib.jar}" todir="../intellijad/lib"/>
+    </target>
+
     <!-- Packages plugin sources -->
     <target name="-package.src">
         <echo message="Packaging library sources"/>
