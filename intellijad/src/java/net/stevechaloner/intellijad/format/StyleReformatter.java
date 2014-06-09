@@ -64,6 +64,8 @@ public class StyleReformatter {
                         @Override
                         protected void run() throws Throwable {
                             JavaCodeStyleManager.getInstance(context.getProject()).optimizeImports(psiFile);
+                            PsiDocumentManager.getInstance(context.getProject())
+                                    .doPostponedOperationsAndUnblockDocument(document);
                             CodeStyleManager.getInstance(context.getProject()).reformat(psiFile);
                         }
                     };
