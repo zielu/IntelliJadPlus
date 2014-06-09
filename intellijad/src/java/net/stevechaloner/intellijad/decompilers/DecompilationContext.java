@@ -18,12 +18,14 @@ package net.stevechaloner.intellijad.decompilers;
 import java.io.File;
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.UserDataHolder;
 import net.stevechaloner.intellijad.config.Config;
 import net.stevechaloner.intellijad.console.ConsoleContext;
+import net.stevechaloner.intellijad.util.OsUtil;
 import net.stevechaloner.intellijad.util.PluginUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -74,10 +76,23 @@ public class DecompilationContext implements UserDataHolder
         this.project = project;
         this.consoleContext = consoleContext;
         this.command = command;
-        this.targetDirectory = new File(new File(System.getProperty("java.io.tmpdir")),
-                                        "ij" + System.currentTimeMillis());
+        this.targetDirectory = prepareTargetDir(project);
         targetDirectory.mkdir();
         targetDirectory.deleteOnExit();
+    }
+
+    private File prepareTargetDir(@NotNull Project project) {
+        Config config = PluginUtil.getConfig(project);
+        File tempDir;
+        if (config.isUseCustomTempDir()) {
+            tempDir = new File(config.getCustomTempDirPath());
+            if (!tempDir.exists()) {
+                Preconditions.checkState(tempDir.mkdirs(), "Could not mkdirs: "+tempDir.getAbsolutePath());
+            }
+        } else {
+            tempDir = OsUtil.getTempDir();
+        }
+        return new File(tempDir, "ij" + System.currentTimeMillis());
     }
 
     // javadoc unnecessary

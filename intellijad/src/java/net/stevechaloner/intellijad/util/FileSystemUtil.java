@@ -27,7 +27,7 @@ public class FileSystemUtil {
     } 
     
     public static String generateTempOutputDir() {
-        String tempDirPath = System.getProperty("java.io.tmpdir");
+        String tempDirPath = OsUtil.getTempDirPath();
         if (!tempDirPath.endsWith(File.separator)) {
             tempDirPath = tempDirPath + File.separator;
         }

@@ -54,7 +54,8 @@ public class Config implements DOMable {
     private static final PropertyDescriptor<Boolean> CLEANUP_SOURCE_ROOTS = new ImmutablePropertyDescriptor<Boolean>("cleanup-source-roots",
             Boolean.TRUE);
     private static final PropertyDescriptor<Boolean> FORCED_DECOMPILE_TO_MEMORY = new ImmutablePropertyDescriptor<Boolean>("forced-decompile-to-memory", Boolean.FALSE);
-    
+    private static final PropertyDescriptor<Boolean> CUSTOM_TEMP_DIR = new ImmutablePropertyDescriptor<Boolean>("use-custom-temp-dir", Boolean.FALSE);
+    private static final PropertyDescriptor<String> CUSTOM_TEMP_DIR_PATH = new ImmutablePropertyDescriptor<String>("custom-temp-dir-path");
     //keep deprecated properties to support users coming from older plugin version
     @Deprecated
     private static final PropertyDescriptor<Boolean> DECOMPILE_TO_MEMORY = new ImmutablePropertyDescriptor<Boolean>("decompile-to-memory", Boolean.FALSE);
@@ -135,6 +136,8 @@ public class Config implements DOMable {
         registerStringProperty(REFORMAT_STYLE, dpc);
         registerBooleanProperty(CLEANUP_SOURCE_ROOTS, dpc);
         registerBooleanProperty(FORCED_DECOMPILE_TO_MEMORY, dpc);
+        registerBooleanProperty(CUSTOM_TEMP_DIR, dpc);
+        registerStringProperty(CUSTOM_TEMP_DIR_PATH, dpc);
 
         dpc.put(EXCLUSION_TABLE_MODEL,
                 new DOMableTableModel(EXCLUSION_TABLE_MODEL,
@@ -737,6 +740,24 @@ public class Config implements DOMable {
         value.setValue(forced);
     }
 
+    public void setUseCustomTempDir(boolean useCustomTemp) {
+        DOMableGeneric<Boolean> value = (DOMableGeneric<Boolean>) propertyContainer.get(CUSTOM_TEMP_DIR);
+        value.setValue(useCustomTemp);
+    }
+
+    public boolean isUseCustomTempDir() {
+        return CUSTOM_TEMP_DIR.getValue(propertyContainer.get(CUSTOM_TEMP_DIR));
+    }
+
+    public void setCustomTempDirPath(String customTempDirPath) {
+        DOMableGeneric<String> value = (DOMableGeneric<String>) propertyContainer.get(CUSTOM_TEMP_DIR_PATH);
+        value.setValue(customTempDirPath);
+    }
+
+    public String getCustomTempDirPath() {
+        return CUSTOM_TEMP_DIR_PATH.getValue(propertyContainer.get(CUSTOM_TEMP_DIR_PATH));
+    }
+
     @NotNull
     public PropertyDescriptor getPropertyDescriptor() {
         return domable.getPropertyDescriptor();
@@ -846,6 +867,8 @@ public class Config implements DOMable {
         setReformatStyle(config.getReformatStyle());
         setCleanupSourceRoots(config.isCleanupSourceRoots());
         setForcedDecompileToMemory(config.isForcedDecompileToMemory());
+        setUseCustomTempDir(config.isUseCustomTempDir());
+        setCustomTempDirPath(config.getCustomTempDirPath());
     }
 
     public boolean isOutputDirectoryNotSet() {

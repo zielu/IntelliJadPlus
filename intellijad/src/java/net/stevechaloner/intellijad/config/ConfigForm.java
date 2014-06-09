@@ -16,10 +16,7 @@
 package net.stevechaloner.intellijad.config;
 
 import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -41,6 +38,7 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import com.google.common.base.Objects;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.ide.util.PackageChooserDialog;
 import com.intellij.openapi.diagnostic.Logger;
@@ -108,6 +106,9 @@ public class ConfigForm
     @Control private JCheckBox cleanupSourceRootsCheckBox;
     @Control private JCheckBox clearAndCloseConsoleCheckBox;
     private LinkLabel getJadLink;
+    @Control private JCheckBox tempDirectoryCheckBox;
+    @Control private JTextField tempDirTextField;
+    @Control private JButton browseTempDirButton;
 
     private ExclusionTableModel exclusionTableModel;
 
@@ -177,10 +178,10 @@ public class ConfigForm
 
         outputDirBrowseButton.addActionListener(project == null ?
                                   new ApplicationFileSelectionAction(outputDirectoryTextField,
-                                                                     FileSelectionDescriptor.DIRECTORIES_ONLY) :
-                                                                                                               new ProjectFileSelectionAction(project,
-                                                                                                                                              outputDirectoryTextField,
-                                                                                                                                              FileSelectionDescriptor.DIRECTORIES_ONLY));
+                                              FileSelectionDescriptor.DIRECTORIES_ONLY) :
+                                  new ProjectFileSelectionAction(project,
+                                                                      outputDirectoryTextField,
+                                              FileSelectionDescriptor.DIRECTORIES_ONLY));
         browseButton1.addActionListener(project == null ?
                                         new ApplicationFileSelectionAction(jadTextField,
                                                                            FileSelectionDescriptor.FILES_ONLY) :
@@ -268,6 +269,20 @@ public class ConfigForm
                 BrowserUtil.launchBrowser((String) url);
             }
         }, "http://varaneckas.com/jad/");
+        tempDirectoryCheckBox.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                boolean status = tempDirectoryCheckBox.isSelected();
+                tempDirTextField.setEnabled(status);
+                browseTempDirButton.setEnabled(status);
+            }
+        });
+        browseTempDirButton.addActionListener(project == null ?
+                new ApplicationFileSelectionAction(tempDirTextField,
+                        FileSelectionDescriptor.DIRECTORIES_ONLY) :
+                new ProjectFileSelectionAction(project,
+                        tempDirTextField,
+                        FileSelectionDescriptor.DIRECTORIES_ONLY));
     }
 
     /**
@@ -421,6 +436,10 @@ public class ConfigForm
         return false;
     }
 
+    private <T> boolean areDifferent(T first, T other) {
+        return !Objects.equal(first, other);
+    }
+
     /**
      * Convenience method to create a numeric {@link SpinnerModel}.
      *
@@ -563,6 +582,12 @@ public class ConfigForm
         {
             return true;
         }
+        if (areDifferent(tempDirectoryCheckBox.isSelected(), data.isUseCustomTempDir())) {
+            return true;
+        }
+        if (isModified(tempDirTextField.getText(), data.getCustomTempDirPath())) {
+            return true;
+        }
         return false;
     }
 
@@ -604,7 +629,8 @@ public class ConfigForm
         unusedExceptionNamesTextField.setText(data.getPrefixUnusedExceptions());
         alwaysExcludePackagesRecursivelyCheckBox.setSelected(data.isAlwaysExcludeRecursively());
         cleanupSourceRootsCheckBox.setSelected(data.isCleanupSourceRoots());
-        
+        tempDirectoryCheckBox.setSelected(data.isUseCustomTempDir());
+        tempDirTextField.setText(data.getCustomTempDirPath());
         if (project != null) {
             setControlsEnabled(project, data.isUseProjectSpecificSettings());           
         }
@@ -639,7 +665,8 @@ public class ConfigForm
         data.setPrefixUnusedExceptions(unusedExceptionNamesTextField.getText());
         data.setAlwaysExcludeRecursively(alwaysExcludePackagesRecursivelyCheckBox.isSelected());
         data.setCleanupSourceRoots(cleanupSourceRootsCheckBox.isSelected());
-
+        data.setUseCustomTempDir(tempDirectoryCheckBox.isSelected());
+        data.setCustomTempDirPath(tempDirTextField.getText());
         if (project != null)
         {
             setControlsEnabled(project, data.isUseProjectSpecificSettings());
