@@ -8,6 +8,7 @@ import java.io.File;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import net.stevechaloner.intellijad.config.Config;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * <p></p>
@@ -22,12 +23,17 @@ public class FileSystemUtil {
         return project.getName();    
     }
     
-    public static String generateTempOutputDir(Project project) {
-        return generateTempOutputDir() + File.separator + generateTempDirName(project);
+    public static String generateTempOutputDir(@NotNull Project project) {
+        return generateTempOutputDir(PluginUtil.getConfig(project)) + File.separator + generateTempDirName(project);
     } 
-    
-    public static String generateTempOutputDir() {
-        String tempDirPath = OsUtil.tempDirPath();
+
+    public static String generateTempOutputDir(Config config) {
+        String tempDirPath;
+        if (config.isUseCustomTempDir()) {
+            tempDirPath = config.getCustomTempDirPath();
+        } else {
+            tempDirPath = OsUtil.tempDirPath();
+        }
         if (!tempDirPath.endsWith(File.separator)) {
             tempDirPath = tempDirPath + File.separator;
         }

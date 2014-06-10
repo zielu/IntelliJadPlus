@@ -150,14 +150,14 @@ public class IntelliJad implements ApplicationComponent,
     private String setupTempOutputDir(Config config, boolean enable) {
         if (enable) {
             if (StringUtil.isEmptyOrSpaces(config.getOutputDirectory())) {
-                String outputDir = FileSystemUtil.generateTempOutputDir();
+                String outputDir = FileSystemUtil.generateTempOutputDir(config);
                 _setupTempOutputDir(config, outputDir, enable);
                 return outputDir;
             } else {
                 return config.getOutputDirectory();
             }
         } else {
-            String outputDir = FileSystemUtil.generateTempOutputDir();
+            String outputDir = FileSystemUtil.generateTempOutputDir(config);
             if (outputDir.equals(config.getOutputDirectory())) {
                 _setupTempOutputDir(config, outputDir, enable);    
             }
