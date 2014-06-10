@@ -179,15 +179,6 @@ public abstract class AbstractDecompiler implements Decompiler {
     }
 
     /**
-     * Updates the command to insert any specific arguments.
-     *
-     * @param command the process execution string
-     * @param config  the decompilation configuration
-     */
-    protected abstract void updateCommand(StringBuilder command,
-                                          Config config);
-
-    /**
      * {@inheritDoc}
      */
     public VirtualFile decompile(DecompilationDescriptor descriptor,
@@ -204,8 +195,6 @@ public abstract class AbstractDecompiler implements Decompiler {
                 File targetClass = descriptor.getSourceFile(context.getTargetDirectory());
 
                 StringBuilder command = new StringBuilder(context.getCommand());
-                updateCommand(command,
-                        context.getConfig());
 
                 String path = targetClass.getAbsolutePath();
                 if (path.indexOf(' ') != -1) {
@@ -215,7 +204,6 @@ public abstract class AbstractDecompiler implements Decompiler {
                 consoleContext.addMessage(ConsoleEntryType.DECOMPILATION_OPERATION,
                         "message.executing-jad",
                         command.toString());
-
 
                 try {
                     OperationStatus status = setup(descriptor,

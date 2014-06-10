@@ -15,6 +15,7 @@ import net.stevechaloner.intellijad.console.ConsoleEntryType;
 import net.stevechaloner.intellijad.console.ConsoleManager;
 import net.stevechaloner.intellijad.console.IntelliJadConsole;
 import net.stevechaloner.intellijad.decompilers.*;
+import net.stevechaloner.intellijad.decompilers.jad.JadEngine;
 import net.stevechaloner.intellijad.environment.EnvironmentContext;
 import net.stevechaloner.intellijad.environment.EnvironmentValidator;
 import net.stevechaloner.intellijad.environment.ValidationResult;
@@ -136,13 +137,12 @@ public class DecompilationTask extends Task.Modal implements Callable<Decompilat
                         "error",
                         "Target directory "+config.getOutputDirectory()+" creation failed");
             } else {
-                String info = config.getJadPath() + " " + config.renderCommandLinePropertyDescriptors();
-                DecompilationContext context = new DecompilationContext(project,
-                        consoleContext,
-                        info);
+                DecompilationEngine engine = DecompilationEngine.selector.get(project);
+                DecompilationContext context = new DecompilationContext(project, consoleContext, engine);
                 Decompiler decompiler = new FileSystemDecompiler(appInvoker);
                 if (debug) {
-                    LOG.debug("Decompiler in use: "+decompiler.getClass().getSimpleName());
+                    LOG.debug("Decompiler engine in use: "+engine.getClass().getSimpleName()
+                            +"/"+decompiler.getClass().getSimpleName());
                 }
                 try {
                     final VirtualFile file = decompiler.getVirtualFile(descriptor, context);

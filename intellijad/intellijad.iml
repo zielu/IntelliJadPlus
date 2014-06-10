@@ -10,8 +10,8 @@
       <sourceFolder url="file://$MODULE_DIR$/src/help" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/icons" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/java" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/test/java" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/src/procyon" type="java-resource" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

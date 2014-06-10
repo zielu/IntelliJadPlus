@@ -58,11 +58,8 @@ public abstract class DecompilerBase extends AbstractDecompiler {
                                        @NotNull ByteArrayOutputStream output,
                                        @NotNull ByteArrayOutputStream err) throws DecompilationException {
                 StringBuilder sb = new StringBuilder(output.toString());
-                sb.insert(0,
-                        OsUtil.lineSeparator());
-                sb.insert(0,
-                        IntelliJadResourceBundle.message("message.decompiled-through-intellijad"));
-
+                sb.insert(0, OsUtil.lineSeparator());
+                sb.insert(0, context.getEngine().waterMark());
                 String content = sb.toString();
                 if (DecompilationDescriptor.ClassPathType.FS == descriptor.getClassPathType()) {
                     DecompilationDescriptorFactory.getFactoryForFile(targetClass).update(descriptor,
@@ -153,19 +150,6 @@ public abstract class DecompilerBase extends AbstractDecompiler {
     protected abstract void attachSourceToLibraries(@NotNull final DecompilationDescriptor descriptor,
                                            @NotNull final DecompilationContext context,
                                            @NotNull final List<Library> libraries);
-
-    /**
-     * {@inheritDoc}
-     */
-    protected void updateCommand(StringBuilder command,
-                                 Config config) {
-        command.append(" -p ");
-        if (command.indexOf(" -lnc ") == -1 &&
-                CodeStyle.DEBUGGABLE_STYLE.getName().equals(config.getReformatStyle())) {
-            // technically it wouldn't hurt to have this present twice, but this is neater
-            command.append(" -lnc ");
-        }
-    }
 
     /**
      * Calculates the success of the process execution.

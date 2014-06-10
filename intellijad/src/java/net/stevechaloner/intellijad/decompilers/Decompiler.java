@@ -22,8 +22,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * A decompiler is used to convert a class file into a Java file.
  */
-public interface Decompiler
-{
+public interface Decompiler {
     /**
      * Decompiles the class detailed in the decompilation descriptor.
      *

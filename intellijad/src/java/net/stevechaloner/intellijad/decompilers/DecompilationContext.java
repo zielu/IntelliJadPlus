@@ -62,23 +62,27 @@ public class DecompilationContext implements UserDataHolder
      */
     private final Map<Key, Object> userData = Maps.newConcurrentMap();
 
+    private final DecompilationEngine engine;
+
     /**
      * Initialises a new instance of this class.
      *
      * @param project the project
      * @param consoleContext the reporting console context
-     * @param command the command to execute
      */
     public DecompilationContext(@NotNull Project project,
                                 @NotNull ConsoleContext consoleContext,
-                                @NotNull String command)
+                                @NotNull DecompilationEngine engine
+                                )
     {
-        this.project = project;
-        this.consoleContext = consoleContext;
-        this.command = command;
+        this.project = Preconditions.checkNotNull(project);
+        this.consoleContext = Preconditions.checkNotNull(consoleContext);
+        this.engine = Preconditions.checkNotNull(engine);
+        command = Preconditions.checkNotNull(engine.prepareCommand(project));
         this.targetDirectory = prepareTargetDir(project);
         targetDirectory.mkdir();
         targetDirectory.deleteOnExit();
+
     }
 
     private File prepareTargetDir(@NotNull Project project) {
@@ -117,6 +121,10 @@ public class DecompilationContext implements UserDataHolder
     public Project getProject()
     {
         return project;
+    }
+
+    public DecompilationEngine getEngine() {
+        return engine;
     }
 
     // javadoc unnecessary
