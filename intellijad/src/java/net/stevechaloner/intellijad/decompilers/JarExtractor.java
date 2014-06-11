@@ -15,6 +15,7 @@
 
 package net.stevechaloner.intellijad.decompilers;
 
+import com.google.common.io.Closer;
 import com.intellij.openapi.util.io.StreamUtil;
 
 import java.io.File;
@@ -32,56 +33,66 @@ import net.stevechaloner.intellijad.console.ConsoleEntryType;
 /**
  * JarExtractor will pull a file from a given path and extract it into
  * a directory on the file system.
- * 
+ *
  * @author Steve Chaloner
  */
-class JarExtractor
-{
+class JarExtractor {
     /**
      * Pattern describing class names, including nested classes.
      */
     private static final String CLASS_PATTERN = "((\\$\\w*)?)*";
+    private static final String DEFAULT_PACKAGE = "/";
 
+    private String preparePackage(String packageName) {
+        return DEFAULT_PACKAGE.equals(packageName) ? "" : packageName;
+    }
+
+    private String justFileName(String jarEntryName) {
+        int lastIndex = jarEntryName.lastIndexOf("/");
+        if (lastIndex > -1) {
+            return jarEntryName.substring(lastIndex);
+        } else {
+            return jarEntryName;
+        }
+    }
     /**
      * Extract the given file to the target directory specified in the context.
      *
-     * @param context the context of the decompilation operation
-     * @param jarFile the name of the zip file to open
+     * @param context     the context of the decompilation operation
+     * @param jarFile     the name of the zip file to open
      * @param packageName the package of the class
-     * @param className the name of the class
+     * @param className   the name of the class
      * @throws IOException if an error occurs during the operation
      */
     void extract(DecompilationContext context,
                  JarFile jarFile,
                  String packageName,
-                 String className) throws IOException
-    {
-        Pattern p = Pattern.compile(packageName + className + CLASS_PATTERN + ".class");
+                 String className) throws IOException {
+        Pattern p = Pattern.compile(preparePackage(packageName) + className + CLASS_PATTERN + ".class");
 
         Enumeration<? extends JarEntry> entries = jarFile.entries();
-        while (entries.hasMoreElements())
-        {
+        while (entries.hasMoreElements()) {
             JarEntry entry = entries.nextElement();
             String name = entry.getName();
             Matcher matcher = p.matcher(name);
-            if (matcher.matches())
-            {
+            if (matcher.matches()) {
                 context.getConsoleContext().addMessage(ConsoleEntryType.JAR_OPERATION,
-                                                       "message.extracting",
-                                                       entry.getName());
-                InputStream inputStream = jarFile.getInputStream(entry);
-                int lastIndex = name.lastIndexOf("/");
-                File outputFile = new File(context.getTargetDirectory(),
-                                           name.substring(lastIndex));
-                context.getConsoleContext().addMessage(ConsoleEntryType.JAR_OPERATION,
-                        "message.extracting-done",
-                        entry.getName(), outputFile.getAbsolutePath());
-                outputFile.deleteOnExit();
-                FileOutputStream fos = new FileOutputStream(outputFile);
-                StreamUtil.copyStreamContent(inputStream,
-                                             fos);
-                inputStream.close();
-                fos.close();
+                        "message.extracting",
+                        entry.getName());
+                Closer closer = Closer.create();
+                try {
+                    InputStream inputStream = closer.register(jarFile.getInputStream(entry));
+
+                    File outputFile = new File(context.getTargetDirectory(), justFileName(entry.getName()));
+                    context.getConsoleContext().addMessage(ConsoleEntryType.JAR_OPERATION,
+                            "message.extracting-done",
+                            entry.getName(), outputFile.getAbsolutePath());
+                    outputFile.deleteOnExit();
+                    FileOutputStream fos = closer.register(new FileOutputStream(outputFile));
+                    StreamUtil.copyStreamContent(inputStream, fos);
+                } finally {
+                    closer.close();
+                }
             }
         }
     }
