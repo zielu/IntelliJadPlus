@@ -127,7 +127,7 @@ public class DecompilationTest extends LightCodeInsightFixtureTestCase {
         return new PreparedDecompilation(testFile, listener, config);
     }
     
-    public void testDecompilation_ToPreferredStyle() throws Exception {
+    public void test_decompilationToPreferredStyle() throws Exception {
         PreparedDecompilation preparedDecompilation = setupDecompilation();
         preparedDecompilation.config.setReformatStyle(CodeStyle.PREFERRED_STYLE.getName());
         
@@ -155,7 +155,7 @@ public class DecompilationTest extends LightCodeInsightFixtureTestCase {
         
     }
     
-    public void testDecompilation_ToDebuggableStyle() throws Exception {
+    public void test_decompilationToDebuggableStyle() throws Exception {
         PreparedDecompilation preparedDecompilation = setupDecompilation();
         preparedDecompilation.config.setReformatStyle(CodeStyle.DEBUGGABLE_STYLE.getName());
         

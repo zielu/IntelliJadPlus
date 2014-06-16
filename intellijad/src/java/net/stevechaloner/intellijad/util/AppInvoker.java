@@ -6,10 +6,8 @@ package net.stevechaloner.intellijad.util;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 /**
@@ -23,12 +21,16 @@ public class AppInvoker {
     
     private final Application application;
     
-    public AppInvoker(Application application) {
-        this.application = application;
+    private AppInvoker(Application _application) {
+        application = _application;
+    }
+    
+    public static AppInvoker create(Application application) {
+        return new AppInvoker(application);
     }
     
     public static AppInvoker get() {
-        return new AppInvoker(ApplicationManager.getApplication());
+        return create(ApplicationManager.getApplication());
     }
 
     public <T> T invokeAndWait(Callable<T> action) {

@@ -1,5 +1,6 @@
 package net.stevechaloner.intellijad;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -9,13 +10,22 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
+import java.io.File;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import net.stevechaloner.intellijad.config.Config;
 import net.stevechaloner.intellijad.console.ConsoleContext;
 import net.stevechaloner.intellijad.console.ConsoleEntryType;
 import net.stevechaloner.intellijad.console.ConsoleManager;
 import net.stevechaloner.intellijad.console.IntelliJadConsole;
-import net.stevechaloner.intellijad.decompilers.*;
-import net.stevechaloner.intellijad.decompilers.jad.JadEngine;
+import net.stevechaloner.intellijad.decompilers.DecompilationContext;
+import net.stevechaloner.intellijad.decompilers.DecompilationDescriptor;
+import net.stevechaloner.intellijad.decompilers.DecompilationEngine;
+import net.stevechaloner.intellijad.decompilers.DecompilationException;
+import net.stevechaloner.intellijad.decompilers.DecompilationResult;
+import net.stevechaloner.intellijad.decompilers.Decompiler;
+import net.stevechaloner.intellijad.decompilers.FileSystemDecompiler;
 import net.stevechaloner.intellijad.environment.EnvironmentContext;
 import net.stevechaloner.intellijad.environment.EnvironmentValidator;
 import net.stevechaloner.intellijad.environment.ValidationResult;
@@ -23,12 +33,6 @@ import net.stevechaloner.intellijad.util.AppInvoker;
 import net.stevechaloner.intellijad.util.FileSystemUtil;
 import net.stevechaloner.intellijad.util.PluginUtil;
 import org.jetbrains.annotations.NotNull;
-
-import java.io.File;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 
 /**
  * Created by Lukasz on 25.02.14.
@@ -71,6 +75,10 @@ public class DecompilationTask extends Task.Modal implements Callable<Decompilat
         });
     }
 
+    private SdkHandler sdkHandler() {
+        return SdkHandler.create(ApplicationManager.getApplication());
+    }
+    
     @Override
     public DecompilationResult call() throws Exception {
         indicator.setFraction(0.0);
@@ -119,7 +127,7 @@ public class DecompilationTask extends Task.Modal implements Callable<Decompilat
                         if (debug) {
                             LOG.debug("Will decompile to created directory: "+outDirFile);
                         }
-                        intelliJad.checkSDKRoot(project, outDirFile);
+                        sdkHandler().checkSDKRoot(project, outDirFile);
                     } else {
                         if (debug) {
                             LOG.debug("Output directory creation failed");
@@ -129,7 +137,7 @@ public class DecompilationTask extends Task.Modal implements Callable<Decompilat
                 } else if (outDirFile == null) {
                     intelliJad.handleDisabledVirtualFs(lfs, config, project);
                 } else {
-                    intelliJad.checkSDKRoot(project, outDirFile);
+                    sdkHandler().checkSDKRoot(project, outDirFile);
                 }
             }
             if (IntelliJadConstants.DECOMPILATION_DISABLED.get(project, false)) {

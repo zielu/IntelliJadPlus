@@ -15,47 +15,31 @@
 
 package net.stevechaloner.intellijad;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Future;
-
 import com.intellij.openapi.application.Application;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.project.ProjectManagerListener;
-import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.roots.OrderRootType;
-import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.roots.libraries.Library;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.VirtualFileManager;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Future;
 import net.stevechaloner.intellijad.actions.NavigationListener;
 import net.stevechaloner.intellijad.config.Config;
 import net.stevechaloner.intellijad.console.ConsoleContext;
-import net.stevechaloner.intellijad.console.ConsoleEntryType;
 import net.stevechaloner.intellijad.console.ConsoleManager;
 import net.stevechaloner.intellijad.console.IntelliJadConsole;
 import net.stevechaloner.intellijad.decompilers.DecompilationChoiceListener;
-import net.stevechaloner.intellijad.decompilers.DecompilationContext;
 import net.stevechaloner.intellijad.decompilers.DecompilationDescriptor;
-import net.stevechaloner.intellijad.decompilers.DecompilationException;
 import net.stevechaloner.intellijad.decompilers.DecompilationResult;
-import net.stevechaloner.intellijad.decompilers.Decompiler;
-import net.stevechaloner.intellijad.decompilers.FileSystemDecompiler;
 import net.stevechaloner.intellijad.environment.EnvironmentContext;
-import net.stevechaloner.intellijad.environment.EnvironmentValidator;
-import net.stevechaloner.intellijad.environment.ValidationResult;
 import net.stevechaloner.intellijad.util.AppInvoker;
 import net.stevechaloner.intellijad.util.FileSystemUtil;
 import net.stevechaloner.intellijad.util.PluginUtil;
@@ -81,37 +65,13 @@ public class IntelliJad implements ApplicationComponent,
     private final ConsoleManager consoleManager = new ConsoleManager();
 
     private static final Logger LOG = Logger.getInstance(IntelliJad.class);
-    
-    /**
-     * The per-project map of closing tasks.
-     */
-    private final Map<Project, List<Runnable>> projectClosingTasks = new HashMap<Project, List<Runnable>>()
-    {
-        /**
-         * Gets the list for the project.  If it doesn't exist, it's created and placed into the map.
-         *
-         * @param key the map key
-         * @return the list
-         */
-        @Override
-        @NotNull
-        public List<Runnable> get(@NotNull Object key)
-        {
-            List<Runnable> list = super.get(key);
-            if (list == null) {
-                list = new ArrayList<Runnable>();
-                put((Project) key, list);
-            }
-            return list;
-        }
-    };
 
     private final Application application;
     private final AppInvoker appInvoker;
     
-    public IntelliJad(Application application) {
-        this.application = application;
-        this.appInvoker = new AppInvoker(application);
+    public IntelliJad(Application _application) {
+        application = _application;
+        appInvoker = AppInvoker.create(application);
     }
 
     /**
@@ -240,7 +200,7 @@ public class IntelliJad implements ApplicationComponent,
         project.getMessageBus().connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, navigationListener);
         IntelliJadConstants.DECOMPILE_LISTENER.set(project, navigationListener);
 
-        projectClosingTasks.get(project).add(new Runnable()
+        ProjectClosingTasks.getInstance(project).addTask(new Runnable()
         {
             public void run()
             {
@@ -266,24 +226,14 @@ public class IntelliJad implements ApplicationComponent,
      * {@inheritDoc}
      */
     public boolean canCloseProject(Project project) {
-        Config config = PluginUtil.getConfig(project);
-        if (config.isCleanupSourceRoots()) {
-            List<Runnable> tasks = projectClosingTasks.get(project);
-            for (Runnable task : tasks) {
-                appInvoker.runWriteActionAndWait(task);
-            }
-        }
-        IntelliJadConstants.INTELLIJAD_PRIMED.set(project, false);
         return true;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void projectClosed(Project project)
-    {
+    public void projectClosed(Project project) {
         consoleManager.disposeConsole(project);
-        projectClosingTasks.remove(project);
         IntelliJadConstants.DECOMPILE_LISTENER.set(project, null);
         TempMemoryVFS.dispose(project);        
         List<Library> libraries = IntelliJadConstants.GENERATED_SOURCE_LIBRARIES.get(project);
@@ -296,9 +246,8 @@ public class IntelliJad implements ApplicationComponent,
     /**
      * {@inheritDoc}
      */
-    public void projectClosing(final Project project)
-    {
-        // no-op
+    public void projectClosing(final Project project) {
+        IntelliJadConstants.INTELLIJAD_PRIMED.set(project, false);
     }
 
     public void onStartup() {
@@ -342,7 +291,7 @@ public class IntelliJad implements ApplicationComponent,
             }
         }
         if (!IntelliJadConstants.DECOMPILATION_DISABLED.get(project, false)) {
-            checkSDKRoot(project, outDirFile);
+            SdkHandler.create(application).checkSDKRoot(project, outDirFile);
         }
         return outDirFile;
     } 
@@ -359,57 +308,6 @@ public class IntelliJad implements ApplicationComponent,
         DecompilationTask task = new DecompilationTask(this, envContext, descriptor);
         task.queue();
         return task.result();
-    }
-
-    /**
-     * Checks if the project SDK has the given source root attached, and attaches it if it is not.
-     * <p>
-     * This has to be done just-in-time to ensure the SDK directory index has been initialised; it can't be done in the
-     * {@link IntelliJad#projectOpened} method.
-     * </p>
-     *
-     * @param project the project
-     * @param root    the source root
-     */
-    void checkSDKRoot(final Project project,
-                              final VirtualFile root) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Checking SDK root: "+project.getName()+" -> "+root.getPresentableUrl());
-        }
-        appInvoker.runWriteActionAndWait(new Runnable() {
-            public void run() {
-                final Sdk projectJdk = ProjectRootManager.getInstance(project).getProjectSdk();
-                if (projectJdk != null) {
-                    SdkModificator sdkModificator = projectJdk.getSdkModificator();
-                    VirtualFile[] files = sdkModificator.getRoots(OrderRootType.SOURCES);
-                    boolean attached = false;
-                    for (int i = 0; !attached && i < files.length; i++) {
-                        if (files[i].equals(root)) {
-                            attached = true;
-                        }
-                    }
-                    if (!attached) {
-                        sdkModificator.addRoot(root,
-                                OrderRootType.SOURCES);
-                        sdkModificator.commitChanges();
-                        IntelliJadConstants.SDK_SOURCE_ROOT_ATTACHED.set(project, true);
-
-                        projectClosingTasks.get(project).add(new Runnable() {
-                            public void run() {
-                                if (projectJdk != null) {
-                                    SdkModificator sdkModificator = projectJdk.getSdkModificator();
-                                    if (sdkModificator != null) {
-                                        sdkModificator.removeRoot(root, OrderRootType.SOURCES);
-                                        sdkModificator.commitChanges();
-                                    }
-                                }
-                            }
-                        });
-                    }
-                }
-            }
-        });
-
     }
 
     /**
