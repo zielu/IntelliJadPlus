@@ -11,10 +11,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 
 /**
- * <p></p>
- * <br/>
- * <p>Created on 06.02.14</p>
- *
  * @author Lukasz Zielinski
  */
 public class AppInvoker {
