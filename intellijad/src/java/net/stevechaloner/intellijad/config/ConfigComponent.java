@@ -29,6 +29,7 @@ import com.intellij.openapi.util.WriteExternalException;
 import net.stevechaloner.idea.util.properties.DOMable;
 import net.stevechaloner.intellijad.IntelliJadConstants;
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
+import net.stevechaloner.intellijad.config.jad.JadConfigForm;
 import net.stevechaloner.intellijad.config.rules.RuleContext;
 import net.stevechaloner.intellijad.gui.IntelliJadIcon;
 import org.jdom.Element;
@@ -68,7 +69,7 @@ abstract class ConfigComponent implements Configurable,
     /**
      * The configuration GUI.
      */
-    private ConfigForm form;
+    private JadConfigForm form;
 
     /** {@inheritDoc} */
     public Icon getIcon()
@@ -114,7 +115,7 @@ abstract class ConfigComponent implements Configurable,
     }
 
     protected void afterReset(Config config) {}
-    
+
     /** {@inheritDoc} */
     public void disposeUIResources()
     {
@@ -127,7 +128,7 @@ abstract class ConfigComponent implements Configurable,
      * @return the form
      */
     @NotNull
-    protected ConfigForm createForm()
+    protected JadConfigForm createForm()
     {
         return createForm(null);
     }
@@ -139,19 +140,19 @@ abstract class ConfigComponent implements Configurable,
      * @return the form
      */
     @NotNull
-    protected synchronized ConfigForm createForm(@Nullable Project project)
+    protected synchronized JadConfigForm createForm(@Nullable Project project)
     {
         if (form != null)
         {
             throw new IllegalArgumentException(IntelliJadResourceBundle.message("error.config-form-already-exists"));
         }
-        form = new ConfigForm(project);
+        form = new JadConfigForm(project);
         return form;
     }
 
     // javadoc unnecessary
     @Nullable
-    protected ConfigForm getForm()
+    protected JadConfigForm getForm()
     {
         return form;
     }

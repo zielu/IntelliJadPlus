@@ -1,4 +1,4 @@
-/* 
+/*
  * @(#) $Id:  $
  */
 package net.stevechaloner.intellijad.config;
@@ -8,6 +8,7 @@ import com.intellij.openapi.ui.popup.JBPopupAdapter;
 import com.intellij.openapi.ui.popup.LightweightWindowEvent;
 import com.intellij.util.Alarm;
 import net.stevechaloner.intellijad.IntelliJadResourceBundle;
+import net.stevechaloner.intellijad.config.jad.JadConfigForm;
 import net.stevechaloner.intellijad.gui.DelayedBalloonInfo;
 
 /**
@@ -24,12 +25,12 @@ public abstract class UiConfigComponent extends ConfigComponent {
     protected Alarm getAlarm() {
         return myAlarm;
     }
-    
+
     protected abstract boolean shouldReportOutputDirectoryNotSet(Config config);
-    
+
     @Override
     protected void afterReset(Config config) {
-        ConfigForm form = getForm();
+        JadConfigForm form = getForm();
         if (config.isOutputDirectoryNotSet() && shouldReportOutputDirectoryNotSet(config)) {
             DelayedBalloonInfo delayedBalloonInfo = new DelayedBalloonInfo(MessageType.ERROR,
                     form.getOutputDirectoryInputComponent(),
@@ -46,7 +47,7 @@ public abstract class UiConfigComponent extends ConfigComponent {
 
     @Override
     protected void afterIsModified(boolean modified, Config config) {
-        ConfigForm form = getForm();
+        JadConfigForm form = getForm();
         if (closedAfterReset && form.isOutputDirectoryNotSet() && shouldReportOutputDirectoryNotSet(config)) {
             new DelayedBalloonInfo(MessageType.ERROR, form.getOutputDirectoryInputComponent(),
                 getAlarm(), IntelliJadResourceBundle.message("error.output-directory-not-set")).run();

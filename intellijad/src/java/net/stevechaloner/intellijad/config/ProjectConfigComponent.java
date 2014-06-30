@@ -24,6 +24,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.util.JDOMExternalizable;
 import com.intellij.openapi.util.WriteExternalException;
+import net.stevechaloner.intellijad.config.jad.JadConfigForm;
 import net.stevechaloner.intellijad.util.PluginUtil;
 import org.jdom.Element;
 import org.jetbrains.annotations.Nls;
@@ -62,7 +63,7 @@ public class ProjectConfigComponent implements ProjectComponent,
         @NotNull
         public JComponent createComponent()
         {
-            ConfigForm form = getForm();
+            JadConfigForm form = getForm();
             return form == null ? createForm(project).getRoot() : form.getRoot();
         }
 
