@@ -1,0 +1,54 @@
+dependencies {
+    compile project(':plugin-lib')
+    compile 'idea:icons'
+}
+
+jar.doFirst {
+    copy {
+        from 'META-INF'
+        into "${sourceSets.main.output.classesDir}/META-INF"
+    }
+}
+
+task intellijad_help(type: Jar) {
+    from 'src/help'
+    baseName = 'intellijad-help'
+}
+
+def distContent = ['plugin-lib.jar']
+task dist_zip(dependsOn: intellijad_help, type: Zip) {
+    into('intellijad-plus/lib') {
+        from {
+            configurations.compile.filter { distContent.contains(it.name) }
+        }
+    }
+    into('intellijad-plus/lib') {
+        from {
+            'build/libs'
+        }
+        include 'intellijad.jar'
+    }
+    into('intellijad-plus/help') {
+        from {
+            'build/libs'
+        }
+        include 'intellijad-help.jar'
+    }
+    baseName = 'intellijad-plus'
+}
+
+task dist(dependsOn: [build, dist_zip]) {
+    doLast {
+        delete 'dist'
+
+        copy {
+            from 'build/distributions'
+            into "${dist_dir}"
+        }
+        println "Copied result to dist"
+    }
+
+}
+
+
+test.enabled = false

@@ -1,0 +1,70 @@
+subprojects {
+    apply plugin: 'java'
+
+    ext {
+        idea_dist_home = 'c:/Programy/Jetbrains/Idea 13.1 DEV'
+        dist_dir = 'dist'
+    }
+
+    sourceCompatibility = 1.6
+
+    repositories {
+        flatDir {
+            dirs "${idea_dist_home}/lib"
+        }
+        mavenCentral()
+    }
+
+    sourceSets {
+        main {
+            java {
+                srcDir 'src/java'
+            }
+        }
+        test {
+            java {
+                srcDir 'test/java'
+            }
+        }
+    }
+
+    dependencies {
+        compile 'idea:openapi'
+        compile 'idea:idea'
+        compile 'idea:util'
+        compile 'idea:annotations'
+        compile 'idea:extensions'
+
+        compile 'idea_lib:jdom'
+        compile 'idea_lib:guava:14.0.1'
+
+        runtime 'idea_lib:forms_rt'
+
+        testCompile group: 'junit', name: 'junit', version: '4.+'
+    }
+
+
+    configurations {
+        javac2
+    }
+
+    dependencies {
+        javac2 'idea_lib:jdom'
+        javac2 'idea_lib:asm'
+        javac2 'idea_lib:asm-commons'
+        javac2 'idea_lib:asm4-all'
+        javac2 'idea_lib:javac2'
+    }
+
+    compileJava.doLast {
+        ant.taskdef(name: 'javac2', classname: 'com.intellij.ant.Javac2', classpath: configurations.javac2.asPath)
+        println "Compiling UI forms"
+        ant.javac2(destdir: "build/classes/main", debug: 'true', source: '1.6', target: '1.6', fork: 'true') {
+            src(path: "src/java")
+            include(name: "**/*.form")
+            classpath {
+                pathelement(path: sourceSets.main.runtimeClasspath.asPath)
+            }
+        }
+    }
+}

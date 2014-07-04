@@ -1,7 +1,11 @@
 .idea/
+.gradle/
 intellijad.iws
-intellijad/lib/
 intellijad/dist/
+intellijad/.gradle/
+intellijad/build/
 plugin-lib/dist/
+plugin-lib/.gradle/
+plugin-lib/build/
 classes/
 out/
