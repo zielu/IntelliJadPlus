@@ -20,6 +20,9 @@ subprojects {
             java {
                 srcDir 'src/java'
             }
+            resources {
+                srcDir 'src/resources'
+            }
         }
         test {
             java {
@@ -56,7 +59,7 @@ subprojects {
         javac2 'idea_lib:javac2'
     }
 
-    compileJava.doLast {
+    classes.doLast {
         ant.taskdef(name: 'javac2', classname: 'com.intellij.ant.Javac2', classpath: configurations.javac2.asPath)
         println "Compiling UI forms"
         ant.javac2(destdir: "build/classes/main", debug: 'true', source: '1.6', target: '1.6', fork: 'true') {
