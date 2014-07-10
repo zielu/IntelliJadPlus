@@ -60,14 +60,6 @@
                   <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
                 </constraints>
               </vspacer>
-              <component id="8912b" class="javax.swing.JCheckBox" binding="useProjectSpecificIntelliJadCheckBox" default-binding="true">
-                <constraints>
-                  <grid row="0" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text resource-bundle="net/stevechaloner/intellijad/messages-i18n" key="action.use-project-intellijad-settings"/>
-                </properties>
-              </component>
               <component id="d105d" class="javax.swing.JComboBox" binding="reformatStyle">
                 <constraints>
                   <grid row="2" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
